@@ -5,12 +5,13 @@
   "type": "module",
   "main": "electron.cjs",
   "scripts": {
-    "dev": "tsx server.ts",
+    "dev": "concurrently \"npm run server\" \"vite\"",
+    "server": "tsx server.ts",
     "build": "vite build",
     "start": "node server.ts",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && electron .\"",
+    "electron:dev": "concurrently \"npm run server\" \"wait-on http://localhost:3000 && npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
     "electron:build": "vite build && electron-builder --win --x64"
   },
   "build": {

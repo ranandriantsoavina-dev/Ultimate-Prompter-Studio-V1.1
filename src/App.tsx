@@ -1250,20 +1250,34 @@ export default function App() {
   });
 
   // Hold-and-slide reordering for individual item elements
+  const visibleElements = useMemo(() => {
+    return currentElements.filter((e) => db.nsfwOn || !e.nsfw);
+  }, [currentElements, db.nsfwOn]);
+
   const elementReorder = useHoldAndSlide({
-    groupId: 'elements',
-    items: currentElements,
-    onReorder: (newEls) => {
+    groupId: activeSubcat ? `elements-${activeCat?.id}-${activeSubcat.id}` : `elements-${activeCat?.id || 'flat'}`,
+    items: visibleElements,
+    onReorder: (newVisibleEls) => {
       if (!activeCat) return;
       setDb((prev) => {
         const catsCopy = JSON.parse(JSON.stringify(prev.cats));
         const cat = catsCopy.find((c: any) => c.id === activeCat.id);
         if (cat) {
-          if (cat.type === 'flat') {
-            cat.els = newEls;
-          } else {
-            const sc = cat.subcats?.find((s: any) => s.id === activeSubcat?.id);
-            if (sc) sc.els = newEls;
+          const targetList = cat.type === 'flat' ? cat.els : cat.subcats?.find((s: any) => s.id === activeSubcat?.id)?.els;
+          if (targetList) {
+            let visIdx = 0;
+            const updated = targetList.map((el: any) => {
+              if (db.nsfwOn || !el.nsfw) {
+                return newVisibleEls[visIdx++] || el;
+              }
+              return el;
+            });
+            if (cat.type === 'flat') {
+              cat.els = updated;
+            } else {
+              const sc = cat.subcats?.find((s: any) => s.id === activeSubcat?.id);
+              if (sc) sc.els = updated;
+            }
           }
         }
         return { ...prev, cats: catsCopy };
@@ -2030,11 +2044,8 @@ export default function App() {
 
                     return (
                       <>
-                        {elements
-                          .filter((e) => db.nsfwOn || !e.nsfw)
-                          .map((el) => {
+                        {visibleElements.map((el, visIdx) => {
                             const isSelected = selArr.includes(el.id);
-                            const fullIdx = currentElements.findIndex((x) => x.id === el.id);
                             return (
                               <ElementCard
                                 key={el.id}
@@ -2059,9 +2070,9 @@ export default function App() {
                                 }}
                                 nsfwOn={db.nsfwOn}
                                 categoryIcon={activeCat?.icon}
-                                dragProps={fullIdx >= 0 ? elementReorder.getItemProps(fullIdx) : undefined}
-                                handleProps={fullIdx >= 0 ? elementReorder.getHandleProps(fullIdx) : undefined}
-                                isDragging={fullIdx >= 0 && elementReorder.dragIndex === fullIdx}
+                                dragProps={elementReorder.getItemProps(visIdx)}
+                                handleProps={elementReorder.getHandleProps(visIdx)}
+                                isDragging={elementReorder.dragIndex === visIdx}
                               />
                             );
                           })}
