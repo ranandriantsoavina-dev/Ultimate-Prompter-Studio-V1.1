@@ -1,0 +1,6 @@
+{
+  "name": "The Ultimate Prompter",
+  "description": "Professional desktop-grade visual prompt builder and generative AI workstation for Krea, Midjourney, FLUX, and SDXL.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

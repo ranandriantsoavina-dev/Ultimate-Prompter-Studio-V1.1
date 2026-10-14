@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+:root {
+  --bg-primary: #07070a;
+  --panel-surface: #121116;
+  --panel-border: rgba(255, 255, 255, 0.08);
+  --theme-accent: #ff6600;
+  --theme-accent-hover: #ff7d24;
+  --theme-accent-glow: rgba(255, 102, 0, 0.4);
+  --theme-text-accent: #ff7824;
+}
+
+.theme-orange {
+  --theme-accent: #ff6600;
+  --theme-accent-hover: #ff7d24;
+  --theme-accent-glow: rgba(255, 102, 0, 0.4);
+  --theme-text-accent: #ff7824;
+}
+
+.theme-nsfw {
+  --theme-accent: #ff2238;
+  --theme-accent-hover: #ff3d52;
+  --theme-accent-glow: rgba(255, 34, 56, 0.45);
+  --theme-text-accent: #ff384d;
+}
+
+/* Custom workstation scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* Subtle selection styling */
+::selection {
+  background: var(--theme-accent);
+  color: #000000;
+}
+
+.theme-nsfw ::selection {
+  background: #ff2238;
+  color: #ffffff;
+}
+
+/* Tabular figures for telemetry and counts */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
