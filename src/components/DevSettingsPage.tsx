@@ -113,9 +113,38 @@ export const DevSettingsPage: React.FC<DevSettingsPageProps> = ({
   const visionAbortControllerRef = useRef<AbortController | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  // Chat State
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  // Helper to detect image files by MIME type or extension
+  const isImageFile = (file: File): boolean => {
+    if (file.type && file.type.startsWith('image/')) return true;
+    const name = (file.name || '').toLowerCase();
+    return (
+      name.endsWith('.png') ||
+      name.endsWith('.jpg') ||
+      name.endsWith('.jpeg') ||
+      name.endsWith('.webp') ||
+      name.endsWith('.gif') ||
+      name.endsWith('.bmp') ||
+      name.endsWith('.avif') ||
+      name.endsWith('.svg')
+    );
+  };
+
+  // Chat State with session persistence
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => {
+    try {
+      const saved = sessionStorage.getItem('dev_chat_messages');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [chatIsGenerating, setChatIsGenerating] = useState<boolean>(false);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('dev_chat_messages', JSON.stringify(chatMessages));
+    } catch {}
+  }, [chatMessages]);
 
   // Auto-scroll chat to bottom
   useEffect(() => {
@@ -145,15 +174,26 @@ export const DevSettingsPage: React.FC<DevSettingsPageProps> = ({
     }
   }, [initialActivePreset]);
 
-  // Prompt Refiner State
+  // Prompt Refiner State with session persistence
   const [refinerSystemPrompt, setRefinerSystemPrompt] = useState<string>(
     `You are an expert AI prompt refiner. Take the provided prompt and enhance it to be richer, more descriptive, cinematic, detailed, and optimized for high-end AI generation. Maintain the core essence while significantly elevating quality and descriptive depth.`
   );
-  const [refinerImportedPrompt, setRefinerImportedPrompt] = useState<string>(initialRefinePrompt || '');
+  const [refinerImportedPrompt, setRefinerImportedPrompt] = useState<string>(() => {
+    return initialRefinePrompt || sessionStorage.getItem('dev_refiner_imported') || '';
+  });
   const [refinerUserPrompt, setRefinerUserPrompt] = useState<string>('Refine and enhance this prompt for maximum aesthetic impact.');
   const [refinerIsGenerating, setRefinerIsGenerating] = useState<boolean>(false);
-  const [refinerRawResponse, setRefinerRawResponse] = useState<string>('');
+  const [refinerRawResponse, setRefinerRawResponse] = useState<string>(() => {
+    return sessionStorage.getItem('dev_refiner_raw') || '';
+  });
   const [refinerIsCopied, setRefinerIsCopied] = useState<boolean>(false);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('dev_refiner_imported', refinerImportedPrompt || '');
+      sessionStorage.setItem('dev_refiner_raw', refinerRawResponse || '');
+    } catch {}
+  }, [refinerImportedPrompt, refinerRawResponse]);
 
   useEffect(() => {
     if (initialRefinePrompt) {
@@ -262,12 +302,14 @@ export const DevSettingsPage: React.FC<DevSettingsPageProps> = ({
   }
   const [chatInput, setChatInput] = useState<string>('');
   const [chatImages, setChatImages] = useState<string[]>([]);
+  const [isChatDraggingOver, setIsChatDraggingOver] = useState<boolean>(false);
   const chatFileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleChatImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-    Array.from(files).forEach((file) => {
+  const chatDragCounterRef = useRef(0);
+
+  const processChatFiles = (files: File[]) => {
+    const imageFiles = files.filter(isImageFile);
+    imageFiles.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (evt) => {
         const res = evt.target?.result as string;
@@ -281,6 +323,49 @@ export const DevSettingsPage: React.FC<DevSettingsPageProps> = ({
       };
       reader.readAsDataURL(file);
     });
+  };
+
+  const handleChatImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    processChatFiles(Array.from(files));
+    e.target.value = '';
+  };
+
+  const handleChatDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    chatDragCounterRef.current++;
+    setIsChatDraggingOver(true);
+  };
+
+  const handleChatDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'copy';
+    if (!isChatDraggingOver) {
+      setIsChatDraggingOver(true);
+    }
+  };
+
+  const handleChatDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    chatDragCounterRef.current--;
+    if (chatDragCounterRef.current <= 0) {
+      chatDragCounterRef.current = 0;
+      setIsChatDraggingOver(false);
+    }
+  };
+
+  const handleChatDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    chatDragCounterRef.current = 0;
+    setIsChatDraggingOver(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      processChatFiles(Array.from(e.dataTransfer.files));
+    }
   };
 
   const handleStopChatMessage = () => {
@@ -434,9 +519,21 @@ export const DevSettingsPage: React.FC<DevSettingsPageProps> = ({
   // New User Input State
   const [newUserName, setNewUserName] = useState<string>('');
 
-  // Image Vision Testing State
-  const [testImage, setTestImage] = useState<string | null>(null);
-  const [testImageName, setTestImageName] = useState<string>('');
+  // Image Vision Testing State with session persistence
+  const [testImage, setTestImage] = useState<string | null>(() => {
+    try {
+      return sessionStorage.getItem('dev_test_image') || null;
+    } catch {
+      return null;
+    }
+  });
+  const [testImageName, setTestImageName] = useState<string>(() => {
+    try {
+      return sessionStorage.getItem('dev_test_image_name') || '';
+    } catch {
+      return '';
+    }
+  });
   const [systemPrompt, setSystemPrompt] = useState<string>(
     `You are an expert AI vision analyst and structured prompt engineer. Analyze the provided image and extract ONLY the following 6 distinct, non-overlapping elements into a valid JSON object. Strictly enforce these boundary definitions:
 
@@ -466,10 +563,40 @@ CRITICAL INSTRUCTIONS:
     'Extract the 6 distinct elements (subject, outfit [either top+bottom OR one-piece], pose, composition, environment, lighting) according to the strict boundary rules.'
   );
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const [rawResponse, setRawResponse] = useState<string>('');
-  const [parsedData, setParsedData] = useState<any | null>(null);
+  const [rawResponse, setRawResponse] = useState<string>(() => {
+    try {
+      return sessionStorage.getItem('dev_extractor_raw') || '';
+    } catch {
+      return '';
+    }
+  });
+  const [parsedData, setParsedData] = useState<any | null>(() => {
+    try {
+      const s = sessionStorage.getItem('dev_extractor_parsed');
+      return s ? JSON.parse(s) : null;
+    } catch {
+      return null;
+    }
+  });
   const [importStatus, setImportStatus] = useState<string>('');
   const [importOk, setImportOk] = useState<boolean>(true);
+
+  useEffect(() => {
+    try {
+      if (testImage) {
+        sessionStorage.setItem('dev_test_image', testImage);
+      } else {
+        sessionStorage.removeItem('dev_test_image');
+      }
+      sessionStorage.setItem('dev_test_image_name', testImageName || '');
+      sessionStorage.setItem('dev_extractor_raw', rawResponse || '');
+      if (parsedData) {
+        sessionStorage.setItem('dev_extractor_parsed', JSON.stringify(parsedData));
+      } else {
+        sessionStorage.removeItem('dev_extractor_parsed');
+      }
+    } catch {}
+  }, [testImage, testImageName, rawResponse, parsedData]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -576,18 +703,90 @@ CRITICAL INSTRUCTIONS:
     }
   };
 
+  const [isExtractorDraggingOver, setIsExtractorDraggingOver] = useState<boolean>(false);
+  const extractorDragCounterRef = useRef(0);
+
+  const processExtractorFile = (file: File) => {
+    if (!file) return;
+    setTestImageName(file.name);
+
+    if (isImageFile(file)) {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const result = evt.target?.result as string;
+        if (result) {
+          setTestImage(result);
+        }
+      };
+      reader.readAsDataURL(file);
+    } else {
+      // Support prompt text or JSON files dropped into extractor
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const text = evt.target?.result as string;
+        if (text) {
+          try {
+            const parsed = JSON.parse(text);
+            setParsedData(parsed);
+            setRawResponse(JSON.stringify(parsed, null, 2));
+            setImportStatus('Loaded extracted JSON data from file.');
+            setImportOk(true);
+          } catch {
+            setRawResponse(text);
+            setImportStatus('Loaded prompt text from file.');
+            setImportOk(true);
+          }
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setTestImageName(file.name);
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const result = evt.target?.result as string;
-      if (result) {
-        setTestImage(result);
+    processExtractorFile(file);
+    e.target.value = '';
+  };
+
+  const handleExtractorDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    extractorDragCounterRef.current++;
+    setIsExtractorDraggingOver(true);
+  };
+
+  const handleExtractorDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'copy';
+    if (!isExtractorDraggingOver) {
+      setIsExtractorDraggingOver(true);
+    }
+  };
+
+  const handleExtractorDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    extractorDragCounterRef.current--;
+    if (extractorDragCounterRef.current <= 0) {
+      extractorDragCounterRef.current = 0;
+      setIsExtractorDraggingOver(false);
+    }
+  };
+
+  const handleExtractorDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    extractorDragCounterRef.current = 0;
+    setIsExtractorDraggingOver(false);
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const imgFile = Array.from(files).find(isImageFile) || files[0];
+      if (imgFile) {
+        processExtractorFile(imgFile);
       }
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   const handleStopVisionTest = () => {
@@ -1009,7 +1208,19 @@ ollama serve`}
           
           {/* Preset 1: Prompt Extractor & Distributor */}
           {activePreset === 'extractor' && (
-            <div className="rounded-2xl bg-[#121116]/90 border border-white/[0.08] p-6 shadow-xl backdrop-blur-md space-y-5">
+            <div 
+              onDragOver={handleExtractorDragOver}
+              onDragEnter={handleExtractorDragEnter}
+              onDragLeave={handleExtractorDragLeave}
+              onDrop={handleExtractorDrop}
+              className={`rounded-2xl bg-[#121116]/90 border p-6 shadow-xl backdrop-blur-md space-y-5 transition-colors ${
+                isExtractorDraggingOver
+                  ? nsfwOn
+                    ? 'border-red-500/60 shadow-[0_0_25px_rgba(255,34,56,0.25)] ring-1 ring-red-500/30'
+                    : 'border-orange-500/60 shadow-[0_0_25px_rgba(255,102,0,0.25)] ring-1 ring-orange-500/30'
+                  : 'border-white/[0.08]'
+              }`}
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <ImageIcon className={`w-4 h-4 ${nsfwOn ? 'text-red-400' : 'text-orange-400'}`} />
@@ -1038,8 +1249,16 @@ ollama serve`}
                   <label className="text-xs text-white/60 font-medium">Test Image Input</label>
                   <div 
                     onClick={() => fileInputRef.current?.click()}
+                    onDragOver={handleExtractorDragOver}
+                    onDragEnter={handleExtractorDragEnter}
+                    onDragLeave={handleExtractorDragLeave}
+                    onDrop={handleExtractorDrop}
                     className={`border-2 border-dashed rounded-2xl p-4 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all min-h-[200px] ${
-                      testImage 
+                      isExtractorDraggingOver
+                        ? nsfwOn
+                          ? 'border-red-500 bg-red-500/15 shadow-[0_0_20px_rgba(255,34,56,0.3)]'
+                          : 'border-orange-500 bg-orange-500/15 shadow-[0_0_20px_rgba(255,102,0,0.3)]'
+                        : testImage 
                         ? 'border-orange-500/50 bg-black/40' 
                         : 'border-white/10 hover:border-white/30 bg-white/[0.02]'
                     }`}
@@ -1401,7 +1620,19 @@ ollama serve`}
 
           {/* Preset 3: Chat with AI */}
           {activePreset === 'chat' && (
-            <div className="rounded-2xl bg-[#121116]/90 border border-white/[0.08] p-6 shadow-xl backdrop-blur-md flex flex-col h-[650px] relative">
+            <div 
+              onDragOver={handleChatDragOver}
+              onDragEnter={handleChatDragEnter}
+              onDragLeave={handleChatDragLeave}
+              onDrop={handleChatDrop}
+              className={`rounded-2xl bg-[#121116]/90 border p-6 shadow-xl backdrop-blur-md flex flex-col h-[650px] relative transition-colors ${
+                isChatDraggingOver 
+                  ? nsfwOn 
+                    ? 'border-red-500/60 shadow-[0_0_25px_rgba(255,34,56,0.25)] ring-1 ring-red-500/30' 
+                    : 'border-orange-500/60 shadow-[0_0_25px_rgba(255,102,0,0.25)] ring-1 ring-orange-500/30' 
+                  : 'border-white/[0.08]'
+              }`}
+            >
               <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
                 <div className="flex items-center gap-2">
                   <MessageSquare className={`w-4 h-4 ${nsfwOn ? 'text-red-400' : 'text-orange-400'}`} />
@@ -1425,7 +1656,14 @@ ollama serve`}
                 </div>
               </div>
 
-              <div ref={chatContainerRef} className="flex-1 overflow-y-auto py-4 space-y-4 pr-2">
+              <div 
+                ref={chatContainerRef}
+                onDragOver={handleChatDragOver}
+                onDragEnter={handleChatDragEnter}
+                onDragLeave={handleChatDragLeave}
+                onDrop={handleChatDrop}
+                className="flex-1 overflow-y-auto py-4 space-y-4 pr-2"
+              >
                 {chatMessages.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-center text-white/40 p-6">
                     <MessageSquare className="w-8 h-8 mb-2 opacity-40" />

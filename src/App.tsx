@@ -710,7 +710,7 @@ export default function App() {
 
   const [presetModalData, setPresetModalData] = useState<{
     isOpen: boolean;
-    preset: Preset | null;
+    preset: Preset | (Omit<Preset, 'id'> & { id?: string }) | null;
     kind: 'outfit' | 'context' | 'full';
   }>({
     isOpen: false,
@@ -977,10 +977,73 @@ export default function App() {
           setPathSel(['subject', 'general'], ids);
         }
       } else if (catId === 'outfit' && cat.subcats) {
+        const isOnePieceSub = (sId: string) => {
+          const lower = sId.toLowerCase();
+          return lower === 'onepiece' || lower === 'one_piece' || lower === 'one-piece' || lower.includes('dress') || lower.includes('one piece');
+        };
+        const isTopSub = (sId: string) => {
+          const lower = sId.toLowerCase();
+          return lower === 'top' || lower.includes('top');
+        };
+        const isBottomSub = (sId: string) => {
+          const lower = sId.toLowerCase();
+          return lower === 'bottom' || lower.includes('bottom');
+        };
+
+        const topSub = cat.subcats.find((s) => isTopSub(s.id));
+        const bottomSub = cat.subcats.find((s) => isBottomSub(s.id));
+        const onePieceSub = cat.subcats.find((s) => isOnePieceSub(s.id));
+
+        const topEls = topSub?.els ? visible(topSub.els) : [];
+        const bottomEls = bottomSub?.els ? visible(bottomSub.els) : [];
+        const onePieceEls = onePieceSub?.els ? visible(onePieceSub.els) : [];
+
+        const canDoTwoPiece = topEls.length > 0 && bottomEls.length > 0;
+        const canDoOnePiece = onePieceEls.length > 0;
+
+        // Mutual exclusivity: Option A (top + bottom) vs Option B (one piece only)
+        let chooseOptionA = false;
+        if (canDoTwoPiece && canDoOnePiece) {
+          chooseOptionA = Math.random() < 0.5;
+        } else if (canDoTwoPiece) {
+          chooseOptionA = true;
+        } else if (canDoOnePiece) {
+          chooseOptionA = false;
+        } else if (topEls.length > 0) {
+          chooseOptionA = true;
+        }
+
+        if (chooseOptionA) {
+          // Option A: 1 item from top AND 1 item from bottom; leave one-piece UNSELECTED
+          if (topSub) {
+            setPathSel(['outfit', topSub.id], pickRandom(topEls, 1).map((e) => e.id));
+          }
+          if (bottomSub) {
+            setPathSel(['outfit', bottomSub.id], pickRandom(bottomEls, 1).map((e) => e.id));
+          }
+          if (onePieceSub) {
+            setPathSel(['outfit', onePieceSub.id], []);
+          }
+        } else {
+          // Option B: 1 item from one-piece ONLY; leave top and bottom UNSELECTED
+          if (onePieceSub) {
+            setPathSel(['outfit', onePieceSub.id], pickRandom(onePieceEls, 1).map((e) => e.id));
+          }
+          if (topSub) {
+            setPathSel(['outfit', topSub.id], []);
+          }
+          if (bottomSub) {
+            setPathSel(['outfit', bottomSub.id], []);
+          }
+        }
+
+        // Randomize any other subcategories in outfit (e.g. accessories, footwear)
         cat.subcats.forEach((sc) => {
-          if (sc.els) {
-            const ids = pickRandom(visible(sc.els), 1).map((e) => e.id);
-            setPathSel(['outfit', sc.id], ids);
+          if (!isTopSub(sc.id) && !isBottomSub(sc.id) && !isOnePieceSub(sc.id)) {
+            if (sc.els) {
+              const ids = pickRandom(visible(sc.els), 1).map((e) => e.id);
+              setPathSel(['outfit', sc.id], ids);
+            }
           }
         });
       } else if (catId === 'kw' && cat.type === 'flat') {
@@ -1351,8 +1414,6 @@ export default function App() {
 
   // Create Outfit Preset directly from currently selected items in Prompt Inspector
   const handleCreateOutfitPreset = () => {
-    if (!canCreateOutfitPreset) return;
-
     const outfitSel = db.selections?.outfit || {};
     const hasOnePiece =
       (Array.isArray(outfitSel.onepiece) && outfitSel.onepiece.length > 0) ||
@@ -1417,30 +1478,22 @@ export default function App() {
     });
 
     const name = getNextPresetName('outfit');
-    const newPreset: Preset = {
-      id: 'p_' + Date.now() + Math.random().toString(36).substring(2, 6),
-      name,
+    // Open existing PresetModal prefilled with active selected items and default sequential name
+    setPresetModalData({
+      isOpen: true,
       kind: 'outfit',
-      description: descParts.join(' + ') || 'Custom Outfit Preset',
-      picks,
-      icon: 'Shirt'
-    };
-
-    recordHistory();
-    setDb((prev) => ({
-      ...prev,
-      presets: [newPreset, ...(prev.presets || [])],
-      activePreset: newPreset.id
-    }));
-    playClickSound(db.soundEnabled, true);
-    setPresetNotice(`Created ${name}`);
-    setTimeout(() => setPresetNotice(null), 2500);
+      preset: {
+        name,
+        kind: 'outfit',
+        description: descParts.join(' + ') || 'Custom Outfit Preset',
+        picks,
+        icon: 'Shirt'
+      }
+    });
   };
 
   // Create Context Preset directly from currently selected items in Prompt Inspector
   const handleCreateContextPreset = () => {
-    if (!canCreateContextPreset) return;
-
     const sel = db.selections || {};
     const picks: PresetPick[] = [];
     const descParts: string[] = [];
@@ -1544,24 +1597,18 @@ export default function App() {
     }
 
     const name = getNextPresetName('context');
-    const newPreset: Preset = {
-      id: 'p_' + Date.now() + Math.random().toString(36).substring(2, 6),
-      name,
+    // Open existing PresetModal prefilled with active selected items and default sequential name
+    setPresetModalData({
+      isOpen: true,
       kind: 'context',
-      description: descParts.slice(0, 4).join(' • ') || 'Custom Context Preset',
-      picks,
-      icon: 'Layers'
-    };
-
-    recordHistory();
-    setDb((prev) => ({
-      ...prev,
-      presets: [newPreset, ...(prev.presets || [])],
-      activePreset: newPreset.id
-    }));
-    playClickSound(db.soundEnabled, true);
-    setPresetNotice(`Created ${name}`);
-    setTimeout(() => setPresetNotice(null), 2500);
+      preset: {
+        name,
+        kind: 'context',
+        description: descParts.slice(0, 4).join(' • ') || 'Custom Context Preset',
+        picks,
+        icon: 'Layers'
+      }
+    });
   };
 
   if (!booted) {
@@ -1642,7 +1689,7 @@ export default function App() {
         );
       })()}
 
-      {isDevPage ? (
+      <div className={isDevPage ? 'flex-1 flex flex-col w-full' : 'hidden'}>
         <DevSettingsPage
           db={db}
           onUpdateDb={setDb}
@@ -1658,8 +1705,9 @@ export default function App() {
           initialRefinePrompt={refinePromptInput}
           onRestoreMainDB={() => setRestoreConfirmOpen(true)}
         />
-      ) : (
-        <div className="flex-1 flex flex-col lg:flex-row relative z-10 max-w-[1700px] w-full mx-auto">
+      </div>
+
+      <div className={!isDevPage ? 'flex-1 flex flex-col lg:flex-row relative z-10 max-w-[1700px] w-full mx-auto' : 'hidden'}>
         {/* Left Decks & Cards Work Area */}
         <main className="flex-1 p-4 lg:p-6 min-w-0 flex flex-col">
           {/* Breadcrumbs & Navigation Header */}
@@ -1836,9 +1884,13 @@ export default function App() {
                       presets={db.nsfwOn ? db.presets : db.presets.filter((p) => p.nsfw !== true)}
                       activePreset={db.activePreset}
                       onTogglePreset={handleTogglePreset}
-                      onAddPreset={(kind) =>
-                        setPresetModalData({ isOpen: true, preset: null, kind })
-                      }
+                      onAddPreset={(kind) => {
+                        if (kind === 'outfit') {
+                          handleCreateOutfitPreset();
+                        } else {
+                          handleCreateContextPreset();
+                        }
+                      }}
                       onEditPreset={(preset) =>
                         setPresetModalData({ isOpen: true, preset, kind: preset.kind })
                       }
@@ -2139,7 +2191,6 @@ export default function App() {
           presetNotice={presetNotice}
         />
       </div>
-      )}
 
       {/* Modals & Drawers */}
       <CommandPalette
@@ -2185,6 +2236,8 @@ export default function App() {
         nsfwOn={db.nsfwOn}
         onSave={async (savedDataRaw) => {
           const savedData = { ...savedDataRaw, image: await ensureImageFor(activeUserId, savedDataRaw.image) };
+          recordHistory();
+          let createdId: string | null = null;
           setDb((prev) => {
             const presetsCopy = [...(prev.presets || [])];
             if (savedData.id) {
@@ -2201,22 +2254,27 @@ export default function App() {
                   icon: savedData.icon,
                   nsfw: savedData.nsfw
                 };
+                return { ...prev, presets: presetsCopy };
               }
-            } else {
-              presetsCopy.push({
-                id: 'p' + Date.now(),
-                name: savedData.name,
-                description: savedData.description,
-                kind: savedData.kind,
-                picks: savedData.picks,
-                image: savedData.image,
-                imgPos: savedData.imgPos,
-                icon: savedData.icon,
-                nsfw: savedData.nsfw
-              });
             }
-            return { ...prev, presets: presetsCopy };
+            const newId = 'p' + Date.now();
+            createdId = newId;
+            presetsCopy.unshift({
+              id: newId,
+              name: savedData.name,
+              description: savedData.description,
+              kind: savedData.kind,
+              picks: savedData.picks,
+              image: savedData.image,
+              imgPos: savedData.imgPos,
+              icon: savedData.icon || (savedData.kind === 'outfit' ? 'Shirt' : 'Sparkles'),
+              nsfw: savedData.nsfw
+            });
+            return { ...prev, presets: presetsCopy, activePreset: newId };
           });
+          playClickSound(db.soundEnabled, true);
+          setPresetNotice(`${savedData.id ? 'Updated' : 'Created'} ${savedData.name}`);
+          setTimeout(() => setPresetNotice(null), 2500);
         }}
         onDelete={(id) => {
           setDb((prev) => ({

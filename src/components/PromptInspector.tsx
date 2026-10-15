@@ -200,9 +200,8 @@ export const PromptInspector: React.FC<PromptInspectorProps> = ({
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={onCreateContextPreset}
-              disabled={!canCreateContextPreset}
               title="Create Context Preset (from selected Outfit, Composition, Pose & Action, and Environment & Lighting)"
-              className={`flex flex-col items-start p-2.5 rounded-xl border text-left transition-all active:scale-95 disabled:opacity-30 disabled:pointer-events-none group ${
+              className={`flex flex-col items-start p-2.5 rounded-xl border text-left transition-all active:scale-95 group ${
                 nsfwOn
                   ? 'bg-red-500/10 hover:bg-red-500/20 border-red-500/30 text-white shadow-[0_0_12px_rgba(255,34,56,0.1)]'
                   : 'bg-orange-500/10 hover:bg-orange-500/20 border-orange-500/30 text-white shadow-[0_0_12px_rgba(255,102,0,0.1)]'
@@ -219,9 +218,8 @@ export const PromptInspector: React.FC<PromptInspectorProps> = ({
 
             <button
               onClick={onCreateOutfitPreset}
-              disabled={!canCreateOutfitPreset}
               title="Create Outfit Preset (from selected (Top + Bottom) or One-Piece)"
-              className={`flex flex-col items-start p-2.5 rounded-xl border text-left transition-all active:scale-95 disabled:opacity-30 disabled:pointer-events-none group ${
+              className={`flex flex-col items-start p-2.5 rounded-xl border text-left transition-all active:scale-95 group ${
                 nsfwOn
                   ? 'bg-red-500/10 hover:bg-red-500/20 border-red-500/30 text-white shadow-[0_0_12px_rgba(255,34,56,0.1)]'
                   : 'bg-orange-500/10 hover:bg-orange-500/20 border-orange-500/30 text-white shadow-[0_0_12px_rgba(255,102,0,0.1)]'

@@ -3,10 +3,22 @@ import { X, Check, Trash2, Sparkles, Upload, Shirt, Camera, Palette, Sun, MapPin
 import { Category, Preset, PresetPick, ImgPos } from '../types/prompter';
 import { VisualThumbnail, getImgStyle } from './VisualThumbnail';
 
+export interface PresetModalData {
+  id?: string;
+  name: string;
+  description?: string;
+  kind: 'outfit' | 'context' | 'full';
+  picks: PresetPick[];
+  image?: string;
+  imgPos?: ImgPos;
+  icon?: string;
+  nsfw?: boolean;
+}
+
 interface PresetModalProps {
   isOpen: boolean;
   onClose: () => void;
-  preset: Preset | null;
+  preset: Preset | PresetModalData | null;
   kind: 'outfit' | 'context' | 'full';
   categories: Category[];
   nsfwOn: boolean;
@@ -79,14 +91,23 @@ export const PresetModal: React.FC<PresetModalProps> = ({
 
   if (!isOpen) return null;
 
-  const SLOTS = kind === 'outfit'
-    ? [
-        { label: 'Outfit — Top', cat: 'outfit', sub: 'top' },
-        { label: 'Outfit — Bottom', cat: 'outfit', sub: 'bottom' }
-      ]
+  const outfitCat = categories.find((c) => c.id === 'outfit');
+  const outfitSlots = outfitCat?.subcats && outfitCat.subcats.length > 0
+    ? outfitCat.subcats.map((sc) => ({
+        label: `Outfit — ${sc.name}`,
+        cat: 'outfit',
+        sub: sc.id
+      }))
     : [
         { label: 'Outfit — Top', cat: 'outfit', sub: 'top' },
         { label: 'Outfit — Bottom', cat: 'outfit', sub: 'bottom' },
+        { label: 'Outfit — One-Piece', cat: 'outfit', sub: 'onepiece' }
+      ];
+
+  const SLOTS = kind === 'outfit'
+    ? outfitSlots
+    : [
+        ...outfitSlots,
         { label: 'Composition', cat: 'comp', sub: null },
         { label: 'Pose & Action', cat: 'pose', sub: null },
         { label: 'Environment', cat: 'env', sub: null },
@@ -227,7 +248,7 @@ export const PresetModal: React.FC<PresetModalProps> = ({
           <div className="flex items-center gap-2">
             <Sparkles className="w-3.5 h-3.5 text-white/50 stroke-[1.5]" />
             <h3 className="font-semibold text-base text-white">
-              {preset ? 'Edit' : 'Create'} {kind === 'outfit' ? 'Outfit' : 'Context'} Preset
+              {preset?.id ? 'Edit' : 'Create'} {kind === 'outfit' ? 'Outfit' : 'Context'} Preset
             </h3>
           </div>
           <button
@@ -454,15 +475,27 @@ export const PresetModal: React.FC<PresetModalProps> = ({
                         ))
                     )}
                     {cat.type === 'tabs' && cat.subcats && (
-                      cat.subcats.map((sub) => (
-                        <optgroup key={sub.id} label={sub.name}>
-                          {(sub.els || []).filter((el) => nsfwOn || !el.nsfw).map((el) => (
-                            <option key={el.id} value={`${sub.id}|${el.id}`}>
-                              {el.name} {el.nsfw ? '(NSFW)' : ''}
-                            </option>
-                          ))}
-                        </optgroup>
-                      ))
+                      slot.sub ? (
+                        cat.subcats
+                          .filter((sub) => sub.id === slot.sub)
+                          .map((sub) =>
+                            (sub.els || []).filter((el) => nsfwOn || !el.nsfw).map((el) => (
+                              <option key={el.id} value={`${sub.id}|${el.id}`}>
+                                {el.name} {el.nsfw ? '(NSFW)' : ''}
+                              </option>
+                            ))
+                          )
+                      ) : (
+                        cat.subcats.map((sub) => (
+                          <optgroup key={sub.id} label={sub.name}>
+                            {(sub.els || []).filter((el) => nsfwOn || !el.nsfw).map((el) => (
+                              <option key={el.id} value={`${sub.id}|${el.id}`}>
+                                {el.name} {el.nsfw ? '(NSFW)' : ''}
+                              </option>
+                            ))}
+                          </optgroup>
+                        ))
+                      )
                     )}
                   </select>
                 </div>
@@ -478,11 +511,11 @@ export const PresetModal: React.FC<PresetModalProps> = ({
         </div>
 
         <div className="flex items-center justify-between pt-4 border-t border-white/[0.08]">
-          {preset && onDelete ? (
+          {preset?.id && onDelete ? (
             <button
               onClick={() => {
                 if (confirm('Are you sure you want to delete this preset?')) {
-                  onDelete(preset.id);
+                  onDelete(preset.id!);
                   onClose();
                 }
               }}
@@ -505,7 +538,7 @@ export const PresetModal: React.FC<PresetModalProps> = ({
               disabled={saving}
               className="px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-black text-xs font-bold transition-colors shadow-lg disabled:opacity-60 disabled:pointer-events-none"
             >
-              {saving ? 'Saving…' : preset ? 'Save Changes' : 'Create Preset'}
+              {saving ? 'Saving…' : preset?.id ? 'Save Changes' : 'Create Preset'}
             </button>
           </div>
         </div>
