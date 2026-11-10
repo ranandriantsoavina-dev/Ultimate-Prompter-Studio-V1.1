@@ -85,7 +85,7 @@ export const DesktopTitlebar: React.FC<DesktopTitlebarProps> = ({
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 bg-[#0e0d11]/95 backdrop-blur-md border-b border-white/[0.08] select-none">
+    <header className="shrink-0 z-40 bg-[#0e0d11]/95 border-b border-white/[0.08] select-none">
       {/* Top Native Titlebar Strip */}
       <div className="flex items-center justify-between px-4 py-2 text-xs border-b border-white/[0.04]">
         {/* Left: Window Traffic Lights & App ID */}
@@ -116,13 +116,6 @@ export const DesktopTitlebar: React.FC<DesktopTitlebarProps> = ({
             />
             <span className="font-semibold text-white">Ultimate Prompter</span>
             <span className="text-white/40 hidden sm:inline">· Studio Workstation</span>
-            <span
-              className={`hidden md:inline-block text-[10px] font-mono px-1.5 py-0.5 rounded transition-colors duration-500 ${
-                nsfwOn ? 'bg-red-500/10 text-red-400' : 'bg-orange-500/10 text-orange-400'
-              }`}
-            >
-              Krea 2
-            </span>
           </div>
 
           {saveStatus && (

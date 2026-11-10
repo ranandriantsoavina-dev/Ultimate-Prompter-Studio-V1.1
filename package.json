@@ -5,7 +5,7 @@
   "type": "module",
   "main": "electron.cjs",
   "scripts": {
-    "dev": "concurrently \"npm run server\" \"vite\"",
+    "dev": "tsx server.ts",
     "server": "tsx server.ts",
     "build": "vite build",
     "start": "node server.ts",

@@ -37,7 +37,7 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
     <div
       {...dragProps}
       onClick={onOpen}
-      className={`group relative flex flex-col rounded-xl overflow-hidden cursor-pointer transition-all duration-300 border text-left active:scale-[0.99] ${
+      className={`group relative flex flex-col rounded-xl overflow-hidden cursor-pointer transition-all duration-300 border text-left active:scale-[0.99] w-full ${
         isDragging
           ? nsfwOn
             ? 'scale-105 z-30 shadow-[0_0_25px_rgba(255,34,56,0.5)] ring-2 ring-red-500 opacity-95 cursor-grabbing'

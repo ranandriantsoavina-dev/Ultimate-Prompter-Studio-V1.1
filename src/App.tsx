@@ -2725,30 +2725,32 @@ export default function App() {
                         </p>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3.5">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4 items-stretch">
                         {selectedElementsList.map((item, idx) => (
-                          <div key={`${item.element.id}_${idx}`} className="flex flex-col">
-                            <div className="text-[10px] font-semibold text-white/40 mb-1.5 truncate flex items-center gap-1">
-                              <span className="text-white/70">{item.categoryName}</span>
+                          <div key={`${item.element.id}_${idx}`} className="flex flex-col h-full min-w-0">
+                            <div className="h-5 flex items-center text-[10px] font-semibold text-white/40 mb-2 overflow-hidden shrink-0">
+                              <span className="truncate text-white/70">{item.categoryName}</span>
                               {(item.subcategoryName || item.rowName) && (
                                 <>
-                                  <span className="text-white/20">›</span>
+                                  <span className="text-white/20 mx-1 shrink-0">›</span>
                                   <span className="truncate">{item.rowName || item.subcategoryName}</span>
                                 </>
                               )}
                             </div>
-                            <ElementCard
-                              element={item.element}
-                              isSelected={true}
-                              onToggle={() => {}}
-                              onEdit={() => {}}
-                              nsfwOn={db.nsfwOn}
-                              categoryIcon={item.categoryIcon}
-                              weight={item.weight}
-                              readOnly={true}
-                              showLinkedBadge={Boolean(item.element.linkedContextId || item.element.linkedPoseId || item.element.linkedEnvId)}
-                              linkedTooltip={getLinkedTooltip(item.element)}
-                            />
+                            <div className="flex-1 flex flex-col min-h-0">
+                              <ElementCard
+                                element={item.element}
+                                isSelected={true}
+                                onToggle={() => {}}
+                                onEdit={() => {}}
+                                nsfwOn={db.nsfwOn}
+                                categoryIcon={item.categoryIcon}
+                                weight={item.weight}
+                                readOnly={true}
+                                showLinkedBadge={Boolean(item.element.linkedContextId || item.element.linkedPoseId || item.element.linkedEnvId)}
+                                linkedTooltip={getLinkedTooltip(item.element)}
+                              />
+                            </div>
                           </div>
                         ))}
                       </div>

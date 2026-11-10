@@ -50,8 +50,6 @@ export const PromptInspector: React.FC<PromptInspectorProps> = ({
   blocks = [],
   nsfwOn = false,
   onRefinePrompt,
-  canCreateContextPreset = false,
-  canCreateOutfitPreset = false,
   onCreateContextPreset,
   onCreateOutfitPreset,
   presetNotice,
@@ -61,15 +59,15 @@ export const PromptInspector: React.FC<PromptInspectorProps> = ({
 
   return (
     <aside
-      className={`w-full lg:w-[420px] backdrop-blur-md border-t lg:border-t-0 lg:border-l flex flex-col h-auto lg:h-[calc(100vh-84px)] lg:sticky lg:top-[84px] select-none transition-colors duration-500 ${
+      className={`w-full lg:w-[420px] border-t lg:border-t-0 lg:border-l flex flex-col h-full min-h-0 select-none transition-colors duration-500 shrink-0 ${
         isLight
           ? 'bg-white/95 border-slate-200 text-slate-900 shadow-sm'
           : 'bg-[#100e14]/95 border-white/[0.08] text-white'
       }`}
     >
-      {/* Inspector Header */}
+      {/* Inspector Header (Fixed) */}
       <div
-        className={`p-4 border-b flex items-center justify-between gap-2 ${
+        className={`p-4 border-b flex items-center justify-between gap-2 shrink-0 ${
           isLight ? 'border-slate-200' : 'border-white/[0.06]'
         }`}
       >
@@ -91,7 +89,7 @@ export const PromptInspector: React.FC<PromptInspectorProps> = ({
           </span>
         </div>
 
-        {/* Structured (Blocks) vs Fluid (Paragraph) Toggle for Krea 2 */}
+        {/* Structured (Blocks) vs Fluid (Paragraph) Toggle */}
         <div
           className={`flex items-center p-0.5 rounded-lg border text-xs ${
             isLight ? 'bg-slate-100 border-slate-200' : 'bg-black/60 border-white/[0.06]'
@@ -128,11 +126,12 @@ export const PromptInspector: React.FC<PromptInspectorProps> = ({
         </div>
       </div>
 
-      {/* Main Output Box Area */}
-      <div className="p-4 flex-1 flex flex-col min-h-0 space-y-3 overflow-y-auto">
-        <div className="relative flex-1 flex flex-col">
+      {/* Main Inspector Body (Non-scrolling wrapper; only inner text box scrolls) */}
+      <div className="p-4 flex-1 flex flex-col min-h-0 space-y-3 overflow-hidden">
+        {/* Top Info & Contributing Categories Strip */}
+        <div className="shrink-0 space-y-2">
           <div
-            className={`flex items-center justify-between mb-1.5 text-xs font-mono ${
+            className={`flex items-center justify-between text-xs font-mono ${
               isLight ? 'text-slate-500' : 'text-white/40'
             }`}
           >
@@ -146,9 +145,8 @@ export const PromptInspector: React.FC<PromptInspectorProps> = ({
             </div>
           </div>
 
-          {/* Contributing Active Categories Strip with theme color badges */}
           {blocks.length > 0 && (
-            <div className="flex items-center gap-1.5 flex-wrap mb-2">
+            <div className="flex items-center gap-1.5 flex-wrap">
               {blocks.map((b, i) => (
                 <span
                   key={i}
@@ -167,77 +165,75 @@ export const PromptInspector: React.FC<PromptInspectorProps> = ({
               ))}
             </div>
           )}
-
-          {/* Compiled Output Container */}
-          <div
-            className={`relative flex-1 min-h-[170px] rounded-xl border p-3.5 font-mono text-xs leading-relaxed overflow-y-auto transition-all duration-500 ${
-              isLight
-                ? 'bg-slate-50/90 border-slate-300 text-slate-900 shadow-inner'
-                : 'bg-black/70 border-white/10 text-[#ede6dd]'
-            } ${
-              nsfwOn
-                ? 'border-red-500/20 focus-within:border-red-500/50'
-                : 'border-orange-500/20 focus-within:border-orange-500/50'
-            }`}
-          >
-            {promptText ? (
-              promptMode === 'structured' && blocks.length > 0 ? (
-                /* Structured Mode: Render each category mention in glowing orange or red */
-                <div className="space-y-2.5 select-text">
-                  {blocks.map((block, idx) => (
-                    <div key={idx} className="leading-relaxed">
-                      <span
-                        className={`font-bold tracking-wide transition-colors duration-500 inline-block mr-1.5 ${
-                          isLight
-                            ? nsfwOn
-                              ? 'text-rose-600'
-                              : 'text-orange-600'
-                            : nsfwOn
-                            ? 'text-[#ff384d] drop-shadow-[0_0_8px_rgba(255,56,77,0.4)]'
-                            : 'text-[#ff7824] drop-shadow-[0_0_8px_rgba(255,120,36,0.4)]'
-                        }`}
-                      >
-                        {block.name}:
-                      </span>
-                      <span className={isLight ? 'text-slate-800' : 'text-[#eee7de]'}>{block.text}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                /* Fluid Mode: Natural continuous paragraph */
-                <p className={`whitespace-pre-wrap select-text leading-relaxed ${isLight ? 'text-slate-800' : 'text-[#eee7de]'}`}>
-                  {promptText}
-                </p>
-              )
-            ) : (
-              <div
-                className={`h-full flex flex-col items-center justify-center text-center p-4 ${
-                  isLight ? 'text-slate-400' : 'text-white/30'
-                }`}
-              >
-                <Sparkles
-                  className={`w-5 h-5 mb-2 stroke-[1.5] transition-colors duration-500 ${
-                    nsfwOn
-                      ? isLight
-                        ? 'text-red-500/60'
-                        : 'text-red-400/50'
-                      : isLight
-                      ? 'text-orange-500/60'
-                      : 'text-orange-400/50'
-                  }`}
-                />
-                <p className="text-xs">No elements selected yet.</p>
-                <p className={`text-[11px] mt-1 ${isLight ? 'text-slate-400' : 'text-white/20'}`}>
-                  Pick cards from categories or roll a preset to assemble your prompt.
-                </p>
-              </div>
-            )}
-          </div>
         </div>
 
-        {/* Preset Creation from Currently Selected Items */}
+        {/* Compiled Output Container (THE ONLY SECTION THAT SCROLLS INTERNALLY) */}
         <div
-          className={`pt-2 border-t space-y-2 ${
+          className={`flex-1 min-h-[140px] rounded-xl border p-3.5 font-mono text-xs leading-relaxed overflow-y-auto transition-all duration-500 ${
+            isLight
+              ? 'bg-slate-50/90 border-slate-300 text-slate-900 shadow-inner'
+              : 'bg-black/70 border-white/10 text-[#ede6dd]'
+          } ${
+            nsfwOn
+              ? 'border-red-500/20 focus-within:border-red-500/50'
+              : 'border-orange-500/20 focus-within:border-orange-500/50'
+          }`}
+        >
+          {promptText ? (
+            promptMode === 'structured' && blocks.length > 0 ? (
+              <div className="space-y-2.5 select-text">
+                {blocks.map((block, idx) => (
+                  <div key={idx} className="leading-relaxed">
+                    <span
+                      className={`font-bold tracking-wide transition-colors duration-500 inline-block mr-1.5 ${
+                        isLight
+                          ? nsfwOn
+                            ? 'text-rose-600'
+                            : 'text-orange-600'
+                          : nsfwOn
+                          ? 'text-[#ff384d] drop-shadow-[0_0_8px_rgba(255,56,77,0.4)]'
+                          : 'text-[#ff7824] drop-shadow-[0_0_8px_rgba(255,120,36,0.4)]'
+                      }`}
+                    >
+                      {block.name}:
+                    </span>
+                    <span className={isLight ? 'text-slate-800' : 'text-[#eee7de]'}>{block.text}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className={`whitespace-pre-wrap select-text leading-relaxed ${isLight ? 'text-slate-800' : 'text-[#eee7de]'}`}>
+                {promptText}
+              </p>
+            )
+          ) : (
+            <div
+              className={`h-full flex flex-col items-center justify-center text-center p-4 ${
+                isLight ? 'text-slate-400' : 'text-white/30'
+              }`}
+            >
+              <Sparkles
+                className={`w-5 h-5 mb-2 stroke-[1.5] transition-colors duration-500 ${
+                  nsfwOn
+                    ? isLight
+                      ? 'text-red-500/60'
+                      : 'text-red-400/50'
+                    : isLight
+                    ? 'text-orange-500/60'
+                    : 'text-orange-400/50'
+                }`}
+              />
+              <p className="text-xs">No elements selected yet.</p>
+              <p className={`text-[11px] mt-1 ${isLight ? 'text-slate-400' : 'text-white/20'}`}>
+                Pick cards from categories or roll a preset to assemble your prompt.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Preset Creation Buttons (Fixed at bottom of inspector) */}
+        <div
+          className={`pt-2 border-t space-y-2 shrink-0 ${
             isLight ? 'border-slate-200' : 'border-white/[0.06]'
           }`}
         >
@@ -261,7 +257,7 @@ export const PromptInspector: React.FC<PromptInspectorProps> = ({
             <button
               onClick={onCreateContextPreset}
               title="Create Context Preset (from selected Outfit, Composition, Pose & Action, and Environment & Lighting)"
-              className={`flex flex-col items-start p-2.5 rounded-xl border text-left transition-all active:scale-95 group ${
+              className={`flex flex-col items-start p-2 rounded-xl border text-left transition-all active:scale-95 group ${
                 nsfwOn
                   ? isLight
                     ? 'bg-rose-50 hover:bg-rose-100 border-rose-200 text-slate-900 shadow-xs'
@@ -276,7 +272,7 @@ export const PromptInspector: React.FC<PromptInspectorProps> = ({
                 <span>+ Context Preset</span>
               </div>
               <span
-                className={`text-[10px] mt-1 leading-tight ${
+                className={`text-[10px] mt-0.5 leading-tight ${
                   isLight
                     ? 'text-slate-500 group-hover:text-slate-700'
                     : 'text-white/40 group-hover:text-white/60'
@@ -289,7 +285,7 @@ export const PromptInspector: React.FC<PromptInspectorProps> = ({
             <button
               onClick={onCreateOutfitPreset}
               title="Create Outfit Preset (from selected (Top + Bottom) or One-Piece)"
-              className={`flex flex-col items-start p-2.5 rounded-xl border text-left transition-all active:scale-95 group ${
+              className={`flex flex-col items-start p-2 rounded-xl border text-left transition-all active:scale-95 group ${
                 nsfwOn
                   ? isLight
                     ? 'bg-rose-50 hover:bg-rose-100 border-rose-200 text-slate-900 shadow-xs'
@@ -304,7 +300,7 @@ export const PromptInspector: React.FC<PromptInspectorProps> = ({
                 <span>+ Outfit Preset</span>
               </div>
               <span
-                className={`text-[10px] mt-1 leading-tight ${
+                className={`text-[10px] mt-0.5 leading-tight ${
                   isLight
                     ? 'text-slate-500 group-hover:text-slate-700'
                     : 'text-white/40 group-hover:text-white/60'
@@ -316,12 +312,12 @@ export const PromptInspector: React.FC<PromptInspectorProps> = ({
           </div>
         </div>
 
-        {/* Action Buttons Row */}
-        <div className="grid grid-cols-4 gap-2">
+        {/* Action Buttons Row (Fixed at bottom) */}
+        <div className="grid grid-cols-4 gap-2 pt-1 shrink-0">
           <button
             onClick={onCopyPrompt}
             disabled={!promptText}
-            className={`col-span-2 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl font-bold text-xs transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none duration-300 shadow-sm ${
+            className={`col-span-2 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl font-bold text-xs transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none duration-300 shadow-sm ${
               isCopied
                 ? 'bg-emerald-500 text-black shadow-[0_0_15px_rgba(16,185,129,0.4)]'
                 : nsfwOn
@@ -346,7 +342,7 @@ export const PromptInspector: React.FC<PromptInspectorProps> = ({
             onClick={() => onRefinePrompt?.(promptText)}
             disabled={!promptText}
             title="Refine prompt with Ollama AI"
-            className={`flex items-center justify-center gap-1 py-2.5 px-2 rounded-xl border font-semibold text-xs transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none ${
+            className={`flex items-center justify-center gap-1 py-2 px-2 rounded-xl border font-semibold text-xs transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none ${
               nsfwOn
                 ? isLight
                   ? 'bg-rose-50 border-rose-300 text-rose-800 hover:bg-rose-100'
@@ -363,7 +359,7 @@ export const PromptInspector: React.FC<PromptInspectorProps> = ({
           <button
             onClick={onClearSelections}
             title="Clear all active selections"
-            className={`flex items-center justify-center gap-1 py-2.5 px-2 rounded-xl border font-medium text-xs transition-all active:scale-95 ${
+            className={`flex items-center justify-center gap-1 py-2 px-2 rounded-xl border font-medium text-xs transition-all active:scale-95 ${
               isLight
                 ? 'bg-slate-100 hover:bg-rose-50 border-slate-200 hover:border-rose-300 text-slate-600 hover:text-rose-600'
                 : 'bg-white/[0.04] hover:bg-rose-500/10 border-white/[0.08] hover:border-rose-500/30 text-white/60 hover:text-rose-400'

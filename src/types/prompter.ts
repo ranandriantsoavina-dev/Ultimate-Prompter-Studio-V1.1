@@ -104,6 +104,7 @@ export interface DBState {
   activePreset: string | null;
   stylize: number;
   soundEnabled: boolean;
+  soundVolume?: number;
   history: PromptHistoryItem[];
   autoSelectEnsemble?: boolean;
   autoSelectContext?: boolean;

@@ -38,11 +38,12 @@ export const ElementCard: React.FC<ElementCardProps> = ({
     showLinkedBadge &&
     (element.linkedPoseId || element.linkedContextId || element.linkedEnvId)
   );
+
   return (
     <div
       {...(!readOnly ? dragProps : {})}
       onClick={!readOnly ? onToggle : undefined}
-      className={`group relative flex flex-col rounded-xl overflow-hidden transition-all duration-200 border text-left select-none ${
+      className={`group relative flex flex-col h-full w-full rounded-xl overflow-hidden transition-all duration-200 border text-left select-none box-border ${
         readOnly
           ? 'cursor-default active:scale-100'
           : 'cursor-pointer active:scale-[0.99]'
@@ -71,7 +72,7 @@ export const ElementCard: React.FC<ElementCardProps> = ({
 
       {/* Weight Badge (if adjusted) */}
       {weight && weight !== 1 && (
-        <div className="absolute bottom-12 left-2 z-10 px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-md text-[10px] font-mono text-white/90 border border-white/20">
+        <div className="absolute top-2 left-9 z-10 px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-md text-[10px] font-mono text-white/90 border border-white/20">
           {weight}x
         </div>
       )}
@@ -107,68 +108,71 @@ export const ElementCard: React.FC<ElementCardProps> = ({
             onEdit();
           }}
           title="Edit element"
-          className="absolute bottom-11 right-2 z-10 p-1.5 rounded-lg bg-black/60 hover:bg-black/90 text-white/50 hover:text-white border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-md"
+          className="absolute bottom-24 right-2 z-10 p-1.5 rounded-lg bg-black/60 hover:bg-black/90 text-white/50 hover:text-white border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-md"
         >
           <Edit3 className="w-3 h-3 stroke-[1.5]" />
         </button>
       )}
 
-      {/* Visual Artwork Thumbnail */}
-      <VisualThumbnail
-        image={element.image}
-        imgPos={element.imgPos}
-        name={element.name}
-        categoryIcon={categoryIcon}
-        nsfw={element.nsfw}
-        nsfwOn={nsfwOn}
-        aspect="aspect-square"
-      />
+      {/* Top Section: Visual Artwork Thumbnail (Square aspect ratio preview area) */}
+      <div className="w-full shrink-0">
+        <VisualThumbnail
+          image={element.image}
+          imgPos={element.imgPos}
+          name={element.name}
+          categoryIcon={categoryIcon}
+          nsfw={element.nsfw}
+          nsfwOn={nsfwOn}
+          aspect="aspect-square"
+        />
+      </div>
 
-      {/* Element Info */}
-      <div className="p-2.5 flex flex-col justify-between flex-1 border-t border-white/[0.04] bg-[#121116]/90 pointer-events-none">
-        <div>
+      {/* Bottom Section: Info Section with Divider and Fixed Reserved Row Heights */}
+      <div className="p-2.5 flex flex-col justify-between flex-1 border-t border-white/[0.06] bg-[#121116]/90 pointer-events-none">
+        {/* Title row: reserved exact 2-line height (2.25rem) */}
+        <div className="h-[2.25rem] flex items-start overflow-hidden">
           <span className="font-semibold text-xs text-white/90 line-clamp-2 leading-tight">
             {element.name}
           </span>
-          {element.prompt && (
-            <span className="text-[10px] text-white/35 truncate mt-1 block font-mono">
-              {element.prompt}
+        </div>
+
+        {/* Description row: reserved exact 1-line height (1rem) */}
+        <div className="h-4 mt-1 flex items-center overflow-hidden">
+          <span className="text-[10px] text-white/35 truncate font-mono block w-full">
+            {element.prompt || ''}
+          </span>
+        </div>
+
+        {/* Tag row: reserved exact 1-line tag height (1.25rem) */}
+        <div className="h-5 mt-1.5 flex items-center gap-1.5 overflow-hidden flex-nowrap shrink-0">
+          {element.ensembleId && (
+            <span className="inline-flex items-center gap-1 text-[9px] font-mono font-medium px-1.5 py-0.5 rounded bg-white/[0.05] text-white/50 border border-white/[0.08] shrink-0">
+              <Link2 className="w-2.5 h-2.5 text-emerald-400 stroke-[2]" />
+              <span>Ensemble</span>
+            </span>
+          )}
+          {hasLinks && (
+            <div className="group/linked relative inline-flex items-center pointer-events-auto shrink-0">
+              <span
+                title={linkedTooltip || "Linked item"}
+                className="inline-flex items-center gap-1 text-[9px] font-mono font-medium px-1.5 py-0.5 rounded bg-white/[0.05] text-cyan-300/80 border border-cyan-500/25 shrink-0"
+              >
+                <Link2 className="w-2.5 h-2.5 text-cyan-400 stroke-[2]" />
+                <span>Linked</span>
+              </span>
+              {linkedTooltip && (
+                <div className="pointer-events-none absolute bottom-full left-0 mb-1.5 z-40 hidden group-hover/linked:block whitespace-nowrap rounded-lg bg-[#18161f] border border-cyan-500/30 shadow-2xl px-2.5 py-1 text-[10px] text-white/95 font-sans animate-in fade-in zoom-in-95 duration-100">
+                  {linkedTooltip}
+                </div>
+              )}
+            </div>
+          )}
+          {element.tags && element.tags.length > 0 && (
+            <span className="text-[9px] font-mono text-white/40 truncate max-w-[120px] shrink-0">
+              {element.tags[0]}
             </span>
           )}
         </div>
-
-        {/* Ensemble Indicator, Linked Badge or Primary Tag */}
-        {(element.ensembleId || hasLinks || (element.tags && element.tags.length > 0)) && (
-          <div className="mt-1.5 flex items-center gap-1.5 overflow-hidden flex-wrap">
-            {element.ensembleId && (
-              <span className="inline-flex items-center gap-1 text-[9px] font-mono font-medium px-1.5 py-0.5 rounded bg-white/[0.05] text-white/50 border border-white/[0.08] shrink-0">
-                <Link2 className="w-2.5 h-2.5 text-emerald-400 stroke-[2]" />
-                <span>Ensemble</span>
-              </span>
-            )}
-            {hasLinks && (
-              <div className="group/linked relative inline-flex items-center pointer-events-auto">
-                <span
-                  title={linkedTooltip || "Linked item"}
-                  className="inline-flex items-center gap-1 text-[9px] font-mono font-medium px-1.5 py-0.5 rounded bg-white/[0.05] text-cyan-300/80 border border-cyan-500/25 shrink-0"
-                >
-                  <Link2 className="w-2.5 h-2.5 text-cyan-400 stroke-[2]" />
-                  <span>Linked</span>
-                </span>
-                {linkedTooltip && (
-                  <div className="pointer-events-none absolute bottom-full left-0 mb-1.5 z-40 hidden group-hover/linked:block whitespace-nowrap rounded-lg bg-[#18161f] border border-cyan-500/30 shadow-2xl px-2.5 py-1 text-[10px] text-white/95 font-sans animate-in fade-in zoom-in-95 duration-100">
-                    {linkedTooltip}
-                  </div>
-                )}
-              </div>
-            )}
-            {element.tags && element.tags.length > 0 && (
-              <span className="text-[9px] font-mono text-white/40 truncate max-w-[120px]">
-                {element.tags[0]}
-              </span>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );

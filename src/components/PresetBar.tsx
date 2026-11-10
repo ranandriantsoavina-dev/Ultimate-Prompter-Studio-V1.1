@@ -96,7 +96,7 @@ export const PresetBar: React.FC<PresetBarProps> = ({
           </button>
         </div>
 
-        <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3.5 transition-all duration-300 ease-in-out ${
+        <div className={`grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3.5 w-full transition-all duration-300 ease-in-out ${
           outfitFolded ? 'max-h-0 opacity-0 overflow-hidden mb-0' : 'max-h-[2000px] opacity-100'
         }`}>
           {outfitPresets.map((preset, index) => (
@@ -118,7 +118,7 @@ export const PresetBar: React.FC<PresetBarProps> = ({
           {/* Add Outfit Preset Card Button */}
           <button
             onClick={() => onAddPreset('outfit')}
-            className={`rounded-xl border border-dashed p-6 flex flex-col items-center justify-center gap-2 transition-all group min-h-[160px] duration-300 ${
+            className={`rounded-xl border border-dashed p-6 flex flex-col items-center justify-center gap-2 transition-all group min-h-[160px] duration-300 w-full ${
               nsfwOn
                 ? 'border-white/10 hover:border-red-500/50 bg-[#121116]/80 hover:bg-[#181215] text-white/40 hover:text-red-300'
                 : 'border-white/10 hover:border-orange-500/50 bg-[#121116]/80 hover:bg-[#181412] text-white/40 hover:text-orange-300'
@@ -165,7 +165,7 @@ export const PresetBar: React.FC<PresetBarProps> = ({
           </button>
         </div>
 
-        <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3.5 transition-all duration-300 ease-in-out ${
+        <div className={`grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3.5 w-full transition-all duration-300 ease-in-out ${
           contextFolded ? 'max-h-0 opacity-0 overflow-hidden mb-0' : 'max-h-[2000px] opacity-100'
         }`}>
           {contextPresets.map((preset, index) => (
@@ -187,7 +187,7 @@ export const PresetBar: React.FC<PresetBarProps> = ({
           {/* Add Context Preset Card Button */}
           <button
             onClick={() => onAddPreset('context')}
-            className={`rounded-xl border border-dashed p-6 flex flex-col items-center justify-center gap-2 transition-all group min-h-[160px] duration-300 ${
+            className={`rounded-xl border border-dashed p-6 flex flex-col items-center justify-center gap-2 transition-all group min-h-[160px] duration-300 w-full ${
               nsfwOn
                 ? 'border-white/10 hover:border-red-500/50 bg-[#121116]/80 hover:bg-[#181215] text-white/40 hover:text-red-300'
                 : 'border-white/10 hover:border-orange-500/50 bg-[#121116]/80 hover:bg-[#181412] text-white/40 hover:text-orange-300'

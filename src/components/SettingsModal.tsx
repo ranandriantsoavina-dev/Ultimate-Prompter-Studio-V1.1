@@ -32,6 +32,8 @@ interface SettingsModalProps {
   onDeleteUser: (userId: string) => void | Promise<void>;
   soundEnabled: boolean;
   onToggleSound: () => void;
+  soundVolume?: number;
+  onChangeVolume?: (vol: number) => void;
   theme: AppTheme;
   onChangeTheme: (theme: AppTheme) => void;
   onFullExport: () => void;
@@ -49,6 +51,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onDeleteUser,
   soundEnabled,
   onToggleSound,
+  soundVolume = 0.5,
+  onChangeVolume,
   theme,
   onChangeTheme,
   onFullExport,
@@ -386,31 +390,51 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </span>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-black/40 border border-white/[0.08] flex items-center justify-between gap-4">
-              <div>
-                <span className="text-xs font-semibold text-white block">
-                  Interactive Audio Feedback
-                </span>
-                <span className="text-[11px] text-white/50 leading-relaxed block">
-                  Plays subtle tactile sound cues on selections, rolls, and preset activations
-                </span>
+            <div className="p-3.5 rounded-xl bg-black/40 border border-white/[0.08] space-y-3">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <span className="text-xs font-semibold text-white block">
+                    Interactive Audio Feedback
+                  </span>
+                  <span className="text-[11px] text-white/50 leading-relaxed block">
+                    Plays subtle tactile sound cues on selections, rolls, and preset activations
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={soundEnabled}
+                  onClick={onToggleSound}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    soundEnabled ? 'bg-orange-600' : 'bg-white/10'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                      soundEnabled ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
               </div>
 
-              <button
-                type="button"
-                role="switch"
-                aria-checked={soundEnabled}
-                onClick={onToggleSound}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                  soundEnabled ? 'bg-orange-600' : 'bg-white/10'
-                }`}
-              >
-                <span
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                    soundEnabled ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
-              </button>
+              {soundEnabled && (
+                <div className="pt-2 border-t border-white/[0.06] flex items-center gap-3 animate-in fade-in">
+                  <span className="text-[11px] font-medium text-white/70">Volume:</span>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={soundVolume}
+                    onChange={(e) => onChangeVolume?.(parseFloat(e.target.value))}
+                    className="flex-1 accent-orange-500 cursor-pointer h-1.5 bg-white/10 rounded-lg"
+                  />
+                  <span className="text-[11px] font-mono text-white/60 w-8 text-right">
+                    {Math.round(soundVolume * 100)}%
+                  </span>
+                </div>
+              )}
             </div>
           </section>
 
