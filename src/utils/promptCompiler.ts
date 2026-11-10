@@ -140,6 +140,40 @@ export function getCategoryPromptText(cat: Category, selections: Record<string, 
   return parts.filter(Boolean).join(' ');
 }
 
+export const DEFAULT_CATEGORY_PROMPT_NAMES: Record<string, string> = {
+  style: 'style',
+  subject: 'subject',
+  outfit: 'outfit',
+  skin: 'skin',
+  comp: 'composition',
+  pose: 'pose',
+  faceexpr: 'expression',
+  env: 'environment',
+  light: 'lighting',
+  tech: 'camera',
+  kw: 'keywords'
+};
+
+export function suggestPromptName(displayName: string, catId?: string): string {
+  if (catId && DEFAULT_CATEGORY_PROMPT_NAMES[catId]) {
+    return DEFAULT_CATEGORY_PROMPT_NAMES[catId];
+  }
+  if (!displayName) return '';
+  // Clean display name: first word before & / or spaces, lowercased, alphanumerics only
+  const firstWord = displayName.split(/[\s&/]+/)[0].toLowerCase().replace(/[^a-z0-9_-]/g, '');
+  return firstWord || 'category';
+}
+
+export function getCategoryPromptName(cat: { id?: string; name: string; promptName?: string }): string {
+  if (cat.promptName && cat.promptName.trim()) {
+    return cat.promptName.trim();
+  }
+  if (cat.id && DEFAULT_CATEGORY_PROMPT_NAMES[cat.id]) {
+    return DEFAULT_CATEGORY_PROMPT_NAMES[cat.id];
+  }
+  return suggestPromptName(cat.name, cat.id);
+}
+
 export function compilePrompt(state: DBState): {
   raw: string;
   formatted: string;
@@ -149,12 +183,13 @@ export function compilePrompt(state: DBState): {
 } {
   const { cats, selections, promptMode } = state;
 
-  // Collect text per category
+  // Collect text per category using its Prompt Name (not display name)
   const blocks: { name: string; text: string }[] = [];
   cats.forEach((cat) => {
     const text = getCategoryPromptText(cat, selections);
     if (text) {
-      blocks.push({ name: cat.name, text: text.trim() });
+      const promptName = getCategoryPromptName(cat);
+      blocks.push({ name: promptName, text: text.trim() });
     }
   });
 

@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Trash2, X, Check, FolderPlus, Edit3, AlertTriangle } from 'lucide-react';
+import { Trash2, X, Check, FolderPlus, Edit3, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { SubCategory } from '../types/prompter';
+import { isDefaultSubcategory } from '../data/initialData';
 
 interface SubcategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
   mode: 'create' | 'edit';
   subcat?: SubCategory | null;
+  categoryName?: string;
+  isTheme?: boolean;
   onSave: (name: string) => void;
   onDelete?: () => void;
   nsfwOn?: boolean;
@@ -17,6 +20,8 @@ export const SubcategoryModal: React.FC<SubcategoryModalProps> = ({
   onClose,
   mode,
   subcat,
+  categoryName,
+  isTheme = false,
   onSave,
   onDelete,
   nsfwOn = false
@@ -24,6 +29,9 @@ export const SubcategoryModal: React.FC<SubcategoryModalProps> = ({
   const [name, setName] = useState<string>('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const isDefault = subcat ? isDefaultSubcategory(subcat.id) : false;
+  const canDelete = mode === 'edit' && !!onDelete && !isDefault;
 
   useEffect(() => {
     if (isOpen) {
@@ -43,6 +51,8 @@ export const SubcategoryModal: React.FC<SubcategoryModalProps> = ({
     onClose();
   };
 
+  const entityLabel = isTheme ? 'Theme / Subcategory' : 'Subcategory';
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fadeIn">
       {/* Backdrop */}
@@ -57,13 +67,13 @@ export const SubcategoryModal: React.FC<SubcategoryModalProps> = ({
                 <AlertTriangle className="w-5 h-5 stroke-[2]" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-white">Delete Subcategory</h3>
+                <h3 className="text-sm font-bold text-white">Delete {entityLabel}</h3>
                 <p className="text-[11px] text-white/50">{subcat?.name}</p>
               </div>
             </div>
 
             <p className="text-xs text-white/80 leading-relaxed bg-black/40 p-3.5 rounded-xl border border-white/[0.06]">
-              Are you sure you want to delete this subcategory and all existing elements inside it?
+              Are you sure you want to delete this custom {entityLabel.toLowerCase()} and all existing elements inside it?
             </p>
 
             <div className="flex items-center justify-end gap-2 pt-2">
@@ -87,7 +97,7 @@ export const SubcategoryModal: React.FC<SubcategoryModalProps> = ({
             </div>
           </div>
         ) : (
-          /* Minimal Subcategory Edit / Create Interface: Name input field and Delete icon */
+          /* Subcategory Edit / Create Interface */
           <form onSubmit={handleSubmit} className="p-5 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
               <div className="flex items-center gap-2">
@@ -97,16 +107,16 @@ export const SubcategoryModal: React.FC<SubcategoryModalProps> = ({
                   <FolderPlus className={`w-4 h-4 ${nsfwOn ? 'text-red-400' : 'text-orange-400'}`} />
                 )}
                 <h3 className="text-xs font-bold uppercase tracking-wider text-white">
-                  {mode === 'edit' ? 'Edit Subcategory' : 'Add Subcategory'}
+                  {mode === 'edit' ? `Edit ${entityLabel}` : `Add ${entityLabel}`}
                 </h3>
               </div>
 
               <div className="flex items-center gap-1">
-                {mode === 'edit' && onDelete && (
+                {canDelete && (
                   <button
                     type="button"
                     onClick={() => setShowDeleteConfirm(true)}
-                    title="Delete subcategory"
+                    title={`Delete custom ${entityLabel.toLowerCase()}`}
                     className="p-1.5 rounded-lg text-white/40 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
                   >
                     <Trash2 className="w-4 h-4 stroke-[1.8]" />
@@ -122,14 +132,31 @@ export const SubcategoryModal: React.FC<SubcategoryModalProps> = ({
               </div>
             </div>
 
+            {/* System Default Protected Notice */}
+            {mode === 'edit' && isDefault && (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[11px] font-medium">
+                <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0" />
+                <span>System default item — Protected from deletion.</span>
+              </div>
+            )}
+
             <div className="space-y-1.5">
-              <label className="text-[11px] font-medium text-white/60">Subcategory Name</label>
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-medium text-white/60">
+                  {entityLabel} Name
+                </label>
+                {categoryName && (
+                  <span className="text-[10px] text-white/40 font-mono">
+                    {categoryName}
+                  </span>
+                )}
+              </div>
               <input
                 ref={inputRef}
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. One-Piece, Footwear, Outerwear..."
+                placeholder={isTheme ? "e.g. Home & Private, Casual & Candid, City & Streetwear..." : "e.g. One-Piece, Footwear, Outerwear..."}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-black/60 border border-white/10 text-xs text-white placeholder-white/30 focus:outline-none focus:border-orange-500 transition-colors"
               />
             </div>

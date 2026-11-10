@@ -11,6 +11,11 @@ export interface ImgPos {
   ar?: number;
 }
 
+export interface Theme {
+  id: string;
+  name: string;
+}
+
 export interface PromptElement {
   id: string;
   name: string;
@@ -19,8 +24,15 @@ export interface PromptElement {
   image?: string;
   imgPos?: ImgPos;
   tags?: string[];
+  themeIds?: string[];
   gradient?: string;
   icon?: string;
+  ensembleId?: string;
+  pairedElementId?: string;
+  subcategoryId?: string;
+  linkedContextId?: string;
+  linkedPoseId?: string;
+  linkedEnvId?: string;
 }
 
 export interface CategoryRow {
@@ -40,6 +52,7 @@ export interface SubCategory {
 export interface Category {
   id: string;
   name: string;
+  promptName?: string;
   type: 'flat' | 'tabs';
   image?: string;
   imgPos?: ImgPos;
@@ -48,6 +61,7 @@ export interface Category {
   accent?: string;
   els?: PromptElement[];
   subcats?: SubCategory[];
+  themes?: Theme[];
 }
 
 export interface PresetPick {
@@ -76,6 +90,8 @@ export interface PromptHistoryItem {
   engine: PromptEngine;
 }
 
+export type AppTheme = 'glow' | 'minimal-dark' | 'minimal-light';
+
 export interface DBState {
   cats: Category[];
   selections: Record<string, any>;
@@ -89,4 +105,9 @@ export interface DBState {
   stylize: number;
   soundEnabled: boolean;
   history: PromptHistoryItem[];
+  autoSelectEnsemble?: boolean;
+  autoSelectContext?: boolean;
+  theme?: AppTheme;
 }
+
+

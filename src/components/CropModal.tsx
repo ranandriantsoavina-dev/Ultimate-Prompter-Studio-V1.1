@@ -20,11 +20,18 @@ import {
   MapPin,
   Sun,
   Aperture,
-  Sliders
+  Sliders,
+  AlertTriangle,
+  Tags,
+  ChevronDown,
+  Link2
 } from 'lucide-react';
-import { ImgPos, PromptElement } from '../types/prompter';
+import { ImgPos, PromptElement, Theme } from '../types/prompter';
 import { getImgStyle } from './VisualThumbnail';
 import { UserProfile } from './DevSettingsPage';
+import { SubcategorySelector, SubcategoryOption } from './SubcategorySelector';
+import { suggestPromptName } from '../utils/promptCompiler';
+import { SearchableLinkSelect, LinkableItemOption } from './SearchableLinkSelect';
 
 export const CATEGORY_ICONS = [
   { id: 'Palette', label: 'Style & Aesthetic', icon: <Palette className="w-4 h-4" /> },
@@ -45,20 +52,49 @@ interface CropModalProps {
   onClose: () => void;
   title: string;
   initialName?: string;
+  initialPromptName?: string;
+  catId?: string;
   initialPrompt?: string;
   initialNsfw?: boolean;
   initialImage?: string;
   initialImgPos?: ImgPos;
   initialIcon?: string;
+  initialEnsembleId?: string;
+  initialPairedElementId?: string;
+  availableEnsemblePairs?: {
+    id: string;
+    name: string;
+    image?: string;
+    subcatName?: string;
+    subcatId?: string;
+  }[];
+  availableSubcategories?: SubcategoryOption[];
+  initialSubcatId?: string;
+  categoryThemes?: Theme[];
+  initialThemeIds?: string[];
+  availableContextItems?: LinkableItemOption[];
+  availablePoseItems?: LinkableItemOption[];
+  availableEnvItems?: LinkableItemOption[];
+  initialLinkedContextId?: string;
+  initialLinkedPoseId?: string;
+  initialLinkedEnvId?: string;
   isCategory?: boolean;
   showPromptField?: boolean;
   onSave: (data: {
     name: string;
+    promptName?: string;
     prompt?: string;
     nsfw?: boolean;
     image: string;
     imgPos?: ImgPos;
     icon?: string;
+    ensembleId?: string;
+    pairedElementId?: string;
+    subcategoryId?: string;
+    themeIds?: string[];
+    linkedContextId?: string;
+    linkedPoseId?: string;
+    linkedEnvId?: string;
   }) => void | Promise<void>;
   onDelete?: () => void;
   users?: UserProfile[];
@@ -77,16 +113,32 @@ interface CropModalProps {
   ) => void | Promise<void>;
 }
 
+
 export const CropModal: React.FC<CropModalProps> = ({
   isOpen,
   onClose,
   title,
   initialName = '',
+  initialPromptName = '',
+  catId,
   initialPrompt = '',
   initialNsfw = false,
   initialImage = '',
   initialImgPos,
   initialIcon = 'Palette',
+  initialEnsembleId,
+  initialPairedElementId,
+  availableEnsemblePairs,
+  availableSubcategories,
+  initialSubcatId,
+  categoryThemes,
+  initialThemeIds,
+  availableContextItems,
+  availablePoseItems,
+  availableEnvItems,
+  initialLinkedContextId,
+  initialLinkedPoseId,
+  initialLinkedEnvId,
   isCategory = false,
   showPromptField = true,
   onSave,
@@ -97,6 +149,8 @@ export const CropModal: React.FC<CropModalProps> = ({
   onTransferToUser
 }) => {
   const [name, setName] = useState(initialName);
+  const [promptName, setPromptName] = useState(initialPromptName);
+  const promptNameModified = useRef(false);
   const [prompt, setPrompt] = useState(initialPrompt);
   const [nsfw, setNsfw] = useState(initialNsfw);
   const [image, setImage] = useState(initialImage);
@@ -104,11 +158,26 @@ export const CropModal: React.FC<CropModalProps> = ({
   const [crop, setCrop] = useState<ImgPos>(
     initialImgPos || { x: 50, y: 50, z: 1, ar: 1 }
   );
+  const [ensembleEnabled, setEnsembleEnabled] = useState<boolean>(false);
+  const [pairedElementId, setPairedElementId] = useState<string>('');
+  const [selectedSubcatId, setSelectedSubcatId] = useState<string>('');
+  const [themeIds, setThemeIds] = useState<string[]>(initialThemeIds || []);
+  const [themeDropdownOpen, setThemeDropdownOpen] = useState<boolean>(false);
+  const [linkedContextId, setLinkedContextId] = useState<string>(initialLinkedContextId || '');
+  const [linkedPoseId, setLinkedPoseId] = useState<string>(initialLinkedPoseId || '');
+  const [linkedEnvId, setLinkedEnvId] = useState<string>(initialLinkedEnvId || '');
   const [transferSuccess, setTransferSuccess] = useState<string>('');
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [transferError, setTransferError] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const currentCatId = catId || (path && path.length > 0 ? path[0] : '');
+  const isEnvCategory = currentCatId === 'env' || currentCatId === 'environment';
+  const isPoseCategory = currentCatId === 'pose';
+  const isContextCategory = currentCatId === 'comp' || currentCatId === 'context' || (title && title.toLowerCase().includes('composition'));
+  const isContextTargetCat = isEnvCategory || isPoseCategory || isContextCategory;
 
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef<{ x: number; y: number } | null>(null);
@@ -117,15 +186,51 @@ export const CropModal: React.FC<CropModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setName(initialName);
+      const computedPromptName = initialPromptName || (isCategory ? suggestPromptName(initialName, catId) : '');
+      setPromptName(computedPromptName);
+      promptNameModified.current = !!initialPromptName;
       setPrompt(initialPrompt);
       setNsfw(initialNsfw);
       setImage(initialImage);
       setIcon(initialIcon || 'Palette');
       setCrop(initialImgPos || { x: 50, y: 50, z: 1, ar: 1 });
+      const hasEnsemble = !!(initialPairedElementId || initialEnsembleId);
+      setEnsembleEnabled(hasEnsemble);
+      setPairedElementId(initialPairedElementId || '');
+      
+      const defaultSubcat = initialSubcatId || (path.length >= 2 ? path[1] : '') || (availableSubcategories && availableSubcategories[0]?.id) || '';
+      setSelectedSubcatId(defaultSubcat);
+
+      setThemeIds(initialThemeIds || []);
+      setThemeDropdownOpen(false);
+      setLinkedContextId(initialLinkedContextId || '');
+      setLinkedPoseId(initialLinkedPoseId || '');
+      setLinkedEnvId(initialLinkedEnvId || '');
+
       setSaveError('');
       setTransferError('');
+      setShowDeleteConfirm(false);
     }
-  }, [isOpen, initialName, initialPrompt, initialNsfw, initialImage, initialImgPos, initialIcon]);
+  }, [
+    isOpen, 
+    initialName, 
+    initialPromptName,
+    catId,
+    initialPrompt, 
+    initialNsfw, 
+    initialImage, 
+    initialImgPos, 
+    initialIcon, 
+    initialEnsembleId, 
+    initialPairedElementId,
+    initialSubcatId,
+    initialThemeIds,
+    initialLinkedContextId,
+    initialLinkedPoseId,
+    initialLinkedEnvId,
+    availableSubcategories,
+    path
+  ]);
 
   if (!isOpen) return null;
 
@@ -210,14 +315,29 @@ export const CropModal: React.FC<CropModalProps> = ({
     setSaving(true);
     setSaveError('');
     try {
+      let resolvedEnsembleId = initialEnsembleId;
+      if (ensembleEnabled && pairedElementId) {
+        resolvedEnsembleId = resolvedEnsembleId || `ens_${Date.now()}`;
+      } else if (!ensembleEnabled) {
+        resolvedEnsembleId = undefined;
+      }
+
       // the parent writes the photo to the local data folder first; if that fails we stay open and show why
       await onSave({
         name: name.trim(),
+        promptName: isCategory ? (promptName.trim() || suggestPromptName(name, catId)) : undefined,
         prompt: showPromptField ? prompt.trim() : undefined,
         nsfw: showPromptField ? nsfw : undefined,
         image,
         imgPos: image ? crop : undefined,
-        icon: (isCategory || !showPromptField) ? icon : undefined
+        icon: (isCategory || !showPromptField) ? icon : undefined,
+        ensembleId: ensembleEnabled ? resolvedEnsembleId : undefined,
+        pairedElementId: ensembleEnabled ? pairedElementId : undefined,
+        subcategoryId: (!isCategory && availableSubcategories && availableSubcategories.length > 0) ? selectedSubcatId : undefined,
+        themeIds: (!isCategory && categoryThemes && categoryThemes.length > 0) ? themeIds : undefined,
+        linkedContextId: (!isCategory && isContextTargetCat) ? (linkedContextId || undefined) : undefined,
+        linkedPoseId: (!isCategory && isContextTargetCat) ? (linkedPoseId || undefined) : undefined,
+        linkedEnvId: (!isCategory && isContextTargetCat) ? (linkedEnvId || undefined) : undefined
       });
       onClose();
     } catch (err: any) {
@@ -245,8 +365,51 @@ export const CropModal: React.FC<CropModalProps> = ({
           </button>
         </div>
 
-        {/* Form Body */}
-        <div className="py-4 space-y-4 overflow-y-auto flex-1 pr-1">
+        {showDeleteConfirm ? (
+          /* Delete Confirmation Modal State with Delete and Cancel options */
+          <div className="py-6 space-y-4 animate-in fade-in duration-200">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400">
+                <AlertTriangle className="w-5 h-5 stroke-[2]" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">
+                  {isCategory ? 'Delete Category' : 'Delete Element'}
+                </h3>
+                <p className="text-[11px] text-white/50">{name || title}</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-white/80 leading-relaxed bg-black/40 p-3.5 rounded-xl border border-white/[0.06]">
+              {isCategory
+                ? 'Are you sure you want to delete this category and all elements inside it? This action cannot be undone.'
+                : 'Are you sure you want to delete this element? This action cannot be undone.'}
+            </p>
+
+            <div className="flex items-center justify-end gap-2 pt-4 border-t border-white/[0.08]">
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-xs font-semibold text-white/80 hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onDelete?.();
+                  onClose();
+                }}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-all shadow-[0_0_15px_rgba(225,29,72,0.4)]"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Form Body */}
+            <div className="py-4 space-y-4 overflow-y-auto flex-1 pr-1">
           {/* Name Field */}
           <div>
             <label className="block text-xs font-medium text-white/70 mb-1.5">
@@ -255,11 +418,54 @@ export const CropModal: React.FC<CropModalProps> = ({
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Cinematic 35mm Portrait"
+              onChange={(e) => {
+                const val = e.target.value;
+                setName(val);
+                if (isCategory && !promptNameModified.current) {
+                  setPromptName(suggestPromptName(val, catId));
+                }
+              }}
+              placeholder={isCategory ? 'e.g. Pose & Action' : 'e.g. Cinematic 35mm Portrait'}
               className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/[0.1] text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-white/30"
             />
           </div>
+
+          {/* Prompt Name Field (Main Categories Only - Directly below Display Name) */}
+          {isCategory && (
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-medium text-white/80">
+                  Prompt Name
+                </label>
+                <span className="text-[10px] text-orange-400 font-mono">Injected into prompt</span>
+              </div>
+              <input
+                type="text"
+                value={promptName}
+                onChange={(e) => {
+                  promptNameModified.current = true;
+                  setPromptName(e.target.value);
+                }}
+                placeholder="e.g. subject, pose, environment"
+                className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/[0.1] text-xs font-mono text-white placeholder:text-white/30 focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/30"
+              />
+              <p className="text-[10px] text-white/40 mt-1 leading-relaxed">
+                A short, simplified name used when this category is written into the generated prompt.
+              </p>
+            </div>
+          )}
+
+          {/* Subcategory / Theme Selector (Pose & Action and Environment & Setting Elements) */}
+          {!isCategory && showPromptField && availableSubcategories && availableSubcategories.length > 0 && (
+            <SubcategorySelector
+              subcategories={availableSubcategories}
+              value={selectedSubcatId}
+              onChange={setSelectedSubcatId}
+              categoryName={path[0] === 'pose' ? 'Pose & Action' : path[0] === 'env' ? 'Environment & Setting' : undefined}
+              label={path[0] === 'pose' || path[0] === 'env' ? 'Theme / Subcategory' : 'Subcategory'}
+              required
+            />
+          )}
 
           {/* Reference Image & Interactive Pan/Crop Preview */}
           <div>
@@ -421,6 +627,275 @@ export const CropModal: React.FC<CropModalProps> = ({
             </div>
           )}
 
+          {/* Theme Dropdown Selector (Environment & Pose Items) */}
+          {!isCategory && showPromptField && categoryThemes && categoryThemes.length > 0 && (
+            <div className="space-y-1.5 pt-1">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-white/80 flex items-center gap-1.5">
+                  <Tags className="w-3.5 h-3.5 text-orange-400" />
+                  <span>Assigned Themes</span>
+                </label>
+                <span className="text-[10px] text-white/40">
+                  {themeIds.length === 0 ? 'No themes assigned' : `${themeIds.length} theme${themeIds.length > 1 ? 's' : ''} assigned`}
+                </span>
+              </div>
+
+              {/* Dropdown trigger */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setThemeDropdownOpen(!themeDropdownOpen)}
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-black/50 border border-white/10 hover:border-white/20 text-xs text-white text-left transition-all cursor-pointer"
+                >
+                  <div className="flex items-center gap-2 truncate">
+                    <Tags className="w-3.5 h-3.5 text-white/40 shrink-0" />
+                    <span className="truncate">
+                      {themeIds.length === 0
+                        ? 'Select themes to assign this item to...'
+                        : categoryThemes
+                            .filter((t) => themeIds.includes(t.id))
+                            .map((t) => t.name)
+                            .join(', ')}
+                    </span>
+                  </div>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 text-white/40 transition-transform duration-200 shrink-0 ${
+                      themeDropdownOpen ? 'rotate-180 text-orange-400' : ''
+                    }`}
+                  />
+                </button>
+
+                {/* Dropdown List with On/Off Toggle per theme */}
+                {themeDropdownOpen && (
+                  <div className="absolute top-full left-0 right-0 mt-1 z-30 rounded-xl bg-[#18161e] border border-white/15 shadow-2xl overflow-hidden p-2 space-y-1 animate-in fade-in duration-150">
+                    <div className="text-[10px] uppercase font-bold tracking-wider text-white/40 px-2 py-1">
+                      Toggle themes for this item
+                    </div>
+                    <div className="max-h-48 overflow-y-auto space-y-1 pr-1">
+                      {categoryThemes.map((theme) => {
+                        const isAssigned = themeIds.includes(theme.id);
+                        return (
+                          <div
+                            key={theme.id}
+                            onClick={() => {
+                              setThemeIds((prev) =>
+                                isAssigned ? prev.filter((id) => id !== theme.id) : [...prev, theme.id]
+                              );
+                            }}
+                            className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors ${
+                              isAssigned
+                                ? 'bg-orange-500/15 text-orange-200 border border-orange-500/30'
+                                : 'hover:bg-white/[0.06] text-white/70 hover:text-white border border-transparent'
+                            }`}
+                          >
+                            <span className="text-xs font-medium truncate pr-2">{theme.name}</span>
+                            {/* On/Off Switch */}
+                            <div
+                              className={`w-8 h-4 rounded-full relative transition-colors duration-200 shrink-0 pointer-events-none ${
+                                isAssigned ? 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.5)]' : 'bg-white/15'
+                              }`}
+                            >
+                              <div
+                                className={`w-3 h-3 rounded-full bg-white absolute top-[2px] transition-transform duration-200 shadow-sm ${
+                                  isAssigned ? 'translate-x-[16px]' : 'translate-x-[2px]'
+                                }`}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Badges of currently assigned themes */}
+              {themeIds.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {themeIds.map((tid) => {
+                    const th = categoryThemes.find((t) => t.id === tid);
+                    if (!th) return null;
+                    return (
+                      <span
+                        key={tid}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-orange-500/15 border border-orange-500/30 text-orange-300 text-[11px] font-medium"
+                      >
+                        <span>{th.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => setThemeIds((prev) => prev.filter((id) => id !== tid))}
+                          className="text-orange-400 hover:text-white p-0.5 rounded transition-colors"
+                          title={`Remove ${th.name} theme`}
+                        >
+                          <X className="w-2.5 h-2.5" />
+                        </button>
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Auto-Select Context Links (Context, Pose, and Environment Items) */}
+          {isContextTargetCat && !isCategory && showPromptField && (
+            <div className="pt-3 border-t border-white/[0.08] space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400">
+                    <Link2 className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-semibold text-white/90 block">Auto-Select Context Links</span>
+                    <span className="text-[10px] text-white/50">Bidirectional linking across Context, Pose, and Environment</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 opacity-70">
+                  <span title="Context"><Camera className="w-3 h-3 text-amber-400" /></span>
+                  <span title="Pose"><Activity className="w-3 h-3 text-sky-400" /></span>
+                  <span title="Environment"><MapPin className="w-3 h-3 text-purple-400" /></span>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-sky-950/20 border border-sky-500/20 space-y-3">
+                {/* If Environment Item: show Linked Pose and Linked Context */}
+                {isEnvCategory && (
+                  <>
+                    <SearchableLinkSelect
+                      label="Linked Pose"
+                      categoryIcon={<Activity className="w-3.5 h-3.5 text-sky-400" />}
+                      value={linkedPoseId}
+                      onChange={setLinkedPoseId}
+                      items={availablePoseItems || []}
+                      placeholder="Choose complementary Pose item..."
+                    />
+                    <SearchableLinkSelect
+                      label="Linked Context"
+                      categoryIcon={<Camera className="w-3.5 h-3.5 text-amber-400" />}
+                      value={linkedContextId}
+                      onChange={setLinkedContextId}
+                      items={availableContextItems || []}
+                      placeholder="Choose complementary Context item..."
+                    />
+                  </>
+                )}
+
+                {/* If Pose Item: show Linked Environment and Linked Context */}
+                {isPoseCategory && (
+                  <>
+                    <SearchableLinkSelect
+                      label="Linked Environment"
+                      categoryIcon={<MapPin className="w-3.5 h-3.5 text-purple-400" />}
+                      value={linkedEnvId}
+                      onChange={setLinkedEnvId}
+                      items={availableEnvItems || []}
+                      placeholder="Choose complementary Environment item..."
+                    />
+                    <SearchableLinkSelect
+                      label="Linked Context"
+                      categoryIcon={<Camera className="w-3.5 h-3.5 text-amber-400" />}
+                      value={linkedContextId}
+                      onChange={setLinkedContextId}
+                      items={availableContextItems || []}
+                      placeholder="Choose complementary Context item..."
+                    />
+                  </>
+                )}
+
+                {/* If Context / Composition Item: show Linked Environment and Linked Pose */}
+                {isContextCategory && !isEnvCategory && !isPoseCategory && (
+                  <>
+                    <SearchableLinkSelect
+                      label="Linked Environment"
+                      categoryIcon={<MapPin className="w-3.5 h-3.5 text-purple-400" />}
+                      value={linkedEnvId}
+                      onChange={setLinkedEnvId}
+                      items={availableEnvItems || []}
+                      placeholder="Choose complementary Environment item..."
+                    />
+                    <SearchableLinkSelect
+                      label="Linked Pose"
+                      categoryIcon={<Activity className="w-3.5 h-3.5 text-sky-400" />}
+                      value={linkedPoseId}
+                      onChange={setLinkedPoseId}
+                      items={availablePoseItems || []}
+                      placeholder="Choose complementary Pose item..."
+                    />
+                  </>
+                )}
+
+                <p className="text-[10px] text-sky-300/70 leading-relaxed">
+                  When Auto-Select Context is ON, selecting this item will automatically select its linked counterparts in the other categories.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Ensemble Pairing (Outfit Section Only) */}
+          {path && path[0] === 'outfit' && !isCategory && showPromptField && (
+            <div className="pt-3 border-t border-white/[0.08] space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                    <Sparkles className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-semibold text-white/90 block">Auto-Select Ensemble</span>
+                    <span className="text-[10px] text-white/50">Pair complementary Top and Bottom items</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = !ensembleEnabled;
+                    setEnsembleEnabled(next);
+                    if (!next) {
+                      setPairedElementId('');
+                    }
+                  }}
+                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    ensembleEnabled ? 'bg-purple-600' : 'bg-white/10'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                      ensembleEnabled ? 'translate-x-4' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {ensembleEnabled && (
+                <div className="p-3 rounded-xl bg-purple-950/20 border border-purple-500/25 space-y-2.5 animate-in fade-in duration-150">
+                  <label className="block text-[11px] font-medium text-purple-200">
+                    Choose Paired {path[1] === 'top' ? 'Bottom' : path[1] === 'bottom' ? 'Top' : 'Outfit Item'}:
+                  </label>
+                  <select
+                    value={pairedElementId}
+                    onChange={(e) => setPairedElementId(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-black/60 border border-purple-500/30 text-xs text-white focus:outline-none focus:border-purple-400"
+                  >
+                    <option value="">-- Select paired complementary item --</option>
+                    {availableEnsemblePairs && availableEnsemblePairs.length > 0 ? (
+                      availableEnsemblePairs.map((pair) => (
+                        <option key={pair.id} value={pair.id}>
+                          {pair.name} {pair.subcatName ? `(${pair.subcatName})` : ''}
+                        </option>
+                      ))
+                    ) : (
+                      <option disabled value="">
+                        No complementary items found in opposite category
+                      </option>
+                    )}
+                  </select>
+                  <p className="text-[10px] text-purple-300/70 leading-relaxed">
+                    When Auto-Select Ensemble is active, picking this piece will automatically select the paired counterpart.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Transfer Element to User Account Section */}
           {showPromptField && users && users.length > 0 && onTransferToUser && (
             <div className="pt-3 border-t border-white/[0.08] space-y-2.5">
@@ -503,14 +978,13 @@ export const CropModal: React.FC<CropModalProps> = ({
         <div className="pt-4 border-t border-white/[0.08] flex items-center justify-between gap-2">
           {onDelete ? (
             <button
-              onClick={() => {
-                onDelete();
-                onClose();
-              }}
+              type="button"
+              onClick={() => setShowDeleteConfirm(true)}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-rose-400 hover:bg-rose-500/10 text-xs font-medium transition-colors"
+              title={isCategory ? 'Delete Category' : 'Delete Element'}
             >
               <Trash2 className="w-3.5 h-3.5" />
-              <span>Delete</span>
+              <span>{isCategory ? 'Delete Category' : 'Delete'}</span>
             </button>
           ) : <div />}
 
@@ -531,6 +1005,8 @@ export const CropModal: React.FC<CropModalProps> = ({
             </button>
           </div>
         </div>
+          </>
+        )}
       </div>
     </div>
   );

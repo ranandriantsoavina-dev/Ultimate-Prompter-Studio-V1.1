@@ -17,14 +17,15 @@ import {
   Plus,
   Trash2,
   Database,
-  User,
-  Users,
   ToggleLeft,
   ToggleRight,
   Wand2,
   MessageSquare,
   Send,
-  Copy
+  Copy,
+  FolderArchive,
+  Archive,
+  Download
 } from 'lucide-react';
 import { DBState } from '../types/prompter';
 
@@ -40,15 +41,17 @@ interface DevSettingsPageProps {
   onUpdateDb: React.Dispatch<React.SetStateAction<DBState>>;
   onBack: () => void;
   nsfwOn: boolean;
-  users: UserProfile[];
-  activeUserId: string;
-  onSwitchUser: (userId: string) => void;
-  onCreateUser: (name: string) => void;
-  onDeleteUser: (userId: string) => void;
-  onExtractToUser: (userId: string, data: any, categoryFilter?: string | string[]) => Promise<{ added: number; presets: number }>;
+  users?: UserProfile[];
+  activeUserId?: string;
+  onSwitchUser?: (userId: string) => void;
+  onCreateUser?: (name: string) => void;
+  onDeleteUser?: (userId: string) => void;
+  onExtractToUser?: (userId: string, data: any, categoryFilter?: string | string[]) => Promise<{ added: number; presets: number }>;
   initialActivePreset?: 'extractor' | 'refiner' | 'chat';
   initialRefinePrompt?: string;
   onRestoreMainDB?: () => void;
+  onFullExport?: () => void;
+  onFullImport?: () => void;
 }
 
 interface OllamaModel {
@@ -74,6 +77,72 @@ interface RunningModel {
   size_vram?: number;
 }
 
+export const EXTRACTOR_PRESETS = {
+  detailed: {
+    name: 'Detailed Output',
+    systemPrompt: `You are an expert AI vision analyst and structured prompt engineer. Analyze the provided image and extract 6 distinct, isolated elements into a valid JSON object.
+
+Compose every extracted prompt in clear, natural language of detailed length (typically 2 to 3 articulate sentences) to retain richer essential detail and atmosphere. Avoid excessive micro-details or comma-separated keyword lists, but ensure comprehensive descriptive depth. Strictly isolate each element from other domains so elements can be paired with any setting without contradiction.
+
+Element Definitions & Boundaries:
+1. "subject": Person and physique only (facial features, hair color and style, eyes, skin tone, build, and defining physical characteristics). Strictly exclude clothing, posture, lighting, and environment.
+2. "outfit": Garments, footwear, and accessories only. Structure as either:
+   - Option A: { "top": { "name": "...", "prompt": "..." }, "bottom": { "name": "...", "prompt": "..." }, "accessories": { "name": "...", "prompt": "..." } }
+   - Option B: { "one_piece": { "name": "...", "prompt": "..." }, "accessories": { "name": "...", "prompt": "..." } }
+   Strictly exclude physical body traits and background.
+3. "pose": Stance, posture, limb orientation, and bodily action only (e.g. seated with crossed legs, standing poised, leaning back). Strictly describe bodily posture and kinematics; exclude all environment, furniture, vehicles, and setting details.
+4. "composition": Camera perspective and shot framing. Categorize into exactly one subcategory based on context:
+   - "angle": Camera elevation or tilt (e.g. eye-level straight, low angle looking up, bird's-eye overhead, Dutch tilt).
+   - "framing": Portrait cropping distance (e.g. close-up headshot, half-body waist-up, full-body shot).
+   - "style": Perspective technique (e.g. mirror selfie, candid POV, over-the-shoulder view).
+   Format: { "type": "angle" | "framing" | "style", "name": "...", "prompt": "..." }
+5. "environment": Physical setting, location, architecture, and background scenery only. Categorize into:
+   - "indoor": Interior rooms, studios, apartments, cafes, or architectural spaces.
+   - "outdoor": Open-air landscapes, streets, beaches, forests, rooftops, or natural outdoor scenery.
+   Format: { "type": "indoor" | "outdoor", "name": "...", "prompt": "..." }
+   Strictly exclude lighting conditions or person details.
+6. "lighting": Illumination characteristics, light sources, color temperature, and shadows only (e.g. soft diffused window light, warm golden hour sun, moody chiaroscuro). Strictly exclude location and scenery details.
+
+Prompt Writing Guidelines:
+- Format: Natural, descriptive prose of 2–3 sentences balancing rich detail and vividness without verbosity or tag lists.
+- JSON Output: Return only a valid JSON object containing keys: "subject", "outfit", "pose", "composition", "environment", "lighting".`,
+    userPrompt: 'Extract the 6 distinct elements (subject, outfit, pose, composition, environment, lighting) as structured JSON. Write each prompt in clear, natural language of 2–3 sentences to capture rich detail while maintaining strict element isolation.'
+  },
+  medium: {
+    name: 'Medium Length Output',
+    systemPrompt: `You are an expert AI vision analyst and structured prompt engineer. Analyze the provided image and extract 6 distinct, isolated elements into a valid JSON object.
+
+Compose every extracted prompt in clear, natural language of medium length (typically 1 to 2 articulate sentences). Avoid excessive micro-details, and never reduce descriptions into comma-separated keywords. Retain all essential visual traits and atmosphere while strictly isolating each element from other domains so elements can be paired with any setting without contradiction.
+
+Element Definitions & Boundaries:
+1. "subject": Person and physique only (facial features, hair color and style, eyes, skin tone, build, and defining physical characteristics). Strictly exclude clothing, posture, lighting, and environment.
+2. "outfit": Garments, footwear, and accessories only. Structure as either:
+   - Option A: { "top": { "name": "...", "prompt": "..." }, "bottom": { "name": "...", "prompt": "..." }, "accessories": { "name": "...", "prompt": "..." } }
+   - Option B: { "one_piece": { "name": "...", "prompt": "..." }, "accessories": { "name": "...", "prompt": "..." } }
+   Strictly exclude physical body traits and background.
+3. "pose": Stance, posture, limb orientation, and bodily action only (e.g. seated with crossed legs, standing poised, leaning back). Strictly describe bodily posture and kinematics; exclude all environment, furniture, vehicles, and setting details.
+4. "composition": Camera perspective and shot framing. Categorize into exactly one subcategory based on context:
+   - "angle": Camera elevation or tilt (e.g. eye-level straight, low angle looking up, bird's-eye overhead, Dutch tilt).
+   - "framing": Portrait cropping distance (e.g. close-up headshot, half-body waist-up, full-body shot).
+   - "style": Perspective technique (e.g. mirror selfie, candid POV, over-the-shoulder view).
+   Format: { "type": "angle" | "framing" | "style", "name": "...", "prompt": "..." }
+5. "environment": Physical setting, location, architecture, and background scenery only. Categorize into:
+   - "indoor": Interior rooms, studios, apartments, cafes, or architectural spaces.
+   - "outdoor": Open-air landscapes, streets, beaches, forests, rooftops, or natural outdoor scenery.
+   Format: { "type": "indoor" | "outdoor", "name": "...", "prompt": "..." }
+   Strictly exclude lighting conditions or person details.
+6. "lighting": Illumination characteristics, light sources, color temperature, and shadows only (e.g. soft diffused window light, warm golden hour sun, moody chiaroscuro). Strictly exclude location and scenery details.
+
+Prompt Writing Guidelines:
+- Format: Natural, descriptive prose of medium length (1–2 sentences) that balances clarity and vividness without verbosity or tag lists.
+- JSON Output: Return only a valid JSON object containing keys: "subject", "outfit", "pose", "composition", "environment", "lighting".`,
+    userPrompt: 'Extract the 6 distinct elements (subject, outfit, pose, composition, environment, lighting) as structured JSON. Write each prompt in clear, natural language of medium length (1–2 sentences) retaining essential characteristics with strict element isolation.'
+  }
+};
+
+export const DEFAULT_EXTRACTOR_SYSTEM_PROMPT = EXTRACTOR_PRESETS.detailed.systemPrompt;
+export const DEFAULT_EXTRACTOR_USER_PROMPT = EXTRACTOR_PRESETS.detailed.userPrompt;
+
 export const DevSettingsPage: React.FC<DevSettingsPageProps> = ({
   db,
   onUpdateDb,
@@ -87,7 +156,9 @@ export const DevSettingsPage: React.FC<DevSettingsPageProps> = ({
   onExtractToUser,
   initialActivePreset,
   initialRefinePrompt,
-  onRestoreMainDB
+  onRestoreMainDB,
+  onFullExport,
+  onFullImport
 }) => {
   // Ollama URL State
   const [ollamaUrl, setOllamaUrl] = useState<string>(() => {
@@ -176,7 +247,7 @@ export const DevSettingsPage: React.FC<DevSettingsPageProps> = ({
 
   // Prompt Refiner State with session persistence
   const [refinerSystemPrompt, setRefinerSystemPrompt] = useState<string>(
-    `You are an expert AI prompt refiner. Take the provided prompt and enhance it to be richer, more descriptive, cinematic, detailed, and optimized for high-end AI generation. Maintain the core essence while significantly elevating quality and descriptive depth.`
+    'You are an expert AI prompt refiner. Take the provided prompt and enhance it to be richer, more descriptive, cinematic, detailed, and optimized for high-end AI generation. Maintain the core essence while significantly elevating quality and descriptive depth.'
   );
   const [refinerImportedPrompt, setRefinerImportedPrompt] = useState<string>(() => {
     return initialRefinePrompt || sessionStorage.getItem('dev_refiner_imported') || '';
@@ -510,14 +581,7 @@ export const DevSettingsPage: React.FC<DevSettingsPageProps> = ({
     }
   };
 
-  // Selected Category Only Filter State
-  const [selectedCategoryOnly, setSelectedCategoryOnly] = useState<boolean>(false);
-  const [selectedCategoryFilters, setSelectedCategoryFilters] = useState<string[]>([
-    'subject', 'outfit', 'pose', 'composition', 'environment', 'lighting'
-  ]);
 
-  // New User Input State
-  const [newUserName, setNewUserName] = useState<string>('');
 
   // Image Vision Testing State with session persistence
   const [testImage, setTestImage] = useState<string | null>(() => {
@@ -534,34 +598,9 @@ export const DevSettingsPage: React.FC<DevSettingsPageProps> = ({
       return '';
     }
   });
-  const [systemPrompt, setSystemPrompt] = useState<string>(
-    `You are an expert AI vision analyst and structured prompt engineer. Analyze the provided image and extract ONLY the following 6 distinct, non-overlapping elements into a valid JSON object. Strictly enforce these boundary definitions:
 
-1. "subject": Physique and person details ONLY (face, facial features, hair color and style, eyes, skin tone, body type/build, and specific physical traits). STRICTLY EXCLUDE pose, body position, clothing, outfit, lighting, and environment.
-2. "outfit": Clothing, garments, footwear, and wearable accessories ONLY. Strictly divide outfits into EITHER:
-   - Option A: "top" (e.g. blouse, shirt, crop top, jacket, hoodie) AND "bottom" (e.g. skirt, trousers, jeans, shorts) (+ "accessories" / "footwear" if present).
-   - Option B: "one_piece" (e.g. dress, slip dress, cocktail gown, jumpsuit, romper, bodysuit, catsuit) (+ "accessories" / "footwear" if present).
-   STRICTLY EXCLUDE physical body traits or background.
-3. "pose": Body position, stance, posture, limb orientation, and action ONLY. ENSURE pose is NEVER integrated into the subject description. STRICTLY EXCLUDE outfit and environment.
-4. "composition": Camera framing, shot type (e.g. close-up, medium shot, wide shot), perspective, camera angle, and framing style ONLY.
-5. "environment": Physical setting, location, architecture, background objects, and place information ONLY. STRICTLY EXCLUDE any lighting or atmospheric information.
-6. "lighting": Time of day, natural/artificial light sources, shadows, illumination, color temperature, mood, and atmosphere ONLY. STRICTLY EXCLUDE location and scenery details.
-
-CRITICAL INSTRUCTIONS:
-- Extract ONLY these 6 elements: "subject", "outfit", "pose", "composition", "environment", "lighting".
-- Do NOT extract keywords, tags, or any other categories.
-- For each element, provide a JSON object with:
-  - "name": A concise, intelligent title (e.g. "Athletic Physique", "Cyberpunk Alley", "Low-Angle Hero Shot").
-  - "prompt": Rich descriptive prompt text respecting the strict boundary rules above.
-- For "outfit", divide into EITHER:
-  - Option A: { "top": { "name": "...", "prompt": "..." }, "bottom": { "name": "...", "prompt": "..." }, "accessories": { "name": "...", "prompt": "..." } }
-  OR
-  - Option B: { "one_piece": { "name": "...", "prompt": "..." }, "accessories": { "name": "...", "prompt": "..." } }
-- Return ONLY valid JSON starting with '{' and ending with '}'.`
-  );
-  const [userPrompt, setUserPrompt] = useState<string>(
-    'Extract the 6 distinct elements (subject, outfit [either top+bottom OR one-piece], pose, composition, environment, lighting) according to the strict boundary rules.'
-  );
+  const [systemPrompt, setSystemPrompt] = useState<string>(DEFAULT_EXTRACTOR_SYSTEM_PROMPT);
+  const [userPrompt, setUserPrompt] = useState<string>(DEFAULT_EXTRACTOR_USER_PROMPT);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [rawResponse, setRawResponse] = useState<string>(() => {
     try {
@@ -578,8 +617,7 @@ CRITICAL INSTRUCTIONS:
       return null;
     }
   });
-  const [importStatus, setImportStatus] = useState<string>('');
-  const [importOk, setImportOk] = useState<boolean>(true);
+
 
   useEffect(() => {
     try {
@@ -729,12 +767,8 @@ CRITICAL INSTRUCTIONS:
             const parsed = JSON.parse(text);
             setParsedData(parsed);
             setRawResponse(JSON.stringify(parsed, null, 2));
-            setImportStatus('Loaded extracted JSON data from file.');
-            setImportOk(true);
           } catch {
             setRawResponse(text);
-            setImportStatus('Loaded prompt text from file.');
-            setImportOk(true);
           }
         }
       };
@@ -811,7 +845,6 @@ CRITICAL INSTRUCTIONS:
     setIsGenerating(true);
     setRawResponse('');
     setParsedData(null);
-    setImportStatus('');
 
     const controller = new AbortController();
     visionAbortControllerRef.current = controller;
@@ -921,12 +954,7 @@ CRITICAL INSTRUCTIONS:
     }
   };
 
-  const handleCreateUserSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newUserName.trim()) return;
-    onCreateUser(newUserName.trim());
-    setNewUserName('');
-  };
+
 
   const isRunning = runningModels.some((rm) => rm.model === selectedModel || rm.name === selectedModel);
 
@@ -944,7 +972,7 @@ CRITICAL INSTRUCTIONS:
           </button>
           <div className="flex items-center gap-2">
             <Cpu className={`w-5 h-5 ${nsfwOn ? 'text-red-500' : 'text-orange-500'}`} />
-            <h1 className="text-xl font-bold tracking-tight text-white">Developer Settings & Multi-User Architecture</h1>
+            <h1 className="text-xl font-bold tracking-tight text-white">Developer & Local AI Settings</h1>
           </div>
         </div>
 
@@ -964,7 +992,7 @@ CRITICAL INSTRUCTIONS:
       {/* Preset Mode Tabs */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {[
-          { id: 'extractor', label: '1. Prompt Extractor & Distributor', icon: Sparkles, desc: 'Image-to-prompt extraction & routing' },
+          { id: 'extractor', label: '1. Prompt Extractor', icon: Sparkles, desc: 'Image-to-prompt extraction' },
           { id: 'refiner', label: '2. Prompt Refiner', icon: Wand2, desc: 'Enhance & refine inspection prompt' },
           { id: 'chat', label: '3. Chat with AI', icon: MessageSquare, desc: 'Open-ended chat with multi-image support' },
         ].map((tab) => {
@@ -997,104 +1025,8 @@ CRITICAL INSTRUCTIONS:
       {/* Main Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Column 1: Connection, Model Management & User Management */}
+        {/* Column 1: Connection & Model Management */}
         <div className="space-y-6">
-          
-          {/* Multi-User Management & Scoping Card */}
-          <div className="rounded-2xl bg-[#121116]/90 border border-white/[0.08] p-5 shadow-xl backdrop-blur-md space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Users className={`w-4 h-4 ${nsfwOn ? 'text-red-400' : 'text-orange-400'}`} />
-                <h2 className="text-sm font-bold text-white">User Management & Scoped DB</h2>
-              </div>
-              <span className="text-[11px] font-mono text-white/40">{users.length} user(s)</span>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs text-white/60 font-medium">Active User Profile</label>
-              <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
-                {users.map((u) => {
-                  const isActive = u.id === activeUserId;
-                  return (
-                    <div 
-                      key={u.id}
-                      className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${
-                        isActive 
-                          ? nsfwOn ? 'bg-red-500/10 border-red-500/40 text-white' : 'bg-orange-500/10 border-orange-500/40 text-white'
-                          : 'bg-black/40 border-white/10 text-white/70 hover:border-white/20'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <User className={`w-3.5 h-3.5 shrink-0 ${isActive ? (nsfwOn ? 'text-red-400' : 'text-orange-400') : 'text-white/40'}`} />
-                        <div className="min-w-0">
-                          <p className="text-xs font-semibold truncate">{u.name} {u.isMain && <span className="text-[10px] text-white/40">(Main)</span>}</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {!isActive && (
-                          <button
-                            onClick={() => onSwitchUser(u.id)}
-                            className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[11px] font-semibold transition-colors"
-                          >
-                            Switch
-                          </button>
-                        )}
-                        {!u.isMain && (
-                          <button
-                            onClick={() => onDeleteUser(u.id)}
-                            className="p-1 rounded-lg hover:bg-rose-500/20 text-white/40 hover:text-rose-400 transition-colors"
-                            title="Delete user"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Create Secondary User Form */}
-            <form onSubmit={handleCreateUserSubmit} className="pt-2 border-t border-white/[0.06] space-y-2">
-              <label className="text-xs text-white/60 font-medium">Add Secondary User (Isolated DB)</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newUserName}
-                  onChange={(e) => setNewUserName(e.target.value)}
-                  placeholder="Username..."
-                  className="flex-1 px-3 py-2 rounded-xl bg-black/50 border border-white/10 text-xs text-white focus:outline-none focus:border-orange-500 transition-colors"
-                />
-                <button
-                  type="submit"
-                  className={`px-3.5 py-2 rounded-xl font-semibold text-xs flex items-center gap-1 transition-colors ${
-                    nsfwOn ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-orange-500 hover:bg-orange-400 text-black'
-                  }`}
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Add</span>
-                </button>
-              </div>
-            </form>
-
-            {onRestoreMainDB && (
-              <div className="pt-3 border-t border-white/[0.06]">
-                <button
-                  type="button"
-                  onClick={onRestoreMainDB}
-                  className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 hover:text-amber-200 text-xs font-semibold transition-all"
-                >
-                  <Database className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Restore Main User Database</span>
-                </button>
-                <p className="text-[10px] text-white/40 mt-1 text-center">
-                  Strictly restores Main User data only. Secondary users are unaffected.
-                </p>
-              </div>
-            )}
-          </div>
 
           {/* Ollama Connection Card */}
           <div className="rounded-2xl bg-[#121116]/90 border border-white/[0.08] p-5 shadow-xl backdrop-blur-md space-y-4">
@@ -1293,31 +1225,89 @@ ollama serve`}
                 </div>
 
                 <div className="space-y-4">
+                  {/* Preset Selector for Output Length */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-white/60 font-medium">Output Length Preset</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSystemPrompt(EXTRACTOR_PRESETS.detailed.systemPrompt);
+                          setUserPrompt(EXTRACTOR_PRESETS.detailed.userPrompt);
+                        }}
+                        className={`px-3 py-2 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                          systemPrompt === EXTRACTOR_PRESETS.detailed.systemPrompt
+                            ? nsfwOn
+                              ? 'bg-red-500/20 text-red-300 border-red-500/50 shadow-sm'
+                              : 'bg-orange-500/20 text-orange-300 border-orange-500/50 shadow-sm'
+                            : 'bg-black/40 text-white/70 border-white/10 hover:border-white/20'
+                        }`}
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Detailed Output (2–3 Sentences)</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSystemPrompt(EXTRACTOR_PRESETS.medium.systemPrompt);
+                          setUserPrompt(EXTRACTOR_PRESETS.medium.userPrompt);
+                        }}
+                        className={`px-3 py-2 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                          systemPrompt === EXTRACTOR_PRESETS.medium.systemPrompt
+                            ? nsfwOn
+                              ? 'bg-red-500/20 text-red-300 border-red-500/50 shadow-sm'
+                              : 'bg-orange-500/20 text-orange-300 border-orange-500/50 shadow-sm'
+                            : 'bg-black/40 text-white/70 border-white/10 hover:border-white/20'
+                        }`}
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Medium Length Output (1–2 Sentences)</span>
+                      </button>
+                    </div>
+                  </div>
+
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <label className="text-xs text-white/60 font-medium">System Prompt (Extraction Blueprint)</label>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 text-white/40 border border-white/10">Locked</span>
+                      {systemPrompt !== DEFAULT_EXTRACTOR_SYSTEM_PROMPT && (
+                        <button
+                          type="button"
+                          onClick={() => setSystemPrompt(DEFAULT_EXTRACTOR_SYSTEM_PROMPT)}
+                          className="text-[10px] text-orange-400 hover:text-orange-300 font-mono transition-colors"
+                        >
+                          Reset to Default
+                        </button>
+                      )}
                     </div>
                     <textarea
-                      rows={4}
+                      rows={5}
                       value={systemPrompt}
-                      readOnly
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white/70 font-sans resize-none cursor-not-allowed select-all"
-                      title="System prompt is locked"
+                      onChange={(e) => setSystemPrompt(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white/80 font-sans resize-y focus:outline-none focus:border-orange-500/60 leading-relaxed transition-colors"
+                      placeholder="Enter system prompt for Ollama vision model extraction..."
                     />
                   </div>
 
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <label className="text-xs text-white/60 font-medium">User Prompt / Instructions</label>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 text-white/40 border border-white/10">Locked</span>
+                      {userPrompt !== DEFAULT_EXTRACTOR_USER_PROMPT && (
+                        <button
+                          type="button"
+                          onClick={() => setUserPrompt(DEFAULT_EXTRACTOR_USER_PROMPT)}
+                          className="text-[10px] text-orange-400 hover:text-orange-300 font-mono transition-colors"
+                        >
+                          Reset to Default
+                        </button>
+                      )}
                     </div>
-                    <input
-                      type="text"
+                    <textarea
+                      rows={2}
                       value={userPrompt}
-                      readOnly
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white/70 cursor-not-allowed select-all"
-                      title="User prompt instructions are locked"
+                      onChange={(e) => setUserPrompt(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white/80 focus:outline-none focus:border-orange-500/60 leading-relaxed resize-y transition-colors"
+                      placeholder="Enter user instructions for prompt extraction..."
                     />
                   </div>
 
@@ -1351,127 +1341,9 @@ ollama serve`}
                   <div className="flex items-center justify-between flex-wrap gap-3">
                     <div className="flex items-center gap-2">
                       <FileText className="w-4 h-4 text-emerald-400" />
-                      <h3 className="text-xs font-bold text-white uppercase tracking-wider">Live Stream Output & Targeted Data Extraction</h3>
+                      <h3 className="text-xs font-bold text-white uppercase tracking-wider">Live Stream Output & Parsed Output</h3>
                     </div>
-
-                    {parsedData && (
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[11px] text-white/60 font-medium">Extract to:</span>
-                        {users.map((u) => (
-                          <button
-                            key={u.id}
-                            onClick={async () => {
-                              setImportOk(true);
-                              setImportStatus(`Importing into ${u.name}…`);
-                              try {
-                                const result = await onExtractToUser(
-                                  u.id,
-                                  { ...parsedData, _image: testImage },
-                                  selectedCategoryOnly ? selectedCategoryFilters : 'all'
-                                );
-                                if (result.added === 0) {
-                                  setImportOk(false);
-                                  setImportStatus(
-                                    parsedData && parsedData.raw_text
-                                      ? 'Nothing imported: the model did not return valid JSON (see the raw output on the left). Try again or use a stronger vision model.'
-                                      : 'Nothing imported: the reply had none of the selected fields (subject, outfit, pose, composition, environment, lighting).'
-                                  );
-                                } else {
-                                  setImportOk(true);
-                                  setImportStatus(
-                                    `Saved ${result.added} element(s) and ${result.presets} preset(s) to ${u.name}'s data folder.`
-                                  );
-                                }
-                              } catch (err: any) {
-                                setImportOk(false);
-                                setImportStatus(`Import failed: ${err?.message || err}`);
-                              }
-                              setTimeout(() => setImportStatus(''), 9000);
-                            }}
-                            className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-lg ${
-                              u.id === activeUserId
-                                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                                : 'bg-white/10 text-white/90 border-white/20 hover:bg-white/20'
-                            }`}
-                          >
-                            <Database className="w-3 h-3" />
-                            <span>{u.name} {u.isMain ? '(Main)' : ''}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
                   </div>
-
-                  {parsedData && (
-                    <div className="space-y-3 bg-white/[0.02] p-4 rounded-xl border border-white/[0.06]">
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={selectedCategoryOnly}
-                          onChange={(e) => setSelectedCategoryOnly(e.target.checked)}
-                          className="w-4 h-4 rounded accent-orange-500 bg-black/50 border-white/20"
-                        />
-                        <span className="text-xs text-white/90 font-semibold">Selected categories only (Multi-select import)</span>
-                      </div>
-
-                      {selectedCategoryOnly && (
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-white/[0.06]">
-                          {[
-                            { id: 'subject', label: '1. Subject Description' },
-                            { id: 'outfit', label: '2. Outfit' },
-                            { id: 'pose', label: '3. Pose & Action' },
-                            { id: 'composition', label: '4. Composition' },
-                            { id: 'environment', label: '5. Environment' },
-                            { id: 'lighting', label: '6. Lighting' }
-                          ].map((cat) => {
-                            const isSelected = selectedCategoryFilters.includes(cat.id);
-                            return (
-                              <div
-                                key={cat.id}
-                                onClick={() => {
-                                  if (isSelected) {
-                                    setSelectedCategoryFilters(selectedCategoryFilters.filter(id => id !== cat.id));
-                                  } else {
-                                    setSelectedCategoryFilters([...selectedCategoryFilters, cat.id]);
-                                  }
-                                }}
-                                className={`px-3 py-2 rounded-lg border text-xs font-medium flex items-center gap-2 cursor-pointer transition-colors ${
-                                  isSelected
-                                    ? 'bg-orange-500/20 border-orange-500/50 text-orange-200'
-                                    : 'bg-black/40 border-white/10 text-white/60 hover:bg-black/60'
-                                }`}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={isSelected}
-                                  onChange={() => {}} 
-                                  className="w-3.5 h-3.5 rounded accent-orange-500 bg-black/50 border-white/20 pointer-events-none"
-                                />
-                                <span className="truncate">{cat.label}</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {importStatus && (
-                    <div
-                      className={`p-3 rounded-xl border text-xs font-medium flex items-center gap-2 ${
-                        importOk
-                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-                          : 'bg-rose-500/10 border-rose-500/30 text-rose-300'
-                      }`}
-                    >
-                      {importOk ? (
-                        <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
-                      ) : (
-                        <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-                      )}
-                      <span>{importStatus}</span>
-                    </div>
-                  )}
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
@@ -1528,14 +1400,22 @@ ollama serve`}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <label className="text-xs text-white/60 font-medium">System Prompt (Refinement Instructions)</label>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 text-white/40 border border-white/10">Locked</span>
+                    {refinerSystemPrompt !== 'You are an expert AI prompt refiner. Take the provided prompt and enhance it to be richer, more descriptive, cinematic, detailed, and optimized for high-end AI generation. Maintain the core essence while significantly elevating quality and descriptive depth.' && (
+                      <button
+                        type="button"
+                        onClick={() => setRefinerSystemPrompt('You are an expert AI prompt refiner. Take the provided prompt and enhance it to be richer, more descriptive, cinematic, detailed, and optimized for high-end AI generation. Maintain the core essence while significantly elevating quality and descriptive depth.')}
+                        className="text-[10px] text-orange-400 hover:text-orange-300 font-mono transition-colors"
+                      >
+                        Reset to Default
+                      </button>
+                    )}
                   </div>
                   <textarea
                     rows={3}
                     value={refinerSystemPrompt}
-                    readOnly
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white/70 font-sans resize-none cursor-not-allowed select-all"
-                    title="System prompt is locked"
+                    onChange={(e) => setRefinerSystemPrompt(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white/80 font-sans resize-y focus:outline-none focus:border-orange-500/60 leading-relaxed transition-colors"
+                    placeholder="Enter prompt refinement system instructions..."
                   />
                 </div>
 
@@ -1553,14 +1433,22 @@ ollama serve`}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <label className="text-xs text-white/60 font-medium">User Instructions / Refinement Directive</label>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 text-white/40 border border-white/10">Locked</span>
+                    {refinerUserPrompt !== 'Refine and enhance this prompt for maximum aesthetic impact.' && (
+                      <button
+                        type="button"
+                        onClick={() => setRefinerUserPrompt('Refine and enhance this prompt for maximum aesthetic impact.')}
+                        className="text-[10px] text-orange-400 hover:text-orange-300 font-mono transition-colors"
+                      >
+                        Reset to Default
+                      </button>
+                    )}
                   </div>
                   <input
                     type="text"
                     value={refinerUserPrompt}
-                    readOnly
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white/70 cursor-not-allowed select-all"
-                    title="User instructions are locked"
+                    onChange={(e) => setRefinerUserPrompt(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white/80 focus:outline-none focus:border-orange-500/60 transition-colors"
+                    placeholder="Enter user refinement directive..."
                   />
                 </div>
 

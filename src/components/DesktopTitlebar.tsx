@@ -17,7 +17,11 @@ import {
   Redo2,
   Cpu,
   User,
-  Database
+  Database,
+  Shirt,
+  FolderArchive,
+  Archive,
+  Settings
 } from 'lucide-react';
 import { PromptEngine } from '../types/prompter';
 
@@ -37,6 +41,9 @@ interface DesktopTitlebarProps {
   onChangeEngine: (engine: PromptEngine) => void;
   onOpenHistory: () => void;
   onOpenDevSettings: () => void;
+  onOpenSettings: () => void;
+  onFullExport: () => void;
+  onFullImport: () => void;
   onExportDB: () => void;
   onImportDB: () => void;
   onRestoreMainDB: () => void;
@@ -63,6 +70,8 @@ export const DesktopTitlebar: React.FC<DesktopTitlebarProps> = ({
   onChangeEngine,
   onOpenHistory,
   onOpenDevSettings,
+  onFullExport,
+  onFullImport,
   onExportDB,
   onImportDB,
   onRestoreMainDB,
@@ -70,7 +79,8 @@ export const DesktopTitlebar: React.FC<DesktopTitlebarProps> = ({
   isFullscreen,
   onToggleFullscreen,
   isRolling,
-  activeUserName
+  activeUserName,
+  onOpenSettings
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -102,9 +112,7 @@ export const DesktopTitlebar: React.FC<DesktopTitlebarProps> = ({
 
           <div className="flex items-center gap-2 font-medium tracking-tight text-white/90">
             <span
-              className={`w-1.5 h-1.5 rounded-full transition-colors duration-500 ${
-                nsfwOn ? 'bg-red-500 shadow-[0_0_8px_#ff2238]' : 'bg-orange-500 shadow-[0_0_8px_#ff6600]'
-              }`}
+              className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981] transition-colors duration-500"
             />
             <span className="font-semibold text-white">Ultimate Prompter</span>
             <span className="text-white/40 hidden sm:inline">· Studio Workstation</span>
@@ -189,6 +197,16 @@ export const DesktopTitlebar: React.FC<DesktopTitlebarProps> = ({
             <span className="hidden lg:inline text-[11px] font-semibold">Dev / Ollama</span>
           </button>
 
+          {/* Settings Modal Button */}
+          <button
+            onClick={onOpenSettings}
+            title="Workstation Settings (Users, Sound, Theme, Backup)"
+            className="p-1.5 rounded-md hover:bg-white/[0.08] text-white/70 hover:text-white transition-colors flex items-center gap-1 border border-white/[0.08]"
+          >
+            <Settings className="w-3.5 h-3.5 stroke-[1.8] text-orange-400" />
+            <span className="hidden xl:inline text-[11px] font-medium">Settings</span>
+          </button>
+
           {/* Fullscreen */}
           <button
             onClick={onToggleFullscreen}
@@ -261,34 +279,30 @@ export const DesktopTitlebar: React.FC<DesktopTitlebarProps> = ({
             <span>Roll Unlocked</span>
           </button>
 
-          {/* NSFW Safety Switch */}
+          {/* NSFW Safety Switch - Orange when off, Red when on */}
           <div
-            className={`flex items-center gap-2 px-2.5 py-1 rounded-xl border transition-all duration-500 ${
+            className={`flex items-center gap-2 px-2.5 py-1 rounded-xl border transition-all duration-300 ${
               nsfwOn
-                ? 'bg-red-950/30 border-red-500/50 shadow-[0_0_18px_rgba(255,34,56,0.22)]'
-                : 'bg-black/50 border-white/[0.08]'
+                ? 'bg-rose-950/35 border-rose-500/50 shadow-[0_0_16px_rgba(244,63,94,0.25)]'
+                : 'bg-orange-950/20 border-orange-500/30'
             }`}
           >
             <Flame
-              className={`w-3.5 h-3.5 transition-colors duration-500 ${
-                nsfwOn ? 'text-red-500 animate-pulse' : 'text-white/40'
+              className={`w-3.5 h-3.5 transition-all duration-300 ${
+                nsfwOn ? 'text-rose-400 animate-pulse scale-110 drop-shadow-[0_0_6px_#f43f5e]' : 'text-orange-400 opacity-80'
               }`}
             />
-            <span
-              className={`text-xs font-semibold tracking-wide transition-colors duration-500 ${
-                nsfwOn ? 'text-red-400' : 'text-white/50'
-              }`}
-            >
+            <span className={`text-xs font-semibold tracking-wide ${nsfwOn ? 'text-rose-300' : 'text-orange-300'}`}>
               NSFW
             </span>
             <button
               onClick={onToggleNsfw}
               role="switch"
               aria-checked={nsfwOn}
-              className={`w-9 h-5 rounded-full transition-all duration-500 relative cursor-pointer ${
+              className={`w-9 h-5 rounded-full transition-all duration-300 relative cursor-pointer ${
                 nsfwOn
-                  ? 'bg-red-600 shadow-[0_0_14px_rgba(255,34,56,0.7)]'
-                  : 'bg-white/10 hover:bg-white/20'
+                  ? 'bg-rose-600 shadow-[0_0_12px_rgba(244,63,94,0.7)]'
+                  : 'bg-orange-950/70 border border-orange-500/30 hover:bg-orange-900/60'
               }`}
             >
               <div
@@ -315,13 +329,47 @@ export const DesktopTitlebar: React.FC<DesktopTitlebarProps> = ({
                   className="fixed inset-0 z-40" 
                   onClick={() => setMenuOpen(false)} 
                 />
-                <div className="absolute right-0 mt-2 w-48 rounded-xl bg-[#17151a] border border-white/[0.1] shadow-2xl p-1 z-50 animate-in fade-in zoom-in-95 duration-100">
+                <div className="absolute right-0 mt-2 w-56 rounded-xl bg-[#17151a] border border-white/[0.1] shadow-2xl p-1.5 z-50 animate-in fade-in zoom-in-95 duration-100 space-y-1">
+                  <div className="px-2.5 py-1 text-[10px] font-bold text-white/40 uppercase tracking-wider">
+                    Full System Archive (ZIP + Photos)
+                  </div>
+                  <button
+                    onClick={() => {
+                      onFullExport();
+                      setMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-white/90 hover:text-white hover:bg-orange-500/15 rounded-lg transition-colors text-left font-medium"
+                  >
+                    <FolderArchive className="w-4 h-4 text-orange-400 shrink-0" />
+                    <div>
+                      <div className="font-semibold text-white">Full Export (.ZIP)</div>
+                      <div className="text-[10px] text-white/50">Database JSON + all photos</div>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => {
+                      onFullImport();
+                      setMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-white/90 hover:text-white hover:bg-sky-500/15 rounded-lg transition-colors text-left font-medium"
+                  >
+                    <Archive className="w-4 h-4 text-sky-400 shrink-0" />
+                    <div>
+                      <div className="font-semibold text-white">Full Import (.ZIP)</div>
+                      <div className="text-[10px] text-white/50">Restore database & unpack photos</div>
+                    </div>
+                  </button>
+
+                  <div className="h-[1px] bg-white/[0.08] my-1" />
+                  <div className="px-2.5 py-1 text-[10px] font-bold text-white/40 uppercase tracking-wider">
+                    Lightweight Backup (JSON)
+                  </div>
                   <button
                     onClick={() => {
                       onExportDB();
                       setMenuOpen(false);
                     }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-white/80 hover:text-white hover:bg-white/[0.06] rounded-lg transition-colors text-left"
+                    className="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-white/80 hover:text-white hover:bg-white/[0.06] rounded-lg transition-colors text-left"
                   >
                     <Download className="w-3.5 h-3.5 text-[#ff5c1a]" />
                     <span>Export Workspace JSON</span>
@@ -331,28 +379,29 @@ export const DesktopTitlebar: React.FC<DesktopTitlebarProps> = ({
                       onImportDB();
                       setMenuOpen(false);
                     }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-white/80 hover:text-white hover:bg-white/[0.06] rounded-lg transition-colors text-left"
+                    className="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-white/80 hover:text-white hover:bg-white/[0.06] rounded-lg transition-colors text-left"
                   >
                     <Upload className="w-3.5 h-3.5 text-sky-400" />
                     <span>Import Workspace JSON</span>
                   </button>
+
+                  <div className="h-[1px] bg-white/[0.08] my-1" />
                   <button
                     onClick={() => {
                       onRestoreMainDB();
                       setMenuOpen(false);
                     }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-amber-300 hover:text-amber-200 hover:bg-amber-500/10 rounded-lg transition-colors text-left"
+                    className="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-amber-300 hover:text-amber-200 hover:bg-amber-500/10 rounded-lg transition-colors text-left"
                   >
                     <Database className="w-3.5 h-3.5 text-amber-400" />
                     <span>Restore Main User Database</span>
                   </button>
-                  <div className="h-[1px] bg-white/[0.08] my-1" />
                   <button
                     onClick={() => {
                       onClearAll();
                       setMenuOpen(false);
                     }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition-colors text-left"
+                    className="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition-colors text-left"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     <span>Reset All Selections</span>

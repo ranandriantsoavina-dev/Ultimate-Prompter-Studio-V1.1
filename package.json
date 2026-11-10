@@ -1,7 +1,7 @@
 {
   "name": "ultimate-prompter-studio",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "main": "electron.cjs",
   "scripts": {
@@ -15,11 +15,21 @@
     "electron:build": "vite build && electron-builder --win --x64"
   },
   "build": {
-    "appId": "com.ultimateprompter.studio",
-    "productName": "Ultimate Prompter Studio",
+    "appId": "com.ultimateprompterv5.studio",
+    "productName": "Ultimate Prompter Studio V5 (1.1)",
     "directories": {
       "output": "release"
     },
+    "extraResources": [
+      {
+        "from": "server/target/release/prompter-server.exe",
+        "to": "prompter-server.exe"
+      },
+      {
+        "from": "dist",
+        "to": "app-dist"
+      }
+    ],
     "win": {
       "target": [
         "nsis",
@@ -37,16 +47,20 @@
     "@google/genai": "^2.4.0",
     "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-react": "^6.1.1",
+    "adm-zip": "^0.6.1",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
+    "multer": "^2.5.0",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "vite": "^8.3.0"
   },
   "devDependencies": {
+    "@types/adm-zip": "^0.5.8",
     "@types/express": "^4.17.21",
+    "@types/multer": "^2.3.0",
     "@types/node": "^22.14.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",

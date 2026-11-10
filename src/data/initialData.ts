@@ -1,14 +1,38 @@
-import { Category, DBState, Preset } from '../types/prompter';
+import { Category, DBState, Preset, Theme } from '../types/prompter';
+
+export const DEFAULT_ENV_THEMES: Theme[] = [
+  { id: 'theme-env-home-private', name: 'Home & Private' },
+  { id: 'theme-env-university-campus', name: 'University & Campus' },
+  { id: 'theme-env-city-streetwear', name: 'City & Streetwear' },
+  { id: 'theme-env-social-nightlife', name: 'Social & Nightlife' },
+  { id: 'theme-env-travel-leisure', name: 'Travel & Leisure' },
+];
+
+export const DEFAULT_POSE_THEMES: Theme[] = [
+  { id: 'theme-pose-fashion-editorial', name: 'Fashion & Editorial' },
+  { id: 'theme-pose-casual-candid', name: 'Casual & Candid' },
+  { id: 'theme-pose-selfie-closeup', name: 'Selfie & Close-Up' },
+  { id: 'theme-pose-fitness-active', name: 'Fitness & Active' },
+];
+
+export const DEFAULT_OUTFIT_THEMES: Theme[] = [
+  { id: 'theme-outfit-casual-streetwear', name: 'Casual & Streetwear' },
+  { id: 'theme-outfit-university-preppy', name: 'University & Preppy' },
+  { id: 'theme-outfit-events-nightlife', name: 'Events & Nightlife' },
+  { id: 'theme-outfit-fitness-active', name: 'Fitness & Active' },
+  { id: 'theme-outfit-swimwear-resort', name: 'Swimwear & Resort' },
+  { id: 'theme-outfit-lingerie-sensual', name: 'Lingerie & Sensual' }
+];
 
 export const INITIAL_PRESETS: Preset[] = [
   {
     id: "p1",
     name: "Cozy Knit Casual",
     kind: "outfit",
-    description: "Relaxed off-shoulder knitwear and denim",
-    nsfw: true,
+    description: "Relaxed off-shoulder knitwear and 90s vintage denim",
+    nsfw: false,
     picks: [
-      { cat: "outfit", sub: "top", el: "e2" },
+      { cat: "outfit", sub: "top", el: "e1" },
       { cat: "outfit", sub: "bottom", el: "e1" }
     ]
   },
@@ -16,9 +40,9 @@ export const INITIAL_PRESETS: Preset[] = [
     id: "p2",
     name: "Metropolitan Office",
     kind: "outfit",
-    description: "Sharp button-up blouse and pencil skirt",
+    description: "Sharp silk button-up blouse and wide-leg linen trousers",
     picks: [
-      { cat: "outfit", sub: "top", el: "e3" },
+      { cat: "outfit", sub: "top", el: "e2" },
       { cat: "outfit", sub: "bottom", el: "e2" }
     ]
   },
@@ -26,53 +50,53 @@ export const INITIAL_PRESETS: Preset[] = [
     id: "p3",
     name: "Night Club Glow",
     kind: "outfit",
-    description: "Sequined halter top with high-slit skirt",
-    nsfw: true,
+    description: "Shimmering sequin halter top with matching sequin mini skirt",
+    nsfw: false,
     picks: [
-      { cat: "outfit", sub: "top", el: "e13" },
-      { cat: "outfit", sub: "bottom", el: "e3" }
+      { cat: "outfit", sub: "top", el: "e24" },
+      { cat: "outfit", sub: "bottom", el: "e24" }
     ]
   },
   {
     id: "p4",
     name: "Athletic Studio",
     kind: "outfit",
-    description: "Sporty zip hoodie with biker shorts",
+    description: "Seamless ribbed sports bra with butt-sculpting leggings",
     picks: [
-      { cat: "outfit", sub: "top", el: "e7" },
-      { cat: "outfit", sub: "bottom", el: "e12" }
+      { cat: "outfit", sub: "top", el: "e27" },
+      { cat: "outfit", sub: "bottom", el: "e27" }
     ]
   },
   {
     id: "p5",
     name: "Urban Streetwear",
     kind: "outfit",
-    description: "Knotted graphic tee and cut-off denim",
+    description: "Knotted graphic vintage tee and cutoff denim shorts",
     picks: [
-      { cat: "outfit", sub: "top", el: "e11" },
-      { cat: "outfit", sub: "bottom", el: "e10" }
+      { cat: "outfit", sub: "top", el: "e6" },
+      { cat: "outfit", sub: "bottom", el: "e6" }
     ]
   },
   {
     id: "p6",
     name: "Lace Intimates",
     kind: "outfit",
-    description: "Sheer lace bralette and matching panties",
+    description: "Sheer floral lace balconette and matching garter belt set",
     nsfw: true,
     picks: [
-      { cat: "outfit", sub: "top", el: "e1" },
-      { cat: "outfit", sub: "bottom", el: "e16" }
+      { cat: "outfit", sub: "top", el: "e45" },
+      { cat: "outfit", sub: "bottom", el: "e45" }
     ]
   },
   {
     id: "p7",
     name: "Sunlit Riviera Bikini",
     kind: "outfit",
-    description: "Micro bikini top and high-cut bottoms",
+    description: "Metallic bronze micro triangle top and Brazilian bottoms",
     nsfw: true,
     picks: [
-      { cat: "outfit", sub: "top", el: "e23" },
-      { cat: "outfit", sub: "bottom", el: "e18" }
+      { cat: "outfit", sub: "top", el: "e36" },
+      { cat: "outfit", sub: "bottom", el: "e36" }
     ]
   },
   {
@@ -80,9 +104,9 @@ export const INITIAL_PRESETS: Preset[] = [
     name: "Artisan Cafe Afternoon",
     kind: "context",
     description: "Cozy knitwear, cafe interior, soft window gaze",
-    nsfw: true,
+    nsfw: false,
     picks: [
-      { cat: "outfit", sub: "top", el: "e2" },
+      { cat: "outfit", sub: "top", el: "e1" },
       { cat: "outfit", sub: "bottom", el: "e1" },
       { cat: "comp", sub: "framing", el: "e1" },
       { cat: "pose", sub: "sitting", el: "e3" },
@@ -96,8 +120,8 @@ export const INITIAL_PRESETS: Preset[] = [
     kind: "context",
     description: "Modern gym studio, mirror selfie framing",
     picks: [
-      { cat: "outfit", sub: "top", el: "e7" },
-      { cat: "outfit", sub: "bottom", el: "e12" },
+      { cat: "outfit", sub: "top", el: "e28" },
+      { cat: "outfit", sub: "bottom", el: "e28" },
       { cat: "comp", sub: "style", el: "e0" },
       { cat: "pose", sub: "standing", el: "e8" },
       { cat: "env", sub: "indoor", el: "e14" }
@@ -107,14 +131,14 @@ export const INITIAL_PRESETS: Preset[] = [
     id: "p10",
     name: "Tokyo Rooftop at Dusk",
     kind: "context",
-    description: "Night city backdrop, neon rim lighting",
-    nsfw: true,
+    description: "Night city backdrop, metallic chainmail and slit skirt",
+    nsfw: false,
     picks: [
-      { cat: "outfit", sub: "top", el: "e13" },
-      { cat: "outfit", sub: "bottom", el: "e3" },
+      { cat: "outfit", sub: "top", el: "e19" },
+      { cat: "outfit", sub: "bottom", el: "e19" },
       { cat: "comp", sub: "framing", el: "e0" },
       { cat: "pose", sub: "standing", el: "e3" },
-      { cat: "env", sub: "outdoor", el: "e1" },
+      { cat: "env", sub: "outdoor", el: "e15" },
       { cat: "light", el: "e2" }
     ]
   },
@@ -122,27 +146,27 @@ export const INITIAL_PRESETS: Preset[] = [
     id: "p11",
     name: "Editorial Shopping Haul",
     kind: "context",
-    description: "Candid walking shot in boutique mall",
+    description: "Pinned ribbed crop top and distressed denim in boutique mall",
     picks: [
-      { cat: "outfit", sub: "top", el: "e11" },
-      { cat: "outfit", sub: "bottom", el: "e10" },
+      { cat: "outfit", sub: "top", el: "e0" },
+      { cat: "outfit", sub: "bottom", el: "e0" },
       { cat: "comp", sub: "style", el: "e1" },
       { cat: "pose", sub: "standing", el: "e6" },
-      { cat: "env", sub: "indoor", el: "e19" }
+      { cat: "env", sub: "indoor", el: "e12" }
     ]
   },
   {
     id: "p12",
     name: "Golden Hour Oasis",
     kind: "context",
-    description: "Sunset poolside, turquoise reflections",
+    description: "Sunset poolside bronze bikini with turquoise reflections",
     nsfw: true,
     picks: [
-      { cat: "outfit", sub: "top", el: "e23" },
-      { cat: "outfit", sub: "bottom", el: "e18" },
+      { cat: "outfit", sub: "top", el: "e36" },
+      { cat: "outfit", sub: "bottom", el: "e36" },
       { cat: "comp", sub: "framing", el: "e0" },
       { cat: "pose", sub: "standing", el: "e4" },
-      { cat: "env", sub: "outdoor", el: "e3" },
+      { cat: "env", sub: "outdoor", el: "e19" },
       { cat: "light", el: "e1" }
     ]
   },
@@ -150,11 +174,11 @@ export const INITIAL_PRESETS: Preset[] = [
     id: "p13",
     name: "Silk & Boudoir Sanctuary",
     kind: "context",
-    description: "Intimate white bed setting with soft diffused light",
+    description: "Intimate white bed setting with delicate eyelash lace bralette",
     nsfw: true,
     picks: [
-      { cat: "outfit", sub: "top", el: "e1" },
-      { cat: "outfit", sub: "bottom", el: "e16" },
+      { cat: "outfit", sub: "top", el: "e46" },
+      { cat: "outfit", sub: "bottom", el: "e46" },
       { cat: "comp", sub: "framing", el: "e1" },
       { cat: "pose", sub: "lying", el: "e0" },
       { cat: "env", sub: "indoor", el: "e0" },
@@ -165,12 +189,12 @@ export const INITIAL_PRESETS: Preset[] = [
     id: "p14",
     name: "90s Flash Disposable Street",
     kind: "context",
-    description: "Vintage candid night street snapshot",
-    nsfw: true,
+    description: "Cropped leather moto jacket and utility cargo pants at night",
+    nsfw: false,
     picks: [
       { cat: "style", el: "e9" },
-      { cat: "outfit", sub: "top", el: "e11" },
-      { cat: "outfit", sub: "bottom", el: "e1" },
+      { cat: "outfit", sub: "top", el: "e3" },
+      { cat: "outfit", sub: "bottom", el: "e3" },
       { cat: "light", el: "e18" },
       { cat: "tech", el: "e3" }
     ]
@@ -179,22 +203,22 @@ export const INITIAL_PRESETS: Preset[] = [
     id: "p15",
     name: "Extreme Vinyl Siren",
     kind: "outfit",
-    description: "Glossy vinyl bodysuit and wet-look tights",
+    description: "Glossy wet-look vinyl bustier and second-skin leggings",
     nsfw: true,
     picks: [
-      { cat: "outfit", sub: "top", el: "e17" },
-      { cat: "outfit", sub: "bottom", el: "e19" }
+      { cat: "outfit", sub: "top", el: "e48" },
+      { cat: "outfit", sub: "bottom", el: "e48" }
     ]
   },
   {
     id: "p16",
     name: "Boudoir Velvet Nocturne",
     kind: "context",
-    description: "Sensual boudoir study with low chiaroscuro lighting",
+    description: "Sensual boudoir study with sheer lace and low chiaroscuro lighting",
     nsfw: true,
     picks: [
-      { cat: "outfit", sub: "top", el: "e15" },
-      { cat: "outfit", sub: "bottom", el: "e14" },
+      { cat: "outfit", sub: "top", el: "e45" },
+      { cat: "outfit", sub: "bottom", el: "e45" },
       { cat: "pose", sub: "lying", el: "e0" },
       { cat: "light", el: "e0" }
     ]
@@ -203,11 +227,11 @@ export const INITIAL_PRESETS: Preset[] = [
     id: "p17",
     name: "Sheer Mesh Decadence",
     kind: "outfit",
-    description: "Transparent mesh corset top and scalloped lace panties",
+    description: "Transparent mesh corset top and matching mesh micro skirt",
     nsfw: true,
     picks: [
-      { cat: "outfit", sub: "top", el: "e29" },
-      { cat: "outfit", sub: "bottom", el: "e16" }
+      { cat: "outfit", sub: "top", el: "e51" },
+      { cat: "outfit", sub: "bottom", el: "e51" }
     ]
   }
 ];
@@ -216,6 +240,7 @@ export const INITIAL_CATEGORIES: Category[] = [
   {
     id: "style",
     name: "Style & Aesthetic",
+    promptName: "style",
     type: "flat",
     icon: "Palette",
     accent: "#ff6b2c",
@@ -352,6 +377,7 @@ export const INITIAL_CATEGORIES: Category[] = [
   {
     id: "subject",
     name: "Subject & Persona",
+    promptName: "subject",
     type: "tabs",
     icon: "User",
     accent: "#ff8a3d",
@@ -571,131 +597,1861 @@ export const INITIAL_CATEGORIES: Category[] = [
     ]
   },
   {
-    id: "outfit",
-    name: "Outfit & Wardrobe",
-    type: "tabs",
-    icon: "Shirt",
-    accent: "#ff3355",
-    description: "Tops, bottoms, accessories, and complete coordinated attire",
-    subcats: [
+    "id": "outfit",
+    "name": "Outfit & Wardrobe",
+    "promptName": "outfit",
+    "type": "tabs",
+    "icon": "Shirt",
+    "accent": "#ff3355",
+    "description": "Tops, bottoms, accessories, and complete coordinated attire",
+    themes: DEFAULT_OUTFIT_THEMES,
+    "subcats": [
       {
-        id: "top",
-        name: "Top & Bodice",
-        type: "flat",
-        els: [
-          { id: "e0", name: "Pinned Ribbed Crop Top", prompt: "She is wearing a white ribbed crop top fastened by a single delicate center pin", nsfw: false },
-          { id: "e1", name: "Black Lace Bralette", prompt: "She is wearing an intricate black floral lace bralette", nsfw: true },
-          { id: "e2", name: "Oversized Cream Knit Sweater", prompt: "She is wearing an oversized chunky cream knit sweater slipping casually off one shoulder", nsfw: false },
-          { id: "e3", name: "Silk Unbuttoned Blouse", prompt: "She is wearing a tailored crisp white silk blouse, partially unbuttoned to reveal the collarbone", nsfw: false },
-          { id: "e4", name: "Sheer Geometric Mesh Top", prompt: "She is wearing a sheer black mesh long-sleeve top", nsfw: true },
-          { id: "e5", name: "Cropped Denim Jacket", prompt: "She is wearing a vintage cropped blue denim jacket worn over bare skin", nsfw: false },
-          { id: "e6", name: "Silk Satin Cami", prompt: "She is wearing a champagne silk satin camisole with delicate spaghetti straps", nsfw: false },
-          { id: "e7", name: "Athletic Crop Zip Hoodie", prompt: "She is wearing a heather grey fitted zip-up crop hoodie", nsfw: false },
-          { id: "e8", name: "Cashmere Fitted Turtleneck", prompt: "She is wearing a snug ribbed black cashmere turtleneck sweater", nsfw: false },
-          { id: "e9", name: "Structured Corset Bustier", prompt: "She is wearing a boned satin corset bustier with sweetheart neckline", nsfw: true },
-          { id: "e10", name: "Deep Plunge Tank Top", prompt: "She is wearing a ribbed cotton tank top with a deep plunging neckline", nsfw: false },
-          { id: "e11", name: "Knotted Vintage Graphic Tee", prompt: "She is wearing a washed charcoal vintage band tee tied high at the waist", nsfw: false },
-          { id: "e12", name: "Draped Wrap Top", prompt: "She is wearing a draped emerald wrap blouse cinched at the side", nsfw: false },
-          { id: "e13", name: "Sequined Gold Halter", prompt: "She is wearing a shimmering gold sequin backless halter top", nsfw: false },
-          { id: "e14", name: "Lace Camisole Top", prompt: "She is wearing a scalloped lace-trimmed satin camisole", nsfw: true },
-          { id: "e15", name: "Sheer Balconette Lace Bra", prompt: "She is wearing an unlined sheer lace balconette bra", nsfw: true },
-          { id: "e16", name: "Open-Back Halter Bodysuit", prompt: "She is wearing an open-back halter bodysuit exposing the entire spine", nsfw: true },
-          { id: "e17", name: "Glossy Vinyl Bodysuit Top", prompt: "She is wearing a high-gloss wet-look black vinyl bodysuit, sculpted fit", nsfw: true },
-          { id: "e18", name: "Fishnet Long-Sleeve Crop", prompt: "She is wearing a delicate black fishnet crop top over bare skin", nsfw: true },
-          { id: "e19", name: "Cut-Out Strappy Bralette", prompt: "She is wearing an architectural cut-out bralette with cage straps", nsfw: true },
-          { id: "e20", name: "Sheer Bodystocking Top", prompt: "She is wearing a sheer gossamer bodystocking top", nsfw: true },
-          { id: "e21", name: "Pasties with Body Chains", prompt: "She is wearing metallic pasties connected by delicate draping gold chains", nsfw: true },
-          { id: "e22", name: "Cardigan Slid Off, No Bra", prompt: "She is wearing an unbuttoned mohair cardigan casually slid off both shoulders", nsfw: true },
-          { id: "e23", name: "Micro Triangle Bikini Top", prompt: "She is wearing a metallic bronze micro triangle bikini top", nsfw: true },
-          { id: "e24", name: "Silk Chiffon Open Robe", prompt: "She is wearing a sheer silk chiffon robe flowing open", nsfw: true },
-          { id: "e25", name: "Leather Buckled Harness", prompt: "She is wearing a handcrafted leather harness across chest and torso", nsfw: true },
-          { id: "e26", name: "Minimal String Bralette", prompt: "She is wearing a delicate minimalist string bralette", nsfw: true },
-          { id: "e27", name: "Drenched Sheer White Tee", prompt: "She is wearing a translucent soaked white cotton tee clinging to the torso", nsfw: true },
-          { id: "e28", name: "Asymmetric Off-Shoulder Top", prompt: "She is wearing an asymmetric off-shoulder top pulled down at one side", nsfw: true },
-          { id: "e29", name: "Mesh Sheer Corset Top", prompt: "She is wearing a semi-transparent boned mesh corset top", nsfw: true }
+        "id": "top",
+        "name": "Top & Bodice",
+        "type": "flat",
+        "els": [
+          {
+            "id": "e0",
+            "name": "Pinned Ribbed White Crop Top",
+            "prompt": "She is wearing a white micro-ribbed cotton crop top fastened by a single delicate center gold pin",
+            "nsfw": false,
+            "ensembleId": "ens_cas_01",
+            "tags": [
+              "Daily Casual",
+              "Streetwear",
+              "Minimalist"
+            ]
+          },
+          {
+            "id": "e1",
+            "name": "Oversized Cream Knit Sweater",
+            "prompt": "She is wearing an oversized chunky ribbed cream wool sweater slipping casually off one shoulder",
+            "nsfw": false,
+            "ensembleId": "ens_cas_02",
+            "tags": [
+              "Daily Casual",
+              "Cozy",
+              "Knitwear"
+            ]
+          },
+          {
+            "id": "e2",
+            "name": "Silk Unbuttoned Blouse",
+            "prompt": "She is wearing a tailored crisp ivory silk blouse casually unbuttoned to reveal the collarbone",
+            "nsfw": false,
+            "ensembleId": "ens_cas_03",
+            "tags": [
+              "Daily Casual",
+              "Chic",
+              "Minimalist"
+            ]
+          },
+          {
+            "id": "e3",
+            "name": "Cropped Vintage Leather Biker Jacket",
+            "prompt": "She is wearing a cropped distressed black leather moto jacket worn over a fitted white baby tee",
+            "nsfw": false,
+            "ensembleId": "ens_cas_04",
+            "tags": [
+              "Daily Casual",
+              "Streetwear",
+              "Edgy"
+            ]
+          },
+          {
+            "id": "e4",
+            "name": "Draped Terracotta Wrap Blouse",
+            "prompt": "She is wearing a lightweight terracotta draped linen wrap blouse cinched at the side",
+            "nsfw": false,
+            "ensembleId": "ens_cas_05",
+            "tags": [
+              "Daily Casual",
+              "Summer",
+              "Boho"
+            ]
+          },
+          {
+            "id": "e5",
+            "name": "Champagne Silk Satin Cami",
+            "prompt": "She is wearing a lustrous champagne silk satin camisole with delicate micro spaghetti straps",
+            "nsfw": false,
+            "ensembleId": "ens_cas_06",
+            "tags": [
+              "Daily Casual",
+              "Satin",
+              "Chic"
+            ]
+          },
+          {
+            "id": "e6",
+            "name": "Knotted Vintage Rock Band Tee",
+            "prompt": "She is wearing a washed charcoal oversized vintage rock band tee tied high above the navel",
+            "nsfw": false,
+            "ensembleId": "ens_cas_07",
+            "tags": [
+              "Daily Casual",
+              "Vintage",
+              "Grunge"
+            ]
+          },
+          {
+            "id": "e7",
+            "name": "Artisanal Crochet Halter Top",
+            "prompt": "She is wearing an artisanal cream open-weave crochet knit halter top with scalloped edging",
+            "nsfw": false,
+            "ensembleId": "ens_cas_08",
+            "tags": [
+              "Daily Casual",
+              "Resort",
+              "Crochet"
+            ]
+          },
+          {
+            "id": "e8",
+            "name": "Deep Plunge Charcoal Ribbed Tank",
+            "prompt": "She is wearing a form-fitting charcoal grey micro-ribbed tank top with a deep scoop neckline",
+            "nsfw": false,
+            "ensembleId": "ens_cas_09",
+            "tags": [
+              "Daily Casual",
+              "Model Off-Duty",
+              "Minimalist"
+            ]
+          },
+          {
+            "id": "e9",
+            "name": "Cropped Cable-Knit Polo Sweater",
+            "prompt": "She is wearing a preppy navy and cream cropped cable-knit polo sweater with contrast tipping",
+            "nsfw": false,
+            "ensembleId": "ens_uni_01",
+            "tags": [
+              "University",
+              "Preppy",
+              "Tennis"
+            ]
+          },
+          {
+            "id": "e10",
+            "name": "Oversized Varsity Letterman Sweater",
+            "prompt": "She is wearing an oversized slouchy forest green collegiate varsity knit sweater",
+            "nsfw": false,
+            "ensembleId": "ens_uni_02",
+            "tags": [
+              "University",
+              "Campus",
+              "Varsity"
+            ]
+          },
+          {
+            "id": "e11",
+            "name": "Fitted Oatmeal Cashmere Turtleneck",
+            "prompt": "She is wearing a snug ribbed oatmeal cashmere turtleneck sweater",
+            "nsfw": false,
+            "ensembleId": "ens_uni_03",
+            "tags": [
+              "University",
+              "Autumn",
+              "Preppy"
+            ]
+          },
+          {
+            "id": "e12",
+            "name": "Cropped Half-Zip Athletic Fleece",
+            "prompt": "She is wearing a heather grey cropped fleece half-zip pullover with an athletic stand collar",
+            "nsfw": false,
+            "ensembleId": "ens_uni_04",
+            "tags": [
+              "University",
+              "Athleisure",
+              "Campus"
+            ]
+          },
+          {
+            "id": "e13",
+            "name": "Layered Oxford & Argyle Sweater Vest",
+            "prompt": "She is wearing an oversized crisp poplin white shirt layered under a knit argyle sweater vest",
+            "nsfw": false,
+            "ensembleId": "ens_uni_05",
+            "tags": [
+              "University",
+              "Dark Academia",
+              "Preppy"
+            ]
+          },
+          {
+            "id": "e14",
+            "name": "Satin Varsity Bomber Jacket",
+            "prompt": "She is wearing a satin burgundy varsity bomber jacket over a fitted white scoop tank",
+            "nsfw": false,
+            "ensembleId": "ens_uni_06",
+            "tags": [
+              "University",
+              "Varsity",
+              "Bomber"
+            ]
+          },
+          {
+            "id": "e15",
+            "name": "Pastel Gingham Tie-Front Crop",
+            "prompt": "She is wearing a delicate powder blue gingham cotton crop top tied in a front bow",
+            "nsfw": false,
+            "ensembleId": "ens_uni_07",
+            "tags": [
+              "University",
+              "Sorority",
+              "Spring"
+            ]
+          },
+          {
+            "id": "e16",
+            "name": "Slouchy Collegiate Pullover Hoodie",
+            "prompt": "She is wearing a washed vintage collegiate pullover hoodie resting casually below the hips",
+            "nsfw": false,
+            "ensembleId": "ens_uni_08",
+            "tags": [
+              "University",
+              "Cozy",
+              "Lounge"
+            ]
+          },
+          {
+            "id": "e17",
+            "name": "Cropped Bouclé Tweed Jacket",
+            "prompt": "She is wearing a structured cropped cream bouclé tweed jacket with gold embossed buttons",
+            "nsfw": false,
+            "ensembleId": "ens_uni_09",
+            "tags": [
+              "University",
+              "Preppy",
+              "Luxury"
+            ]
+          },
+          {
+            "id": "e18",
+            "name": "Boned Satin Corset Bustier",
+            "prompt": "She is wearing a boned black satin corset bustier with a sculpted sweetheart neckline",
+            "nsfw": false,
+            "ensembleId": "ens_eve_01",
+            "tags": [
+              "Events & Nightlife",
+              "Corset",
+              "Cocktail"
+            ]
+          },
+          {
+            "id": "e19",
+            "name": "Backless Metallic Chainmail Halter",
+            "prompt": "She is wearing a liquid gold metallic chainmail backless halter top that drapes fluidly",
+            "nsfw": false,
+            "ensembleId": "ens_eve_02",
+            "tags": [
+              "Events & Nightlife",
+              "Gala",
+              "Glamour"
+            ]
+          },
+          {
+            "id": "e20",
+            "name": "Sheer Geometric Mesh Long-Sleeve",
+            "prompt": "She is wearing a sheer black geometric illusion mesh top with velvet flocked accents",
+            "nsfw": true,
+            "ensembleId": "ens_eve_03",
+            "tags": [
+              "Events & Nightlife",
+              "Clubwear",
+              "Sheer"
+            ]
+          },
+          {
+            "id": "e21",
+            "name": "Cowl-Neck Emerald Silk Cami",
+            "prompt": "She is wearing a draped cowl-neck emerald green silk satin camisole with cross-back straps",
+            "nsfw": false,
+            "ensembleId": "ens_eve_04",
+            "tags": [
+              "Events & Nightlife",
+              "Silk",
+              "Cocktail"
+            ]
+          },
+          {
+            "id": "e22",
+            "name": "Crystal-Embellished Mesh Bandeau",
+            "prompt": "She is wearing an opulent sparkling rhinestone crystal-mesh bandeau top",
+            "nsfw": false,
+            "ensembleId": "ens_eve_05",
+            "tags": [
+              "Events & Nightlife",
+              "Sparkle",
+              "Bandeau"
+            ]
+          },
+          {
+            "id": "e23",
+            "name": "Architectural Cut-Out Cross Top",
+            "prompt": "She is wearing a crossover front halter crop top with architectural keyhole cutouts",
+            "nsfw": false,
+            "ensembleId": "ens_eve_06",
+            "tags": [
+              "Events & Nightlife",
+              "VIP Lounge",
+              "Modern"
+            ]
+          },
+          {
+            "id": "e24",
+            "name": "Shimmering Silver Sequin Halter",
+            "prompt": "She is wearing an iridescent silver sequin backless halter crop top reflecting ambient lights",
+            "nsfw": false,
+            "ensembleId": "ens_eve_07",
+            "tags": [
+              "Events & Nightlife",
+              "Disco",
+              "Sequin"
+            ]
+          },
+          {
+            "id": "e25",
+            "name": "Asymmetric One-Shoulder Draped Top",
+            "prompt": "She is wearing a sculptural midnight blue asymmetric one-shoulder stretch crepe top",
+            "nsfw": false,
+            "ensembleId": "ens_eve_08",
+            "tags": [
+              "Events & Nightlife",
+              "Art Gallery",
+              "Chic"
+            ]
+          },
+          {
+            "id": "e26",
+            "name": "Reflective Cyber Bralette",
+            "prompt": "She is wearing a cyber-inspired iridescent reflective neon crop bralette",
+            "nsfw": false,
+            "ensembleId": "ens_eve_09",
+            "tags": [
+              "Events & Nightlife",
+              "Rave",
+              "Cyberpunk"
+            ]
+          },
+          {
+            "id": "e27",
+            "name": "Seamless Ribbed Sports Bra",
+            "prompt": "She is wearing a mauve seamless ribbed sports bra with a flattering square neckline",
+            "nsfw": false,
+            "ensembleId": "ens_fit_01",
+            "tags": [
+              "Fitness",
+              "Pilates",
+              "Matching Set"
+            ]
+          },
+          {
+            "id": "e28",
+            "name": "Square-Neck Racerback Crop Tank",
+            "prompt": "She is wearing a buttery soft sage green square-neck athletic crop tank top",
+            "nsfw": false,
+            "ensembleId": "ens_fit_02",
+            "tags": [
+              "Fitness",
+              "Hot Girl Walk",
+              "Athleisure"
+            ]
+          },
+          {
+            "id": "e29",
+            "name": "Cross-Back Performance Sports Bra",
+            "prompt": "She is wearing a matte black strappy multi-cross back high-support sports bra",
+            "nsfw": false,
+            "ensembleId": "ens_fit_03",
+            "tags": [
+              "Fitness",
+              "Gym",
+              "Lifting"
+            ]
+          },
+          {
+            "id": "e30",
+            "name": "Athletic Polo Halter Top",
+            "prompt": "She is wearing a sporty white athletic polo collar crop top with navy piping",
+            "nsfw": false,
+            "ensembleId": "ens_fit_04",
+            "tags": [
+              "Fitness",
+              "Tennis",
+              "Court"
+            ]
+          },
+          {
+            "id": "e31",
+            "name": "Open-Back Yoga Bralette",
+            "prompt": "She is wearing an open-back blush pink bamboo-blend yoga bralette with crisscross straps",
+            "nsfw": false,
+            "ensembleId": "ens_fit_05",
+            "tags": [
+              "Fitness",
+              "Yoga",
+              "Bralette"
+            ]
+          },
+          {
+            "id": "e32",
+            "name": "Long-Sleeve Athletic Thumbhole Crop",
+            "prompt": "She is wearing a form-fitting sky blue athletic long-sleeve crop top with thumbholes",
+            "nsfw": false,
+            "ensembleId": "ens_fit_06",
+            "tags": [
+              "Fitness",
+              "Running",
+              "Cardio"
+            ]
+          },
+          {
+            "id": "e33",
+            "name": "Zip-Front High-Impact Sports Bra",
+            "prompt": "She is wearing a tactical olive green zip-front compression sports bra",
+            "nsfw": false,
+            "ensembleId": "ens_fit_07",
+            "tags": [
+              "Fitness",
+              "HIIT",
+              "Crossfit"
+            ]
+          },
+          {
+            "id": "e34",
+            "name": "Ballet Wrap Athleisure Crop",
+            "prompt": "She is wearing a ballet-inspired wrap-front heather grey long-sleeve crop top",
+            "nsfw": false,
+            "ensembleId": "ens_fit_08",
+            "tags": [
+              "Fitness",
+              "Barre",
+              "Dance"
+            ]
+          },
+          {
+            "id": "e35",
+            "name": "Cropped French Terry Zip Hoodie",
+            "prompt": "She is wearing an ivory cropped zip-up hoodie in heavyweight French terry cotton",
+            "nsfw": false,
+            "ensembleId": "ens_fit_09",
+            "tags": [
+              "Fitness",
+              "Post-Workout",
+              "Lounge"
+            ]
+          },
+          {
+            "id": "e36",
+            "name": "Metallic Bronze Micro Triangle Top",
+            "prompt": "She is wearing a shimmering metallic bronze micro triangle bikini top",
+            "nsfw": true,
+            "ensembleId": "ens_swm_01",
+            "tags": [
+              "Swimwear",
+              "Resort",
+              "Bronze"
+            ]
+          },
+          {
+            "id": "e37",
+            "name": "Textured Waffle Scoop Swim Top",
+            "prompt": "She is wearing a textured cream waffle-knit scoop-neck bikini top with a tortoiseshell center buckle",
+            "nsfw": false,
+            "ensembleId": "ens_swm_02",
+            "tags": [
+              "Swimwear",
+              "Beach",
+              "Minimalist"
+            ]
+          },
+          {
+            "id": "e38",
+            "name": "Crochet Macramé Triangle Top",
+            "prompt": "She is wearing a sand-colored handcrafted macramé crochet bikini top with cowrie shell charms",
+            "nsfw": false,
+            "ensembleId": "ens_swm_03",
+            "tags": [
+              "Swimwear",
+              "Boho",
+              "Tulum"
+            ]
+          },
+          {
+            "id": "e39",
+            "name": "Strapless White Ring Bandeau",
+            "prompt": "She is wearing a minimalist pristine white bandeau bikini top with a center gold ring",
+            "nsfw": false,
+            "ensembleId": "ens_swm_04",
+            "tags": [
+              "Swimwear",
+              "Yacht",
+              "Classic"
+            ]
+          },
+          {
+            "id": "e40",
+            "name": "Underwire Balcony Bikini Top",
+            "prompt": "She is wearing a leopard print underwire balcony push-up bikini top",
+            "nsfw": false,
+            "ensembleId": "ens_swm_05",
+            "tags": [
+              "Swimwear",
+              "Glamour",
+              "St. Tropez"
+            ]
+          },
+          {
+            "id": "e41",
+            "name": "Sporty Neoprene Zip Swim Crop",
+            "prompt": "She is wearing a sleek matte black neoprene zip-front athletic bikini crop top",
+            "nsfw": false,
+            "ensembleId": "ens_swm_06",
+            "tags": [
+              "Swimwear",
+              "Surf",
+              "Malibu"
+            ]
+          },
+          {
+            "id": "e42",
+            "name": "Glittering Lurex Wrap Swim Top",
+            "prompt": "She is wearing a sparkling champagne lurex wrap-around crisscross bikini top",
+            "nsfw": true,
+            "ensembleId": "ens_swm_07",
+            "tags": [
+              "Swimwear",
+              "Pool Party",
+              "Ibiza"
+            ]
+          },
+          {
+            "id": "e43",
+            "name": "Vibrant Neon Coral Bandeau",
+            "prompt": "She is wearing a neon coral ribbed underbust bandeau swim top",
+            "nsfw": false,
+            "ensembleId": "ens_swm_08",
+            "tags": [
+              "Swimwear",
+              "Neon",
+              "Bandeau"
+            ]
+          },
+          {
+            "id": "e44",
+            "name": "Plunging Halter Swim Bralette",
+            "prompt": "She is wearing a deep-plunge terracotta halter swim bralette with gold bead accents",
+            "nsfw": false,
+            "ensembleId": "ens_swm_09",
+            "tags": [
+              "Swimwear",
+              "Sunset",
+              "Halter"
+            ]
+          },
+          {
+            "id": "e45",
+            "name": "Unlined Sheer Floral Lace Balconette",
+            "prompt": "She is wearing an unlined translucent black floral lace balconette bra accentuating natural contours",
+            "nsfw": true,
+            "ensembleId": "ens_nsf_01",
+            "tags": [
+              "NSFW",
+              "Lingerie",
+              "Boudoir"
+            ]
+          },
+          {
+            "id": "e46",
+            "name": "Scalloped Eyelash Lace Bralette",
+            "prompt": "She is wearing a delicate champagne silk bralette trimmed with scalloped eyelash lace",
+            "nsfw": true,
+            "ensembleId": "ens_nsf_02",
+            "tags": [
+              "NSFW",
+              "Boudoir",
+              "Silk"
+            ]
+          },
+          {
+            "id": "e47",
+            "name": "Strappy Cut-Out Cage Bralette",
+            "prompt": "She is wearing an architectural black cut-out bralette with provocative cage straps",
+            "nsfw": true,
+            "ensembleId": "ens_nsf_03",
+            "tags": [
+              "NSFW",
+              "Strappy",
+              "Sensual"
+            ]
+          },
+          {
+            "id": "e48",
+            "name": "Glossy Wet-Look Vinyl Bustier",
+            "prompt": "She is wearing a tight high-gloss wet-look black vinyl corset top sculpted to the waist",
+            "nsfw": true,
+            "ensembleId": "ens_nsf_04",
+            "tags": [
+              "NSFW",
+              "Vinyl",
+              "Fetish Glam"
+            ]
+          },
+          {
+            "id": "e49",
+            "name": "Translucent Chiffon Tie-Front Top",
+            "prompt": "She is wearing an ultra-sheer see-through white chiffon tie-front crop top without a bra",
+            "nsfw": true,
+            "ensembleId": "ens_nsf_05",
+            "tags": [
+              "NSFW",
+              "Sheer",
+              "Minimal"
+            ]
+          },
+          {
+            "id": "e50",
+            "name": "Metallic Pasties & Body Chains",
+            "prompt": "She is wearing polished gold metallic pasties connected by delicate draping torso chains",
+            "nsfw": true,
+            "ensembleId": "ens_nsf_06",
+            "tags": [
+              "NSFW",
+              "Body Jewelry",
+              "Exotic"
+            ]
+          },
+          {
+            "id": "e51",
+            "name": "Semi-Sheer Boned Mesh Corset Top",
+            "prompt": "She is wearing a sheer black mesh waist-cinching corset with satin boning channels",
+            "nsfw": true,
+            "ensembleId": "ens_nsf_07",
+            "tags": [
+              "NSFW",
+              "Corsetry",
+              "Mesh"
+            ]
+          },
+          {
+            "id": "e52",
+            "name": "Crimson Red Satin & Lace Demi-Cup",
+            "prompt": "She is wearing a rich crimson red silk satin demi-cup bra with black eyelash lace trim",
+            "nsfw": true,
+            "ensembleId": "ens_nsf_08",
+            "tags": [
+              "NSFW",
+              "Crimson",
+              "Harness"
+            ]
+          },
+          {
+            "id": "e53",
+            "name": "Delicate Long-Sleeve Fishnet Crop",
+            "prompt": "She is wearing a sheer black micro-fishnet long-sleeve crop top worn directly over bare skin",
+            "nsfw": true,
+            "ensembleId": "ens_nsf_09",
+            "tags": [
+              "NSFW",
+              "Fishnet",
+              "Allure"
+            ]
+          }
         ]
       },
       {
-        id: "bottom",
-        name: "Bottom & Skirt",
-        type: "flat",
-        els: [
-          { id: "e0", name: "Thong & Ribbed Thigh-Highs", prompt: "white thong bottoms paired with ribbed knit over-the-knee socks", nsfw: true },
-          { id: "e1", name: "High-Waisted Distressed Denim Shorts", prompt: "high-waisted distressed vintage denim cutoff shorts", nsfw: false },
-          { id: "e2", name: "Tailored Leather Pencil Skirt", prompt: "a sleek black leather pencil skirt hugging her hips", nsfw: false },
-          { id: "e3", name: "Sequined Skirt with High Slit", prompt: "a floor-length sequined evening skirt with a daring thigh-high slit", nsfw: false },
-          { id: "e4", name: "Tiny String Bikini Bottoms", prompt: "tiny side-tie string bikini bottoms", nsfw: true },
-          { id: "e5", name: "Second-Skin Leather Leggings", prompt: "form-fitting supple black leather leggings", nsfw: false },
-          { id: "e6", name: "Pleated Tennis Mini Skirt", prompt: "a crisp pleated tennis mini skirt", nsfw: false },
-          { id: "e7", name: "Seamless Sculpting Leggings", prompt: "high-waisted seamless sculpting athletic leggings", nsfw: false },
-          { id: "e8", name: "Sheer Floral Lace Skirt", prompt: "a translucent black floral lace skirt", nsfw: true },
-          { id: "e9", name: "Wide-Leg Linen Trousers", prompt: "flowing wide-leg ivory linen trousers", nsfw: false },
-          { id: "e10", name: "Frayed Denim Booty Shorts", prompt: "raw-hem frayed cheek denim shorts", nsfw: false },
-          { id: "e11", name: "Bias-Cut Satin Slip Skirt", prompt: "a bias-cut champagne satin midi slip skirt", nsfw: false },
-          { id: "e12", name: "Athletic Compression Biker Shorts", prompt: "matte black compression biker shorts", nsfw: false },
-          { id: "e13", name: "Tiered Chiffon Maxi Skirt", prompt: "a breezy tiered floral chiffon maxi skirt", nsfw: false },
-          { id: "e14", name: "Garter Belt & Sheer Stockings", prompt: "a vintage lace garter belt with ultra-sheer black stockings", nsfw: true },
-          { id: "e15", name: "Micro Tanga Thong", prompt: "a minimalist micro tanga thong", nsfw: true },
-          { id: "e16", name: "Sheer Scalloped Lace Panties", prompt: "translucent scalloped lace lingerie bottoms", nsfw: true },
-          { id: "e17", name: "Crotchless Lace Thong", prompt: "delicate open-crotch lace lingerie bottoms", nsfw: true },
-          { id: "e18", name: "High-Cut Brazilian Bikini Bottoms", prompt: "high-cut Brazilian cheek bikini bottoms", nsfw: true },
-          { id: "e19", name: "Glossy Wet-Look Vinyl Tights", prompt: "tight high-gloss wet-look vinyl leggings", nsfw: true },
-          { id: "e20", name: "Strappy Lace Thong", prompt: "a multi-strap open back lace thong", nsfw: true },
-          { id: "e21", name: "Sheer Bodystocking Tights", prompt: "ultra-fine sheer bodystocking tights", nsfw: true },
-          { id: "e22", name: "Ultra-Short Micro Pleated Skirt", prompt: "an ultra-short micro pleated miniskirt", nsfw: true },
-          { id: "e23", name: "Matching Garter & Thong Ensemble", prompt: "a matching lace garter belt and strappy thong set", nsfw: true },
-          { id: "e24", name: "High-Waist Lace Tap Pants", prompt: "cheeky vintage lace tap shorts riding high on the hips", nsfw: true },
-          { id: "e25", name: "Sheer Sarong Wrap", prompt: "a semi-sheer chiffon sarong wrap", nsfw: true },
-          { id: "e26", name: "Strappy Tie-Side Bottoms", prompt: "strappy double-tied bikini bottoms", nsfw: true },
-          { id: "e27", name: "Fishnet Tights (No Skirt)", prompt: "fishnet tights worn over bare hips without a skirt", nsfw: true },
-          { id: "e28", name: "Low-Rise Seamless G-String", prompt: "a low-rise seamless G-string", nsfw: true },
-          { id: "e29", name: "Sheer Mesh Micro Skirt", prompt: "an ultra-short translucent mesh micro skirt", nsfw: true }
+        "id": "bottom",
+        "name": "Bottom & Skirt",
+        "type": "flat",
+        "els": [
+          {
+            "id": "e0",
+            "name": "High-Waisted Distressed Denim Cutoffs",
+            "prompt": "high-waisted vintage washed blue denim cutoff shorts with authentic raw frayed hems",
+            "nsfw": false,
+            "ensembleId": "ens_cas_01",
+            "tags": [
+              "Daily Casual",
+              "Streetwear",
+              "Denim"
+            ]
+          },
+          {
+            "id": "e1",
+            "name": "Relaxed 90s Straight-Leg Jeans",
+            "prompt": "relaxed 90s vintage light-wash straight-leg denim jeans with subtle whiskering",
+            "nsfw": false,
+            "ensembleId": "ens_cas_02",
+            "tags": [
+              "Daily Casual",
+              "Denim",
+              "Vintage"
+            ]
+          },
+          {
+            "id": "e2",
+            "name": "Wide-Leg Pleated Linen Trousers",
+            "prompt": "flowing wide-leg sand linen trousers with tailored front pleats and an effortless drape",
+            "nsfw": false,
+            "ensembleId": "ens_cas_03",
+            "tags": [
+              "Daily Casual",
+              "Linen",
+              "Tailored"
+            ]
+          },
+          {
+            "id": "e3",
+            "name": "Tailored Relaxed Cargo Pants",
+            "prompt": "high-rise olive green tailored utility cargo trousers with minimalist flap pockets",
+            "nsfw": false,
+            "ensembleId": "ens_cas_04",
+            "tags": [
+              "Daily Casual",
+              "Utility",
+              "Streetwear"
+            ]
+          },
+          {
+            "id": "e4",
+            "name": "A-Line Denim Button-Front Mini",
+            "prompt": "a vintage washed blue denim A-line mini skirt with brass center buttons",
+            "nsfw": false,
+            "ensembleId": "ens_cas_05",
+            "tags": [
+              "Daily Casual",
+              "Denim",
+              "Mini Skirt"
+            ]
+          },
+          {
+            "id": "e5",
+            "name": "Bias-Cut Satin Midi Slip Skirt",
+            "prompt": "a fluid bias-cut champagne satin midi slip skirt skimming gracefully over the hips",
+            "nsfw": false,
+            "ensembleId": "ens_cas_06",
+            "tags": [
+              "Daily Casual",
+              "Satin",
+              "Midi Skirt"
+            ]
+          },
+          {
+            "id": "e6",
+            "name": "Frayed Black Cheeky Denim Shorts",
+            "prompt": "distressed washed black denim cheeky cutoff shorts with frayed thread detailing",
+            "nsfw": false,
+            "ensembleId": "ens_cas_07",
+            "tags": [
+              "Daily Casual",
+              "Denim",
+              "Cheeky"
+            ]
+          },
+          {
+            "id": "e7",
+            "name": "Breezy Cotton Palazzo Pants",
+            "prompt": "relaxed flowing white cotton gauze wide-leg palazzo pants with a drawstring waistband",
+            "nsfw": false,
+            "ensembleId": "ens_cas_08",
+            "tags": [
+              "Daily Casual",
+              "Resort",
+              "Summer"
+            ]
+          },
+          {
+            "id": "e8",
+            "name": "Second-Skin Supple Leather Leggings",
+            "prompt": "sleek matte black second-skin stretch leather leggings hugging every contour",
+            "nsfw": false,
+            "ensembleId": "ens_cas_09",
+            "tags": [
+              "Daily Casual",
+              "Leather",
+              "Edgy"
+            ]
+          },
+          {
+            "id": "e9",
+            "name": "Crisp White Pleated Tennis Skirt",
+            "prompt": "a crisp white high-waisted pleated tennis mini skirt that sways with movement",
+            "nsfw": false,
+            "ensembleId": "ens_uni_01",
+            "tags": [
+              "University",
+              "Tennis",
+              "Pleated"
+            ]
+          },
+          {
+            "id": "e10",
+            "name": "High-Rise Vintage Mom Jeans",
+            "prompt": "authentic high-rise medium-wash mom jeans with relaxed tapered legs",
+            "nsfw": false,
+            "ensembleId": "ens_uni_02",
+            "tags": [
+              "University",
+              "Denim",
+              "Campus"
+            ]
+          },
+          {
+            "id": "e11",
+            "name": "Houndstooth Plaid Wool Mini Skirt",
+            "prompt": "a structured high-waisted houndstooth plaid wool A-line mini skirt",
+            "nsfw": false,
+            "ensembleId": "ens_uni_03",
+            "tags": [
+              "University",
+              "Plaid",
+              "Autumn"
+            ]
+          },
+          {
+            "id": "e12",
+            "name": "Seamless Campus Ribbed Biker Shorts",
+            "prompt": "high-waisted charcoal seamless ribbed athletic biker shorts",
+            "nsfw": false,
+            "ensembleId": "ens_uni_04",
+            "tags": [
+              "University",
+              "Athleisure",
+              "Biker Shorts"
+            ]
+          },
+          {
+            "id": "e13",
+            "name": "Wide-Leg Corduroy Trousers",
+            "prompt": "warm camel brown wide-leg corduroy trousers with raw-edge hems",
+            "nsfw": false,
+            "ensembleId": "ens_uni_05",
+            "tags": [
+              "University",
+              "Corduroy",
+              "Academia"
+            ]
+          },
+          {
+            "id": "e14",
+            "name": "Tartan Pleated Skater Skirt",
+            "prompt": "a flared tartan pleated mini skater skirt in deep red and navy checks",
+            "nsfw": false,
+            "ensembleId": "ens_uni_06",
+            "tags": [
+              "University",
+              "Tartan",
+              "Skater Skirt"
+            ]
+          },
+          {
+            "id": "e15",
+            "name": "Tailored White Denim Mini Skirt",
+            "prompt": "a tailored high-waisted pristine white denim mini skirt with front pockets",
+            "nsfw": false,
+            "ensembleId": "ens_uni_07",
+            "tags": [
+              "University",
+              "Denim",
+              "Mini Skirt"
+            ]
+          },
+          {
+            "id": "e16",
+            "name": "Ribbed Knit Flare Lounge Pants",
+            "prompt": "soft heather grey ribbed knit high-waisted flare pants",
+            "nsfw": false,
+            "ensembleId": "ens_uni_08",
+            "tags": [
+              "University",
+              "Lounge",
+              "Flare"
+            ]
+          },
+          {
+            "id": "e17",
+            "name": "High-Waisted Bouclé Tweed Shorts",
+            "prompt": "tailored cream bouclé tweed high-rise tailored shorts with delicate fringe trim",
+            "nsfw": false,
+            "ensembleId": "ens_uni_09",
+            "tags": [
+              "University",
+              "Tweed",
+              "Tailored"
+            ]
+          },
+          {
+            "id": "e18",
+            "name": "Tailored Leather Pencil Skirt",
+            "prompt": "a supple black leather pencil skirt hugging her hips with an alluring walking slit",
+            "nsfw": false,
+            "ensembleId": "ens_eve_01",
+            "tags": [
+              "Events & Nightlife",
+              "Leather",
+              "Pencil Skirt"
+            ]
+          },
+          {
+            "id": "e19",
+            "name": "Floor-Length High-Slit Crepe Skirt",
+            "prompt": "a floor-length black crepe evening skirt with a daring thigh-high side slit",
+            "nsfw": false,
+            "ensembleId": "ens_eve_02",
+            "tags": [
+              "Events & Nightlife",
+              "Evening",
+              "High Slit"
+            ]
+          },
+          {
+            "id": "e20",
+            "name": "Liquid Wet-Look Vinyl Micro Skirt",
+            "prompt": "an ultra-short high-gloss wet-look black vinyl mini skirt",
+            "nsfw": true,
+            "ensembleId": "ens_eve_03",
+            "tags": [
+              "Events & Nightlife",
+              "Vinyl",
+              "Micro Skirt"
+            ]
+          },
+          {
+            "id": "e21",
+            "name": "High-Waisted Satin Tuxedo Trousers",
+            "prompt": "sleek tailored black satin wide-leg trousers with silk tuxedo side stripes",
+            "nsfw": false,
+            "ensembleId": "ens_eve_04",
+            "tags": [
+              "Events & Nightlife",
+              "Tuxedo",
+              "Trousers"
+            ]
+          },
+          {
+            "id": "e22",
+            "name": "Ruched Asymmetric Velvet Mini",
+            "prompt": "a midnight black ruched stretch velvet mini skirt with an asymmetric angled hem",
+            "nsfw": false,
+            "ensembleId": "ens_eve_05",
+            "tags": [
+              "Events & Nightlife",
+              "Velvet",
+              "Mini Skirt"
+            ]
+          },
+          {
+            "id": "e23",
+            "name": "Low-Rise Split-Hem Leather Flares",
+            "prompt": "low-rise fitted black stretch leather trousers with split-hem flare ankles",
+            "nsfw": false,
+            "ensembleId": "ens_eve_06",
+            "tags": [
+              "Events & Nightlife",
+              "Leather",
+              "Flares"
+            ]
+          },
+          {
+            "id": "e24",
+            "name": "Matching Silver Sequin Mini Skirt",
+            "prompt": "a glittering high-waisted silver sequined mini skirt with micro fringe hem",
+            "nsfw": false,
+            "ensembleId": "ens_eve_07",
+            "tags": [
+              "Events & Nightlife",
+              "Sequin",
+              "Matching Set"
+            ]
+          },
+          {
+            "id": "e25",
+            "name": "Tailored Column Midi Skirt",
+            "prompt": "a tailored black column midi skirt featuring a sharp clean walking slit",
+            "nsfw": false,
+            "ensembleId": "ens_eve_08",
+            "tags": [
+              "Events & Nightlife",
+              "Midi Skirt",
+              "Sophisticated"
+            ]
+          },
+          {
+            "id": "e26",
+            "name": "Pleated Tactical Moto Mini Skirt",
+            "prompt": "a pleated matte black tactical mini skirt accented with chrome hardware buckles",
+            "nsfw": false,
+            "ensembleId": "ens_eve_09",
+            "tags": [
+              "Events & Nightlife",
+              "Tactical",
+              "Mini Skirt"
+            ]
+          },
+          {
+            "id": "e27",
+            "name": "High-Waisted Butt-Sculpting Leggings",
+            "prompt": "matching high-waisted seamless ribbed compressive leggings sculpting the silhouette",
+            "nsfw": false,
+            "ensembleId": "ens_fit_01",
+            "tags": [
+              "Fitness",
+              "Leggings",
+              "Matching Set"
+            ]
+          },
+          {
+            "id": "e28",
+            "name": "Crossover V-Waistband Biker Shorts",
+            "prompt": "high-waisted sage green crossover V-waistband compressive biker shorts",
+            "nsfw": false,
+            "ensembleId": "ens_fit_02",
+            "tags": [
+              "Fitness",
+              "Biker Shorts",
+              "Activewear"
+            ]
+          },
+          {
+            "id": "e29",
+            "name": "Contour Seamless Scrunch Leggings",
+            "prompt": "charcoal grey contour seamless athletic leggings with subtle glute-enhancing accents",
+            "nsfw": false,
+            "ensembleId": "ens_fit_03",
+            "tags": [
+              "Fitness",
+              "Gym",
+              "Scrunch Leggings"
+            ]
+          },
+          {
+            "id": "e30",
+            "name": "Pleated Athletic Tennis Skort",
+            "prompt": "a crisp white pleated athletic tennis skort with built-in compression shorts",
+            "nsfw": false,
+            "ensembleId": "ens_fit_04",
+            "tags": [
+              "Fitness",
+              "Tennis Skort",
+              "Sporty"
+            ]
+          },
+          {
+            "id": "e31",
+            "name": "High-Rise Flare Yoga Pants",
+            "prompt": "buttery soft blush pink high-rise flare yoga pants with split ankles",
+            "nsfw": false,
+            "ensembleId": "ens_fit_05",
+            "tags": [
+              "Fitness",
+              "Yoga",
+              "Flare Pants"
+            ]
+          },
+          {
+            "id": "e32",
+            "name": "Speed Running Dolphin Shorts",
+            "prompt": "featherweight black athletic running shorts with side dolphin hem vents",
+            "nsfw": false,
+            "ensembleId": "ens_fit_06",
+            "tags": [
+              "Fitness",
+              "Running",
+              "Shorts"
+            ]
+          },
+          {
+            "id": "e33",
+            "name": "Compressive Athletic Booty Shorts",
+            "prompt": "high-waisted olive green seamless athletic booty shorts with squat-proof compression",
+            "nsfw": false,
+            "ensembleId": "ens_fit_07",
+            "tags": [
+              "Fitness",
+              "Booty Shorts",
+              "Workout"
+            ]
+          },
+          {
+            "id": "e34",
+            "name": "Stirrup Seamless Dance Tights",
+            "prompt": "sleek matte black seamless dance tights hooked around the heel arches",
+            "nsfw": false,
+            "ensembleId": "ens_fit_08",
+            "tags": [
+              "Fitness",
+              "Dance",
+              "Tights"
+            ]
+          },
+          {
+            "id": "e35",
+            "name": "High-Waisted Athleisure Sweatshorts",
+            "prompt": "matching high-rise ivory cotton sweatshorts with thick raw-edge drawstrings",
+            "nsfw": false,
+            "ensembleId": "ens_fit_09",
+            "tags": [
+              "Fitness",
+              "Sweatshorts",
+              "Casual"
+            ]
+          },
+          {
+            "id": "e36",
+            "name": "Side-Tie Brazilian Bronze Bottoms",
+            "prompt": "matching metallic bronze side-tie Brazilian cut string bikini bottoms",
+            "nsfw": true,
+            "ensembleId": "ens_swm_01",
+            "tags": [
+              "Swimwear",
+              "Brazilian",
+              "Cheeky"
+            ]
+          },
+          {
+            "id": "e37",
+            "name": "High-Cut Ribbed Cheeky Swim Briefs",
+            "prompt": "matching cream textured high-cut cheeky bikini bottoms riding high on the hips",
+            "nsfw": false,
+            "ensembleId": "ens_swm_02",
+            "tags": [
+              "Swimwear",
+              "Cheeky",
+              "Ribbed"
+            ]
+          },
+          {
+            "id": "e38",
+            "name": "Sheer Macramé Tassel Sarong",
+            "prompt": "a matching semi-translucent macramé crochet mini beach sarong with fringe tassels",
+            "nsfw": false,
+            "ensembleId": "ens_swm_03",
+            "tags": [
+              "Swimwear",
+              "Sarong",
+              "Resort"
+            ]
+          },
+          {
+            "id": "e39",
+            "name": "High-Waisted Retro White Swim Bottoms",
+            "prompt": "high-waisted retro white swim bottoms with slimming side ruching",
+            "nsfw": false,
+            "ensembleId": "ens_swm_04",
+            "tags": [
+              "Swimwear",
+              "Retro",
+              "High Waist"
+            ]
+          },
+          {
+            "id": "e40",
+            "name": "Brazilian Cheeky Tie-Side Bottoms",
+            "prompt": "matching leopard print Brazilian cheeky bikini bottoms with thin string ties",
+            "nsfw": false,
+            "ensembleId": "ens_swm_05",
+            "tags": [
+              "Swimwear",
+              "Leopard",
+              "Cheeky"
+            ]
+          },
+          {
+            "id": "e41",
+            "name": "High-Leg Cheeky Neoprene Briefs",
+            "prompt": "matching matte black high-leg cheeky neoprene swim briefs",
+            "nsfw": false,
+            "ensembleId": "ens_swm_06",
+            "tags": [
+              "Swimwear",
+              "Neoprene",
+              "Sporty"
+            ]
+          },
+          {
+            "id": "e42",
+            "name": "Double-String Lurex Tanga Bottoms",
+            "prompt": "matching sparkling champagne double-strap string bikini bottoms",
+            "nsfw": true,
+            "ensembleId": "ens_swm_07",
+            "tags": [
+              "Swimwear",
+              "Lurex",
+              "Tanga"
+            ]
+          },
+          {
+            "id": "e43",
+            "name": "Ultra High-Cut Coral Thong Bottoms",
+            "prompt": "matching neon coral ultra high-cut cheeky thong bikini bottoms",
+            "nsfw": true,
+            "ensembleId": "ens_swm_08",
+            "tags": [
+              "Swimwear",
+              "Thong",
+              "Cheeky"
+            ]
+          },
+          {
+            "id": "e44",
+            "name": "Translucent Chiffon Slit Beach Skirt",
+            "prompt": "a breezy translucent terracotta silk chiffon wrap skirt with a high leg opening",
+            "nsfw": false,
+            "ensembleId": "ens_swm_09",
+            "tags": [
+              "Swimwear",
+              "Cover-Up",
+              "Chiffon"
+            ]
+          },
+          {
+            "id": "e45",
+            "name": "Lace Garter Belt & Sheer Stockings",
+            "prompt": "a vintage lace garter belt with ultra-sheer black stockings and matching micro thong",
+            "nsfw": true,
+            "ensembleId": "ens_nsf_01",
+            "tags": [
+              "NSFW",
+              "Stockings",
+              "Garter"
+            ]
+          },
+          {
+            "id": "e46",
+            "name": "Sheer Scalloped Lace French Knickers",
+            "prompt": "translucent champagne scalloped lace cheeky tap shorts riding high on the hips",
+            "nsfw": true,
+            "ensembleId": "ens_nsf_02",
+            "tags": [
+              "NSFW",
+              "Lace",
+              "Tap Shorts"
+            ]
+          },
+          {
+            "id": "e47",
+            "name": "Multi-Strap Open-Back Tanga Thong",
+            "prompt": "a matching strappy black tanga thong with seductive multi-band hip details",
+            "nsfw": true,
+            "ensembleId": "ens_nsf_03",
+            "tags": [
+              "NSFW",
+              "Tanga",
+              "Cage"
+            ]
+          },
+          {
+            "id": "e48",
+            "name": "Second-Skin Wet-Look Vinyl Tights",
+            "prompt": "tight high-gloss wet-look vinyl leggings creating sharp specular reflections",
+            "nsfw": true,
+            "ensembleId": "ens_nsf_04",
+            "tags": [
+              "NSFW",
+              "Vinyl",
+              "Leggings"
+            ]
+          },
+          {
+            "id": "e49",
+            "name": "Low-Rise Seamless White G-String",
+            "prompt": "a minimalist low-rise seamless white micro G-string",
+            "nsfw": true,
+            "ensembleId": "ens_nsf_05",
+            "tags": [
+              "NSFW",
+              "G-String",
+              "Seamless"
+            ]
+          },
+          {
+            "id": "e50",
+            "name": "Gold Waist Chains & Micro String Thong",
+            "prompt": "a micro string thong framed by delicate tiered gold waist and hip chains",
+            "nsfw": true,
+            "ensembleId": "ens_nsf_06",
+            "tags": [
+              "NSFW",
+              "Chains",
+              "Thong"
+            ]
+          },
+          {
+            "id": "e51",
+            "name": "Sheer Mesh Micro Skirt & Thong",
+            "prompt": "an ultra-short translucent mesh micro skirt worn over a matching black thong",
+            "nsfw": true,
+            "ensembleId": "ens_nsf_07",
+            "tags": [
+              "NSFW",
+              "Mesh",
+              "Micro Skirt"
+            ]
+          },
+          {
+            "id": "e52",
+            "name": "Crimson Lace G-String & Thigh Straps",
+            "prompt": "a matching crimson red lace G-string with adjustable elastic thigh harness straps",
+            "nsfw": true,
+            "ensembleId": "ens_nsf_08",
+            "tags": [
+              "NSFW",
+              "Harness",
+              "G-String"
+            ]
+          },
+          {
+            "id": "e53",
+            "name": "High-Waist Fishnet Tights & Micro Tanga",
+            "prompt": "high-waist sheer micro-fishnet tights paired with a provocative micro tanga thong",
+            "nsfw": true,
+            "ensembleId": "ens_nsf_09",
+            "tags": [
+              "NSFW",
+              "Fishnet",
+              "Tanga"
+            ]
+          }
         ]
       },
       {
-        id: "onepiece",
-        name: "One-Piece",
-        type: "flat",
-        els: [
-          { id: "op0", name: "Backless Satin Slip Dress", prompt: "She is wearing a fluid backless champagne satin slip dress with delicate straps", nsfw: false },
-          { id: "op1", name: "Little Black Cocktail Dress", prompt: "She is wearing a chic tailored little black cocktail dress with a sweetheart neckline", nsfw: false },
-          { id: "op2", name: "Floral Chiffon Sundress", prompt: "She is wearing a breezy pastel floral print chiffon sundress fluttering gently", nsfw: false },
-          { id: "op3", name: "Sculpted Bodycon Mini Dress", prompt: "She is wearing a form-fitting ribbed knit bodycon mini dress", nsfw: false },
-          { id: "op4", name: "Tailored Wide-Leg Jumpsuit", prompt: "She is wearing an elegant sleeveless black tailored jumpsuit with flowing wide-leg trousers", nsfw: false },
-          { id: "op5", name: "Vintage Denim Romper", prompt: "She is wearing a belted vintage wash blue denim utility romper", nsfw: false },
-          { id: "op6", name: "High-Slit Silk Evening Gown", prompt: "She is wearing an emerald green silk evening gown with a dramatic thigh-high slit", nsfw: false },
-          { id: "op7", name: "Ribbed Turtleneck Sweater Dress", prompt: "She is wearing a cozy oatmeal ribbed turtleneck sweater dress", nsfw: false },
-          { id: "op8", name: "Bohemian Tiered Maxi Dress", prompt: "She is wearing a breezy bohemian tiered cotton maxi dress", nsfw: false },
-          { id: "op9", name: "Glossy Wet-Look Catsuit", prompt: "She is wearing a sculpted full-body black wet-look catsuit", nsfw: true },
-          { id: "op10", name: "Sheer Lace Bodysuit", prompt: "She is wearing an intricate sheer floral lace one-piece bodysuit with corset boning", nsfw: true },
-          { id: "op11", name: "Plunging Halter Neck Dress", prompt: "She is wearing a daring deep-plunge halter neck evening dress", nsfw: true },
-          { id: "op12", name: "Cut-Out Strappy Monokini", prompt: "She is wearing an architectural one-piece monokini swimsuit with side cut-outs", nsfw: true },
-          { id: "op13", name: "Metallic Mesh Club Dress", prompt: "She is wearing a shimmering metallic chainmail mesh mini dress", nsfw: true }
+        "id": "onepiece",
+        "name": "One-Piece",
+        "type": "flat",
+        "els": [
+          {
+            "id": "op0",
+            "name": "Backless Satin Slip Dress",
+            "prompt": "She is wearing a fluid backless champagne satin slip dress with delicate micro straps",
+            "nsfw": false,
+            "tags": [
+              "Daily Casual",
+              "Satin",
+              "Dress"
+            ]
+          },
+          {
+            "id": "op1",
+            "name": "Breezy Floral Chiffon Sundress",
+            "prompt": "She is wearing a breezy pastel floral print chiffon sundress fluttering gently in the breeze",
+            "nsfw": false,
+            "tags": [
+              "Daily Casual",
+              "Floral",
+              "Summer"
+            ]
+          },
+          {
+            "id": "op2",
+            "name": "Belted Vintage Denim Utility Romper",
+            "prompt": "She is wearing a belted vintage wash blue denim utility romper with rolled hems",
+            "nsfw": false,
+            "tags": [
+              "Daily Casual",
+              "Denim",
+              "Romper"
+            ]
+          },
+          {
+            "id": "op3",
+            "name": "Ribbed Knit Oatmeal Tank Dress",
+            "prompt": "She is wearing a form-fitting oatmeal ribbed knit midi tank dress with side slit",
+            "nsfw": false,
+            "tags": [
+              "Daily Casual",
+              "Knit",
+              "Midi"
+            ]
+          },
+          {
+            "id": "op4",
+            "name": "Preppy Polo Tennis Dress",
+            "prompt": "She is wearing a sporty white tennis polo mini dress with pleated skater skirt hem",
+            "nsfw": false,
+            "tags": [
+              "University",
+              "Tennis",
+              "Preppy"
+            ]
+          },
+          {
+            "id": "op5",
+            "name": "Corduroy Pinafore Overall Dress",
+            "prompt": "She is wearing a camel corduroy pinafore overall dress layered over a cream mock neck",
+            "nsfw": false,
+            "tags": [
+              "University",
+              "Academia",
+              "Pinafore"
+            ]
+          },
+          {
+            "id": "op6",
+            "name": "Slouchy T-Shirt Mini Dress",
+            "prompt": "She is wearing an oversized heather grey slouchy graphic t-shirt dress cinched with a leather belt",
+            "nsfw": false,
+            "tags": [
+              "University",
+              "Streetwear",
+              "T-Shirt Dress"
+            ]
+          },
+          {
+            "id": "op7",
+            "name": "Ribbed Turtleneck Sweater Dress",
+            "prompt": "She is wearing a cozy ribbed camel turtleneck sweater dress reaching mid-thigh",
+            "nsfw": false,
+            "tags": [
+              "University",
+              "Autumn",
+              "Sweater Dress"
+            ]
+          },
+          {
+            "id": "op8",
+            "name": "High-Slit Emerald Silk Evening Gown",
+            "prompt": "She is wearing an emerald green silk satin evening gown with an alluring thigh-high slit",
+            "nsfw": false,
+            "tags": [
+              "Events & Nightlife",
+              "Gala",
+              "Silk"
+            ]
+          },
+          {
+            "id": "op9",
+            "name": "Little Black Sweetheart Cocktail Dress",
+            "prompt": "She is wearing a tailored little black cocktail dress with a sculpted sweetheart neckline and structured bodice",
+            "nsfw": false,
+            "tags": [
+              "Events & Nightlife",
+              "Cocktail",
+              "LBD"
+            ]
+          },
+          {
+            "id": "op10",
+            "name": "Sculpted Ribbed Bodycon Mini Dress",
+            "prompt": "She is wearing a form-fitting black bodycon mini dress accentuating every curve",
+            "nsfw": false,
+            "tags": [
+              "Events & Nightlife",
+              "Bodycon",
+              "Clubwear"
+            ]
+          },
+          {
+            "id": "op11",
+            "name": "Tailored Wide-Leg Tuxedo Jumpsuit",
+            "prompt": "She is wearing a sophisticated sleeveless black tailored jumpsuit with plunging neckline and wide-leg trousers",
+            "nsfw": false,
+            "tags": [
+              "Events & Nightlife",
+              "Jumpsuit",
+              "Tuxedo"
+            ]
+          },
+          {
+            "id": "op12",
+            "name": "Draped Cowl-Neck Gold Lamé Gown",
+            "prompt": "She is wearing a liquid gold lamé backless cowl-neck gown shimmering under chandelier lighting",
+            "nsfw": false,
+            "tags": [
+              "Events & Nightlife",
+              "Metallic",
+              "Gala"
+            ]
+          },
+          {
+            "id": "op13",
+            "name": "Seamless Sculpting Pilates Unitard",
+            "prompt": "She is wearing a second-skin black seamless ribbed athletic unitard with low scoop back",
+            "nsfw": false,
+            "tags": [
+              "Fitness",
+              "Pilates",
+              "Unitard"
+            ]
+          },
+          {
+            "id": "op14",
+            "name": "Cross-Back Athletic Romper",
+            "prompt": "She is wearing an active cross-back compressive workout romper in sage green",
+            "nsfw": false,
+            "tags": [
+              "Fitness",
+              "Activewear",
+              "Romper"
+            ]
+          },
+          {
+            "id": "op15",
+            "name": "Performance Full-Body Catsuit",
+            "prompt": "She is wearing an ultra-sleek matte black athletic full-body catsuit with contour seams",
+            "nsfw": false,
+            "tags": [
+              "Fitness",
+              "Catsuit",
+              "Athletic"
+            ]
+          },
+          {
+            "id": "op16",
+            "name": "Plunging Halter Monokini with Cutouts",
+            "prompt": "She is wearing a glamorous one-piece monokini swimsuit with deep plunging halter neckline and side waist cutouts",
+            "nsfw": true,
+            "tags": [
+              "Swimwear",
+              "Monokini",
+              "Resort"
+            ]
+          },
+          {
+            "id": "op17",
+            "name": "Classic Scoop-Back Baywatch Red Swimsuit",
+            "prompt": "She is wearing an iconic high-cut red one-piece swimsuit with low scoop back",
+            "nsfw": false,
+            "tags": [
+              "Swimwear",
+              "Classic",
+              "Beach"
+            ]
+          },
+          {
+            "id": "op18",
+            "name": "Ribbed Belted White One-Piece",
+            "prompt": "She is wearing a chic white ribbed one-piece swimsuit accented by a retro tortoiseshell buckle belt",
+            "nsfw": false,
+            "tags": [
+              "Swimwear",
+              "Belted",
+              "Chic"
+            ]
+          },
+          {
+            "id": "op19",
+            "name": "Shimmering Bronze Halter Swimsuit",
+            "prompt": "She is wearing a metallic bronze high-neck halter one-piece swimsuit with open spine",
+            "nsfw": true,
+            "tags": [
+              "Swimwear",
+              "Metallic",
+              "Bronze"
+            ]
+          },
+          {
+            "id": "op20",
+            "name": "Sheer Floral Lace One-Piece Bodysuit",
+            "prompt": "She is wearing an intricate sheer floral lace one-piece bodysuit with underwire cups and satin ribbon ties",
+            "nsfw": true,
+            "tags": [
+              "NSFW",
+              "Lace",
+              "Bodysuit"
+            ]
+          },
+          {
+            "id": "op21",
+            "name": "Full-Body Glossy Wet-Look Catsuit",
+            "prompt": "She is wearing a sculpted full-body black wet-look vinyl catsuit clinging like a second skin",
+            "nsfw": true,
+            "tags": [
+              "NSFW",
+              "Vinyl",
+              "Catsuit"
+            ]
+          },
+          {
+            "id": "op22",
+            "name": "Gossamer Sheer Bodystocking",
+            "prompt": "She is wearing an ultra-fine translucent black floral lace bodystocking enveloping the entire body",
+            "nsfw": true,
+            "tags": [
+              "NSFW",
+              "Bodystocking",
+              "Sheer"
+            ]
+          },
+          {
+            "id": "op23",
+            "name": "Metallic Mesh Chainmail Club Dress",
+            "prompt": "She is wearing a daring semi-translucent metallic chainmail micro mini dress worn over bare skin",
+            "nsfw": true,
+            "tags": [
+              "NSFW",
+              "Chainmail",
+              "Provocative"
+            ]
+          }
         ]
       },
       {
-        id: "other",
-        name: "Accessories & Footwear",
-        type: "flat",
-        els: [
-          { id: "e0", name: "Strappy Stiletto Heels", prompt: "She is wearing minimalist strappy stiletto high heels", nsfw: false },
-          { id: "e1", name: "Pointed Leather Ankle Boots", prompt: "She is wearing sleek pointed black leather ankle boots", nsfw: false },
-          { id: "e2", name: "Barefoot Natural", prompt: "She is barefoot with natural manicured feet", nsfw: false },
-          { id: "e3", name: "Crisp White Designer Sneakers", prompt: "She is wearing pristine white low-top leather sneakers", nsfw: false },
-          { id: "e4", name: "Chunky Gold Hoops", prompt: "She is wearing polished chunky gold hoop earrings", nsfw: false },
-          { id: "e5", name: "Layered Herringbone Necklaces", prompt: "She is wearing delicate layered gold herringbone necklaces", nsfw: false },
-          { id: "e6", name: "Thin Wire-Frame Glasses", prompt: "She is wearing thin transparent architectural glasses", nsfw: false },
-          { id: "e7", name: "Velvet Ribbon Choker", prompt: "She is wearing a slim black velvet ribbon choker", nsfw: false },
-          { id: "e8", name: "Straw Wide-Brim Sunhat", prompt: "She is wearing a woven wide-brim straw hat", nsfw: false },
-          { id: "e9", name: "Hermès Silk Scarf", prompt: "She is wearing a printed silk scarf loosely draped around the neck", nsfw: false },
-          { id: "e10", name: "Mini Structured Handbag", prompt: "She is holding a structured mini leather handbag", nsfw: false },
-          { id: "e11", name: "Minimalist Gold Wristwatch", prompt: "She is wearing a slim gold mesh minimalist wristwatch", nsfw: false },
-          { id: "e12", name: "Dainty Gold Body Chain", prompt: "She is wearing a fine gold chain tracing across her waist and hips", nsfw: true },
-          { id: "e13", name: "Delicate Ankle Bracelet", prompt: "She is wearing a delicate gold anklet", nsfw: false },
-          { id: "e14", name: "Leather Biker Gloves", prompt: "She is wearing fingerless black leather moto gloves", nsfw: false },
-          { id: "e15", name: "Bold Cocktail Rings", prompt: "She is wearing sculptural gold statement cocktail rings", nsfw: false },
-          { id: "e16", name: "90s Oval Dark Sunglasses", prompt: "She is wearing dark tint 90s vintage oval sunglasses", nsfw: false },
-          { id: "e17", name: "Lace Thigh Garter", prompt: "She is wearing a delicate scalloped lace garter on one thigh", nsfw: true }
+        "id": "other",
+        "name": "Accessories & Footwear",
+        "type": "flat",
+        "els": [
+          {
+            "id": "e0",
+            "name": "Minimalist Strappy Stiletto High Heels",
+            "prompt": "She is wearing minimalist black strappy stiletto high heel sandals",
+            "nsfw": false,
+            "tags": [
+              "Footwear",
+              "Heels"
+            ]
+          },
+          {
+            "id": "e1",
+            "name": "Crisp Pristine White Platform Sneakers",
+            "prompt": "She is wearing pristine designer chunky white platform leather sneakers",
+            "nsfw": false,
+            "tags": [
+              "Footwear",
+              "Sneakers"
+            ]
+          },
+          {
+            "id": "e2",
+            "name": "Pointed Black Leather Ankle Boots",
+            "prompt": "She is wearing sleek pointed black leather ankle boots with sculpted heels",
+            "nsfw": false,
+            "tags": [
+              "Footwear",
+              "Boots"
+            ]
+          },
+          {
+            "id": "e3",
+            "name": "Chunky 90s Loafers & Crew Socks",
+            "prompt": "She is wearing chunky black lug-sole loafers paired with white ribbed crew socks",
+            "nsfw": false,
+            "tags": [
+              "Footwear",
+              "Preppy"
+            ]
+          },
+          {
+            "id": "e4",
+            "name": "Knee-High Supple Black Leather Boots",
+            "prompt": "She is wearing form-fitting knee-high black leather boots",
+            "nsfw": false,
+            "tags": [
+              "Footwear",
+              "Boots"
+            ]
+          },
+          {
+            "id": "e5",
+            "name": "Minimalist Leather Slides",
+            "prompt": "She is wearing understated tan leather cross-strap slides",
+            "nsfw": false,
+            "tags": [
+              "Footwear",
+              "Casual"
+            ]
+          },
+          {
+            "id": "e6",
+            "name": "Barefoot Natural with Manicured Pedicure",
+            "prompt": "She is barefoot with natural clean manicured toes and delicate skin",
+            "nsfw": false,
+            "tags": [
+              "Footwear",
+              "Natural"
+            ]
+          },
+          {
+            "id": "e7",
+            "name": "Polished Chunky Gold Hoop Earrings",
+            "prompt": "She is wearing polished chunky 18k gold hoop earrings reflecting soft highlights",
+            "nsfw": false,
+            "tags": [
+              "Jewelry",
+              "Earrings"
+            ]
+          },
+          {
+            "id": "e8",
+            "name": "Layered Herringbone Gold Necklaces",
+            "prompt": "She is wearing delicate layered gold herringbone chains resting on the collarbone",
+            "nsfw": false,
+            "tags": [
+              "Jewelry",
+              "Necklace"
+            ]
+          },
+          {
+            "id": "e9",
+            "name": "Thin Architectural Wire-Frame Glasses",
+            "prompt": "She is wearing delicate minimalist wire-frame eyeglasses adding an intellectual aesthetic",
+            "nsfw": false,
+            "tags": [
+              "Eyewear",
+              "Glasses"
+            ]
+          },
+          {
+            "id": "e10",
+            "name": "90s Dark Oval Vintage Sunglasses",
+            "prompt": "She is wearing dark tint 90s vintage oval acetate sunglasses",
+            "nsfw": false,
+            "tags": [
+              "Eyewear",
+              "Sunglasses"
+            ]
+          },
+          {
+            "id": "e11",
+            "name": "Sculptural Gold Cocktail Statement Rings",
+            "prompt": "She is wearing bold sculptural gold cocktail rings on her fingers",
+            "nsfw": false,
+            "tags": [
+              "Jewelry",
+              "Rings"
+            ]
+          },
+          {
+            "id": "e12",
+            "name": "Hermès Printed Silk Scarf",
+            "prompt": "She is wearing an artisan printed silk scarf casually draped around the neck",
+            "nsfw": false,
+            "tags": [
+              "Accessories",
+              "Scarf"
+            ]
+          },
+          {
+            "id": "e13",
+            "name": "Mini Structured Leather Luxury Handbag",
+            "prompt": "She is holding a structured mini designer leather handbag with gold clasp",
+            "nsfw": false,
+            "tags": [
+              "Bags",
+              "Luxury"
+            ]
+          },
+          {
+            "id": "e14",
+            "name": "Slim Gold Mesh Minimalist Wristwatch",
+            "prompt": "She is wearing a sleek minimalist gold mesh wristwatch with clean white dial",
+            "nsfw": false,
+            "tags": [
+              "Jewelry",
+              "Watch"
+            ]
+          },
+          {
+            "id": "e15",
+            "name": "Woven Wide-Brim Straw Sunhat",
+            "prompt": "She is wearing a wide-brim woven raffia straw sunhat casting soft shadows",
+            "nsfw": false,
+            "tags": [
+              "Hats",
+              "Resort"
+            ]
+          },
+          {
+            "id": "e16",
+            "name": "Embroidered Cotton Baseball Cap",
+            "prompt": "She is wearing a washed navy cotton baseball cap worn casually low",
+            "nsfw": false,
+            "tags": [
+              "Hats",
+              "Casual"
+            ]
+          },
+          {
+            "id": "e17",
+            "name": "Dainty Gold Waist & Hip Body Chain",
+            "prompt": "She is wearing a fine shimmering gold chain tracing across her bare waist and hips",
+            "nsfw": true,
+            "tags": [
+              "Jewelry",
+              "Body Chain"
+            ]
+          },
+          {
+            "id": "e18",
+            "name": "Delicate Diamond Tennis Bracelet",
+            "prompt": "She is wearing a sparkling bezel-set tennis bracelet catching specular light",
+            "nsfw": false,
+            "tags": [
+              "Jewelry",
+              "Bracelet"
+            ]
+          },
+          {
+            "id": "e19",
+            "name": "Delicate Gold Ankle Bracelet",
+            "prompt": "She is wearing a dainty gold link anklet resting above the foot",
+            "nsfw": false,
+            "tags": [
+              "Jewelry",
+              "Anklet"
+            ]
+          },
+          {
+            "id": "e20",
+            "name": "Fingerless Black Leather Moto Gloves",
+            "prompt": "She is wearing snug fingerless black leather moto gloves with knuckle cutouts",
+            "nsfw": false,
+            "tags": [
+              "Accessories",
+              "Gloves"
+            ]
+          },
+          {
+            "id": "e21",
+            "name": "Scalloped Lace Thigh Garter",
+            "prompt": "She is wearing a delicate scalloped black lace garter snug around one upper thigh",
+            "nsfw": true,
+            "tags": [
+              "Accessories",
+              "Garter"
+            ]
+          },
+          {
+            "id": "e22",
+            "name": "Slim Black Velvet Choker",
+            "prompt": "She is wearing a delicate black velvet ribbon choker accentuating the neck",
+            "nsfw": false,
+            "tags": [
+              "Jewelry",
+              "Choker"
+            ]
+          },
+          {
+            "id": "e23",
+            "name": "Leather Strappy Chest Harness",
+            "prompt": "She is wearing a handcrafted supple leather harness strapped across the chest and torso",
+            "nsfw": true,
+            "tags": [
+              "Accessories",
+              "Harness"
+            ]
+          },
+          {
+            "id": "e24",
+            "name": "Canvas Luxury Beach Tote Bag",
+            "prompt": "She is carrying an oversized canvas and leather luxury resort tote bag",
+            "nsfw": false,
+            "tags": [
+              "Bags",
+              "Resort"
+            ]
+          },
+          {
+            "id": "e25",
+            "name": "Pearl Drop Earrings",
+            "prompt": "She is wearing luminous freshwater baroque pearl drop earrings",
+            "nsfw": false,
+            "tags": [
+              "Jewelry",
+              "Pearls"
+            ]
+          }
         ]
       }
     ]
@@ -703,6 +2459,7 @@ export const INITIAL_CATEGORIES: Category[] = [
   {
     id: "skin",
     name: "Skin & Material Detail",
+    promptName: "skin",
     type: "flat",
     icon: "Sparkles",
     accent: "#ffa040",
@@ -773,6 +2530,7 @@ export const INITIAL_CATEGORIES: Category[] = [
   {
     id: "comp",
     name: "Composition & Framing",
+    promptName: "composition",
     type: "tabs",
     icon: "Camera",
     accent: "#4ade80",
@@ -823,24 +2581,172 @@ export const INITIAL_CATEGORIES: Category[] = [
   {
     id: "pose",
     name: "Pose & Action",
+    promptName: "pose",
     type: "tabs",
     icon: "Activity",
     accent: "#38bdf8",
     description: "Full body poses, candid motions, seating arrangements, and kinetic gestures",
+    themes: DEFAULT_POSE_THEMES,
     subcats: [
       {
         id: "standing",
         name: "Standing",
         type: "flat",
         els: [
-          { id: "e0", name: "Standing Tall & Confident", prompt: "Standing tall with shoulders back and confident relaxed posture.", nsfw: false },
-          { id: "e1", name: "Leaning Against Wall", prompt: "Standing leaning casually against a textured architectural wall.", nsfw: false },
-          { id: "e2", name: "One Leg Forward Stance", prompt: "Standing with one leg extended forward, shifting weight naturally.", nsfw: false },
-          { id: "e3", name: "Hand on Hip Glancing Back", prompt: "Standing with hand perched on hip, glancing seductive look over her shoulder.", nsfw: false },
-          { id: "e4", name: "Arms Crossed Casual", prompt: "Standing with arms lightly crossed across chest, easy confident smile.", nsfw: false },
-          { id: "e5", name: "Leaning Forward into Lens", prompt: "Standing leaning gently forward toward the lens, intimate engaged presence.", nsfw: false },
-          { id: "e6", name: "Hands in Denim Pockets", prompt: "Standing with thumbs hooked into denim waistband pockets, effortless swagger.", nsfw: false },
-          { id: "e7", name: "Fixing Hair Updo", prompt: "Standing with both arms raised fixing hair, elbows bent in graceful symmetry.", nsfw: false }
+          {
+            id: "e0",
+            name: "Standing Tall & Confident Posture",
+            prompt: "Standing tall with upright spine, shoulders relaxed and rolled back, weight evenly distributed across both feet, hands resting naturally at sides, confident magnetic gaze directly at the camera.",
+            nsfw: false,
+            tags: ["Fashion & Editorial", "Standing", "Confidence"]
+          },
+          {
+            id: "e1",
+            name: "Relaxed Asymmetrical Lean",
+            prompt: "Standing with one shoulder dropped lower than the other in an asymmetrical relaxed posture, torso tilted subtly, head tilted with a calm poised expression.",
+            nsfw: false,
+            tags: ["Fashion & Editorial", "Standing", "Editorial"]
+          },
+          {
+            id: "e2",
+            name: "Contrapposto Weight Shift",
+            prompt: "Standing in a classic contrapposto stance with weight shifted onto the back leg, opposite hip tilted upward, one foot placed slightly forward, relaxed natural posture.",
+            nsfw: false,
+            tags: ["Casual & Candid", "Standing", "Contrapposto"]
+          },
+          {
+            id: "e3",
+            name: "Hand on Hip Glancing Back",
+            prompt: "Standing with torso turned three-quarters, one hand resting firmly on the high hip with elbow flared outward, head turned back glancing over the shoulder with a captivating smile.",
+            nsfw: false,
+            tags: ["Casual & Candid", "Fashion & Editorial", "Standing", "Over-the-Shoulder"]
+          },
+          {
+            id: "e4",
+            name: "Arms Crossed Casual Stance",
+            prompt: "Standing with arms loosely folded across the lower chest, shoulders soft, weight shifted casually to one side, an easy spontaneous smirk on her lips.",
+            nsfw: false,
+            tags: ["Casual & Candid", "Standing", "Casual"]
+          },
+          {
+            id: "e5",
+            name: "Intimate Forward Lean into Lens",
+            prompt: "Standing leaning upper torso gently forward toward the camera, neck elongated, eyes locked in intimate direct contact with slightly parted lips.",
+            nsfw: false,
+            tags: ["Selfie & Close-Up", "Fashion & Editorial", "Standing", "Intimate"]
+          },
+          {
+            id: "e6",
+            name: "Thumbs Hooked at Hips",
+            prompt: "Standing with thumbs hooked casually at hip level, fingers resting lightly along thighs, weight shifted to one foot, effortless candid confidence.",
+            nsfw: false,
+            tags: ["Casual & Candid", "Standing", "Streetwear"]
+          },
+          {
+            id: "e7",
+            name: "Graceful Hair Updo Adjustment",
+            prompt: "Standing with both arms raised to gather and adjust hair at the crown of the head, elbows bent outward creating balanced upper-body framing, soft focused gaze.",
+            nsfw: false,
+            tags: ["Casual & Candid", "Fashion & Editorial", "Standing", "Hair"]
+          },
+          {
+            id: "e8",
+            name: "Athletic Grounded Ready Stance",
+            prompt: "Standing in a grounded athletic stance with feet shoulder-width apart, knees slightly soft, core engaged, shoulders squared, arms relaxed with a determined confident gaze.",
+            nsfw: false,
+            tags: ["Fitness & Active", "Standing", "Athletic"]
+          },
+          {
+            id: "e9",
+            name: "High-Fashion Angular Weight-Shift",
+            prompt: "High-fashion angular stance with pelvis tilted, one leg stepped across the other, spine straight, one arm hanging limp while the other hand rests lightly on the hip.",
+            nsfw: false,
+            tags: ["Fashion & Editorial", "Standing", "Runway"]
+          },
+          {
+            id: "e10",
+            name: "Hands-on-Hips Power Stance",
+            prompt: "Commanding power stance with both hands placed firmly on hips, elbows flared wide, chin slightly elevated, proud statuesque posture projecting authority.",
+            nsfw: false,
+            tags: ["Fashion & Editorial", "Standing", "Power"]
+          },
+          {
+            id: "e11",
+            name: "Sunkissed Chin Tilt Towards Light",
+            prompt: "Standing with head tilted upward and chin lifted toward the light source, eyes softly closed in serene bliss, relaxed facial muscles, neck elegantly extended.",
+            nsfw: false,
+            tags: ["Selfie & Close-Up", "Casual & Candid", "Standing", "Sunkissed"]
+          },
+          {
+            id: "e12",
+            name: "Soft Hand-to-Cheek Frame",
+            prompt: "Upper body posture with one hand raised to gently cup the cheek and jawline, delicate curled fingers, head tilted toward the hand with a soft gentle gaze.",
+            nsfw: false,
+            tags: ["Selfie & Close-Up", "Standing", "Soft"]
+          },
+          {
+            id: "e13",
+            name: "Tucking Hair Behind Ear with Soft Smile",
+            prompt: "Standing with one hand gracefully tucking loose strands of hair behind the ear, fingers delicately brushing past temple, eyes looking slightly downward with an authentic coy smile.",
+            nsfw: false,
+            tags: ["Casual & Candid", "Selfie & Close-Up", "Standing", "Candid"]
+          },
+          {
+            id: "e14",
+            name: "Mid-Stretch Overhead Arm Reach",
+            prompt: "Standing on tiptoes with both arms stretched high overhead, interlocking fingers, spine fully elongated, chest lifted in a deep expansive stretch.",
+            nsfw: false,
+            tags: ["Fitness & Active", "Standing", "Stretch"]
+          },
+          {
+            id: "e15",
+            name: "Standing Quad Stretch Balance",
+            prompt: "Balancing steadily on one straight leg while bending the opposite knee backward, grasping the ankle close to glute with hand, other arm extended sideways for balance, poised athletic focus.",
+            nsfw: false,
+            tags: ["Fitness & Active", "Standing", "Balance"]
+          },
+          {
+            id: "e16",
+            name: "Relaxed Post-Workout Shoulder Roll",
+            prompt: "Standing with shoulders rolled back in post-exertion relaxation, one hand resting on the back of the neck, chin tilted down with a deep satisfying breath.",
+            nsfw: false,
+            tags: ["Fitness & Active", "Standing", "Relaxed"]
+          },
+          {
+            id: "e17",
+            name: "Delicate Collarbone Touch with Elongated Neck",
+            prompt: "Standing with one hand resting softly against the hollow of the collarbone, head turned to three-quarter profile, neck gracefully extended, tranquil high-fashion composure.",
+            nsfw: false,
+            tags: ["Fashion & Editorial", "Selfie & Close-Up", "Standing", "Elegance"]
+          },
+          {
+            id: "e18",
+            name: "Cross-Body Shoulder Stretch",
+            prompt: "Standing tall with one arm drawn horizontally across the chest, opposite forearm hooking it close to stretch the shoulder, head turned toward the stretching arm with focused athletic composure.",
+            nsfw: false,
+            tags: ["Fitness & Active", "Standing", "Stretch"]
+          },
+          {
+            id: "e19",
+            name: "Two-Finger Cheek Frame with Playful Wink",
+            prompt: "Close standing pose with two fingers forming a subtle frame near cheekbone, head tilted playfully, one eye winking with an energetic confident grin.",
+            nsfw: false,
+            tags: ["Selfie & Close-Up", "Casual & Candid", "Standing", "Playful"]
+          },
+          {
+            id: "e20",
+            name: "Sculptural Dropped-Shoulder Contrapposto",
+            prompt: "Sculptural silhouette pose with one shoulder dropped low, spine curved in an elongated gentle line, one leg extended forward pointing toe, calm contemplative expression.",
+            nsfw: false,
+            tags: ["Fashion & Editorial", "Standing", "Sculptural"]
+          },
+          {
+            id: "e21",
+            name: "Shy Downward Gaze with Parted Lips",
+            prompt: "Standing with shoulders turned slightly away from lens, chin tucked down, gaze looking up demurely through dark eyelashes with soft parted lips.",
+            nsfw: false,
+            tags: ["Casual & Candid", "Selfie & Close-Up", "Standing", "Demure"]
+          }
         ]
       },
       {
@@ -848,12 +2754,118 @@ export const INITIAL_CATEGORIES: Category[] = [
         name: "Sitting",
         type: "flat",
         els: [
-          { id: "e0", name: "Sitting Cross-Legged on Bed", prompt: "Sitting comfortably cross-legged on a plush white bed, relaxed posture.", nsfw: false },
-          { id: "e1", name: "Sitting on Edge of Chair", prompt: "Sitting poised on the edge of a mid-century modern chair, knees aligned.", nsfw: false },
-          { id: "e2", name: "Knees Hugged to Chest", prompt: "Sitting on the floor with knees tucked to chest, arms wrapped around shins.", nsfw: false },
-          { id: "e3", name: "Leaning Back on Hands", prompt: "Sitting leaning back on both palms, head tilted upward comfortably.", nsfw: false },
-          { id: "e4", name: "Resting Chin on Palm", prompt: "Sitting resting elbow on knee with chin cupped in palm, contemplative gaze.", nsfw: false },
-          { id: "e5", name: "Straddling Chair Backward", prompt: "Sitting straddling a chair backward, resting folded arms along the backrest.", nsfw: false }
+          {
+            id: "e0",
+            name: "Seated Cross-Legged with Hands on Knees",
+            prompt: "Seated cross-legged with an upright tall spine, shoulders dropped and relaxed, open palms resting gently on knees, calm centered expression looking at camera.",
+            nsfw: false,
+            tags: ["Casual & Candid", "Fitness & Active", "Seated", "Meditation"]
+          },
+          {
+            id: "e1",
+            name: "Poised Upright Seated Silhouette",
+            prompt: "Seated with upright elongated posture, knees aligned and tilted slightly to one side, hands clasped lightly in lap, poised editorial sophistication.",
+            nsfw: false,
+            tags: ["Fashion & Editorial", "Seated", "Poise"]
+          },
+          {
+            id: "e2",
+            name: "Knees Drawn to Chest with Wrapped Arms",
+            prompt: "Seated with knees pulled up snugly toward chest, arms loosely wrapped around shins, chin resting on top of knees, soft introspective gaze.",
+            nsfw: false,
+            tags: ["Casual & Candid", "Selfie & Close-Up", "Seated", "Cozy"]
+          },
+          {
+            id: "e3",
+            name: "Seated Leaning Back on Open Palms",
+            prompt: "Seated leaning back onto both open palms placed behind the torso, elbows locked lightly, chest elevated, head tilted upward comfortably with a relaxed smile.",
+            nsfw: false,
+            tags: ["Casual & Candid", "Fashion & Editorial", "Seated", "Relaxed"]
+          },
+          {
+            id: "e4",
+            name: "Chin Cupped in Open Palm",
+            prompt: "Seated with elbow resting on raised knee and chin cupped gently in an open palm, fingers curling against cheek, thoughtful direct gaze.",
+            nsfw: false,
+            tags: ["Casual & Candid", "Selfie & Close-Up", "Seated", "Thoughtful"]
+          },
+          {
+            id: "e5",
+            name: "Angled Seated Pose with Arm Draped Over Knee",
+            prompt: "Seated with one knee bent upward and the other leg bent flat, one arm draped effortlessly across the raised knee, torso angled, high-fashion demeanor.",
+            nsfw: false,
+            tags: ["Fashion & Editorial", "Seated", "Angle"]
+          },
+          {
+            id: "e6",
+            name: "Seated Butterfly Stretch with Tall Spine",
+            prompt: "Seated with soles of feet pressed together and knees dropped open wide, hands holding ankles, chest lifted and shoulders pressed down in an open groin stretch.",
+            nsfw: false,
+            tags: ["Fitness & Active", "Seated", "Stretch"]
+          },
+          {
+            id: "e7",
+            name: "Seated Torso Twist with Hand Braced",
+            prompt: "Seated with one leg bent across the other, torso rotated deeply to the side, one hand placed behind for support while opposite arm levers against the outer knee, looking over back shoulder.",
+            nsfw: false,
+            tags: ["Fitness & Active", "Seated", "Twist"]
+          },
+          {
+            id: "e8",
+            name: "Seated Leaning Forward with Hands Clasping Ankles",
+            prompt: "Seated with legs extended forward and knees soft, leaning torso forward with hands reaching to lightly clasp ankles, elongated back in a gentle active stretch.",
+            nsfw: false,
+            tags: ["Fitness & Active", "Seated", "Stretch"]
+          },
+          {
+            id: "e9",
+            name: "Legs Crossed at Ankles with Poised Hands",
+            prompt: "Seated upright with legs elegantly crossed at the ankles, hands resting stacked atop one thigh, relaxed shoulders and poised confident expression.",
+            nsfw: false,
+            tags: ["Fashion & Editorial", "Seated", "Classic"]
+          },
+          {
+            id: "e10",
+            name: "Seated Forward Lean Resting Chin on Knuckles",
+            prompt: "Seated leaning forward into a close frame with elbows on knees, chin resting atop loosely curled knuckles, luminous direct eye contact.",
+            nsfw: false,
+            tags: ["Selfie & Close-Up", "Seated", "Close-Up"]
+          },
+          {
+            id: "e11",
+            name: "Seated with Legs Tucked to One Side",
+            prompt: "Seated with both legs folded smoothly to one side, torso supported by one straight arm at hip, other hand resting on thigh, gentle feminine posture.",
+            nsfw: false,
+            tags: ["Casual & Candid", "Fashion & Editorial", "Seated", "Graceful"]
+          },
+          {
+            id: "e12",
+            name: "Seated Head Tilt Resting on Shoulder",
+            prompt: "Seated with shoulders softly shrugged, head tilted sideways resting gently against one shoulder, playful half-smile, relaxed tender mood.",
+            nsfw: false,
+            tags: ["Selfie & Close-Up", "Casual & Candid", "Seated", "Playful"]
+          },
+          {
+            id: "e13",
+            name: "Hamstring Reach with Extended Toes",
+            prompt: "Seated on one hip with one leg extended straight with pointed toe, torso reaching smoothly toward the foot, athletic flexibility and muscle tone displayed.",
+            nsfw: false,
+            tags: ["Fitness & Active", "Seated", "Flexibility"]
+          },
+          {
+            id: "e14",
+            name: "Seated Profile Arch with Hands Bracing Thighs",
+            prompt: "Seated viewed from side profile, spine arched gracefully with chest projected, hands resting firmly on upper thighs, chin elevated with poised editorial drama.",
+            nsfw: false,
+            tags: ["Fashion & Editorial", "Seated", "Profile"]
+          },
+          {
+            id: "e15",
+            name: "Relaxed Slouched Seated Pose with Parted Knees",
+            prompt: "Seated in a relaxed candid posture with knees loosely parted, elbows resting on thighs, hands loosely clasped between knees, easygoing candid look.",
+            nsfw: false,
+            tags: ["Casual & Candid", "Seated", "Streetwear"]
+          }
         ]
       },
       {
@@ -861,10 +2873,90 @@ export const INITIAL_CATEGORIES: Category[] = [
         name: "Lying Down",
         type: "flat",
         els: [
-          { id: "e0", name: "Lying on Back, Hair Fan", prompt: "Lying on her back across white sheets, hair fanning out naturally across the pillow.", nsfw: false },
-          { id: "e1", name: "Lying on Stomach on Elbows", prompt: "Lying on her stomach propped up on elbows, feet kicked up playfully behind her.", nsfw: false },
-          { id: "e2", name: "Lying on Side Curled", prompt: "Lying gracefully on her side in an S-curve silhouette, gazing at camera.", nsfw: false },
-          { id: "e3", name: "Stretched Out Overhead", prompt: "Lying stretched out languidly with arms extending above head, relaxed pose.", nsfw: false }
+          {
+            id: "e0",
+            name: "Lying on Back with Hair Fanning Naturally",
+            prompt: "Lying flat on back with arms resting loosely beside torso, head tilted slightly, hair fanning out naturally around crown, calm serene facial expression.",
+            nsfw: false,
+            tags: ["Casual & Candid", "Fashion & Editorial", "Lying", "Serene"]
+          },
+          {
+            id: "e1",
+            name: "Propped on Elbows with Feet Kicking Playfully",
+            prompt: "Lying on stomach with upper chest propped up on forearms, chin cradled in palms, lower legs bent at knees and kicked up playfully behind, bright engaging smile.",
+            nsfw: false,
+            tags: ["Casual & Candid", "Lying", "Playful"]
+          },
+          {
+            id: "e2",
+            name: "Graceful Side Reclining S-Curve",
+            prompt: "Reclining gracefully on one side with hips stacked, upper torso slightly propped on forearm, spine tracing a smooth S-curve silhouette, gazing at camera.",
+            nsfw: false,
+            tags: ["Fashion & Editorial", "Lying", "Silhouette"]
+          },
+          {
+            id: "e3",
+            name: "Languid Overhead Torso Stretch",
+            prompt: "Lying supine with arms stretched languidly above head along the surface, ribcage lifted, toes pointed, full-body elongated stretch.",
+            nsfw: false,
+            tags: ["Fitness & Active", "Fashion & Editorial", "Lying", "Stretch"]
+          },
+          {
+            id: "e4",
+            name: "Reclining Gaze Directly into Lens",
+            prompt: "Lying flat on back with face turned directly toward the lens from above, lips slightly parted, tranquil eye contact, delicate collarbone definition.",
+            nsfw: false,
+            tags: ["Selfie & Close-Up", "Lying", "Intimate"]
+          },
+          {
+            id: "e5",
+            name: "Reclining with One Hand Tracing Collarbone",
+            prompt: "Reclining on back with head turned to three-quarter angle, one hand raised with fingertips resting delicately at the base of the neck, elegant editorial repose.",
+            nsfw: false,
+            tags: ["Fashion & Editorial", "Selfie & Close-Up", "Lying", "Editorial"]
+          },
+          {
+            id: "e6",
+            name: "Curled Side Posture with Cheek on Forearm",
+            prompt: "Lying curled softly on one side with knees drawn slightly toward chest, cheek resting against folded forearm, peaceful sleepy expression.",
+            nsfw: false,
+            tags: ["Casual & Candid", "Lying", "Cozy"]
+          },
+          {
+            id: "e7",
+            name: "Supine Post-Workout Deep Breathing Stretch",
+            prompt: "Lying on back in full post-workout relaxation, one hand resting on the center of the chest and the other on the abdomen, feeling deep restorative breaths.",
+            nsfw: false,
+            tags: ["Fitness & Active", "Lying", "Recovery"]
+          },
+          {
+            id: "e8",
+            name: "Reclining Bridge Pose with Engaged Core",
+            prompt: "Lying on back with knees bent and feet planted flat, hips elevated upward into a bridge alignment, glutes and core engaged, arms pressed flat along sides.",
+            nsfw: false,
+            tags: ["Fitness & Active", "Lying", "Bridge"]
+          },
+          {
+            id: "e9",
+            name: "Side-Lying Silhouette with Extended Leg",
+            prompt: "Reclining on side propped on elbow, top leg extended long with pointed foot, hand resting along the curve of the waist, high-fashion beachwear silhouette.",
+            nsfw: false,
+            tags: ["Fashion & Editorial", "Lying", "Long Lines"]
+          },
+          {
+            id: "e10",
+            name: "Propped on One Palm with Arched Ribcage",
+            prompt: "Reclining on hip with upper body elevated on one straight arm and open palm, ribcage arched upward, opposite hand resting on hip, statuesque form.",
+            nsfw: false,
+            tags: ["Fashion & Editorial", "Lying", "Sculptural"]
+          },
+          {
+            id: "e11",
+            name: "Reclining with Fingers Tangled in Hair",
+            prompt: "Lying on back with head tilted back slightly, both hands loosely tangled in hair spreading it wide, eyes half-closed in relaxed ease.",
+            nsfw: false,
+            tags: ["Casual & Candid", "Selfie & Close-Up", "Lying", "Sensory"]
+          }
         ]
       },
       {
@@ -872,9 +2964,90 @@ export const INITIAL_CATEGORIES: Category[] = [
         name: "Movement & Walk",
         type: "flat",
         els: [
-          { id: "e0", name: "Mid-Stride City Walk", prompt: "Caught mid-stride walking through the city, coat hem swaying naturally.", nsfw: false },
-          { id: "e1", name: "Playful Turn with Hair Whip", prompt: "Spinning around with playful kinetic motion, hair whipping dynamically in air.", nsfw: false },
-          { id: "e2", name: "Walking Away Glancing Back", prompt: "Walking away from camera, head turned glancing back over bare shoulder.", nsfw: false }
+          {
+            id: "e0",
+            name: "Unposed Mid-Stride Forward Walk",
+            prompt: "Caught mid-stride walking forward naturally, front foot planted and rear heel lifting, arms swinging in natural rhythm, effortless candid street pace.",
+            nsfw: false,
+            tags: ["Casual & Candid", "Movement", "Stride"]
+          },
+          {
+            id: "e1",
+            name: "Dynamic Pivot Turn with Hair Whip",
+            prompt: "Spinning around in a fast dynamic pivot turn, hair whipping fluidly through the air in mid-motion, genuine spontaneous laugh on her face.",
+            nsfw: false,
+            tags: ["Casual & Candid", "Fashion & Editorial", "Movement", "Hair Whip"]
+          },
+          {
+            id: "e2",
+            name: "Walking Away with Over-the-Shoulder Glance",
+            prompt: "Walking away from camera, shoulders angled three-quarters, head turned backward glancing over shoulder with a magnetic engaging gaze.",
+            nsfw: false,
+            tags: ["Casual & Candid", "Fashion & Editorial", "Movement", "Over-the-Shoulder"]
+          },
+          {
+            id: "e3",
+            name: "High-Fashion Runway Stride Mid-Step",
+            prompt: "Deliberate high-fashion runway stride caught mid-step with one foot crossing slightly in front of the other, posture tall, shoulders pinned back, fierce focused stare.",
+            nsfw: false,
+            tags: ["Fashion & Editorial", "Movement", "Runway"]
+          },
+          {
+            id: "e4",
+            name: "Dynamic Runner's Forward Lunge Posture",
+            prompt: "Stepped forward into a deep athletic lunge with front knee bent at ninety degrees, rear leg extended straight on ball of foot, spine upright with arms in active runner's swing.",
+            nsfw: false,
+            tags: ["Fitness & Active", "Movement", "Lunge"]
+          },
+          {
+            id: "e5",
+            name: "Athletic Skipping Stride with Engaged Posture",
+            prompt: "Caught in mid-skip with one knee driven upward towards waist and opposite arm pumped forward, energetic athletic bounce, radiant smile.",
+            nsfw: false,
+            tags: ["Fitness & Active", "Movement", "Cardio"]
+          },
+          {
+            id: "e6",
+            name: "Dynamic Torso Warm-Up Twist",
+            prompt: "Standing in motion with feet planted and upper torso twisted dynamically to one side, arms swinging naturally around torso in an active athletic warm-up.",
+            nsfw: false,
+            tags: ["Fitness & Active", "Movement", "Warm-Up"]
+          },
+          {
+            id: "e7",
+            name: "Casual Stroll with Thumbs Hooked in Front",
+            prompt: "Walking at a leisurely unhurried pace with thumbs hooked at waistband, shoulders swaying gently with each step, relaxed downward smile.",
+            nsfw: false,
+            tags: ["Casual & Candid", "Movement", "Stroll"]
+          },
+          {
+            id: "e8",
+            name: "Kinetic Step-Down with Head Turned",
+            prompt: "Stepping downward with one foot leading, weight poised on the ball of the foot, torso straight, head turned sharply toward the viewer with editorial intensity.",
+            nsfw: false,
+            tags: ["Fashion & Editorial", "Movement", "Kinetic"]
+          },
+          {
+            id: "e9",
+            name: "Playful Sway Towards Lens with Spontaneous Smile",
+            prompt: "Mid-motion swaying upper body gently toward the camera with shoulders dipped, head tilted playfully, eyes crinkling with genuine joy.",
+            nsfw: false,
+            tags: ["Casual & Candid", "Selfie & Close-Up", "Movement", "Playful"]
+          },
+          {
+            id: "e10",
+            name: "Mid-Jump Kinetic Leap with Pointed Toes",
+            prompt: "Suspended in mid-air during a graceful athletic leap, knees bent and toes pointed downward, arms extended for balance, weightless kinetic dynamism.",
+            nsfw: false,
+            tags: ["Fitness & Active", "Fashion & Editorial", "Movement", "Leap"]
+          },
+          {
+            id: "e11",
+            name: "Graceful Pirouette Rotation on Tiptoes",
+            prompt: "Rotating on the ball of one foot with opposite leg lifted in an open ballet passé, arms held in a soft circular frame overhead, serene poise.",
+            nsfw: false,
+            tags: ["Fashion & Editorial", "Fitness & Active", "Movement", "Pirouette"]
+          }
         ]
       },
       {
@@ -882,14 +3055,90 @@ export const INITIAL_CATEGORIES: Category[] = [
         name: "Sensual & Boudoir",
         type: "flat",
         els: [
-          { id: "e0", name: "Arching Back on Sheets", prompt: "Arching back seductively on the bed, chin tilted up, sultry half-closed eyes.", nsfw: true },
-          { id: "e1", name: "Biting Lip Direct Gaze", prompt: "Lightly biting lower lip while looking straight into the lens, tantalizing aura.", nsfw: true },
-          { id: "e2", name: "Sliding Strap off Shoulder", prompt: "Slowly sliding one thin shoulder strap downward with fingertips.", nsfw: true },
-          { id: "e3", name: "Kneeling on Bed Upright", prompt: "Kneeling upright on a silk duvet, hands resting lightly on hips, commanding gaze.", nsfw: true },
-          { id: "e4", name: "Playing with Waistband", prompt: "Playfully tugging at the lace waistband with both thumbs, coy smirk.", nsfw: true },
-          { id: "e5", name: "Wrapped in Loose Sheet", prompt: "Loosely wrapped in a single white linen bedsheet, exposing one shoulder and bare leg.", nsfw: true },
-          { id: "e6", name: "Fingers Running Through Hair", prompt: "Both hands tangled in hair pulling it back, eyes half-closed in bliss.", nsfw: true },
-          { id: "e7", name: "Leaning Forward Seductive", prompt: "Leaning forward propped on palms, accentuating neckline, sultry smile.", nsfw: true }
+          {
+            id: "e0",
+            name: "Sensual Arched Spine with Raised Chin",
+            prompt: "Arched spine with chest lifted, chin tilted upward, throat elongated, sultry half-closed eyes, lips softly parted in relaxed allure.",
+            nsfw: true,
+            tags: ["Fashion & Editorial", "Sensual", "Arched"]
+          },
+          {
+            id: "e1",
+            name: "Biting Lower Lip with Direct Magnetic Gaze",
+            prompt: "Upper body posture with front teeth lightly catching lower lip, chin tilted down slightly, intense magnetic eye contact piercing the camera lens.",
+            nsfw: true,
+            tags: ["Selfie & Close-Up", "Sensual", "Biting Lip"]
+          },
+          {
+            id: "e2",
+            name: "Fingertips Tracing Slowly Down Collarbone",
+            prompt: "Delicate pose with fingertips of one hand grazing lightly along the collarbone and sternum, shoulders rolled back, soft captivating gaze.",
+            nsfw: true,
+            tags: ["Selfie & Close-Up", "Sensual", "Touch"]
+          },
+          {
+            id: "e3",
+            name: "Upright Kneeling Posture with Hands on Hips",
+            prompt: "Kneeling upright with straight vertical spine, knees spaced shoulder-width, hands resting firmly on hips, commanding sultry posture.",
+            nsfw: true,
+            tags: ["Fashion & Editorial", "Sensual", "Kneeling"]
+          },
+          {
+            id: "e4",
+            name: "Sensual Forward Lean Propped on Open Palms",
+            prompt: "Leaning upper body forward supported on open palms, shoulders pushed back, accentuating neckline and clavicle contours, warm direct gaze.",
+            nsfw: true,
+            tags: ["Sensual", "Form", "Lean"]
+          },
+          {
+            id: "e5",
+            name: "Fingers Tangled in Hair Pulling Gently Back",
+            prompt: "Both hands raised with fingers tangled deep into hair pulling it gently back away from face, elbows bent wide, eyes half-lidded in serene bliss.",
+            nsfw: true,
+            tags: ["Casual & Candid", "Sensual", "Hair"]
+          },
+          {
+            id: "e6",
+            name: "Looking Back Over Bare Shoulder with Curved Spine",
+            prompt: "Torso turned away from camera showing graceful spine curve, head turned fully back over shoulder with an intimate seductive gaze.",
+            nsfw: true,
+            tags: ["Fashion & Editorial", "Sensual", "Back View"]
+          },
+          {
+            id: "e7",
+            name: "Side-Reclining Curve Accentuating Hip Silhouette",
+            prompt: "Reclining on side with waist resting low and hip curve elevated, legs slightly bent and stacked, one arm resting across abdomen, sultry composure.",
+            nsfw: true,
+            tags: ["Fashion & Editorial", "Sensual", "Curves"]
+          },
+          {
+            id: "e8",
+            name: "One Hand Tracing Down Side of Torso and Hip",
+            prompt: "Standing with one arm reaching down along the side curve of ribcage and outer hip, fingers lightly brushing skin, shoulders soft and relaxed.",
+            nsfw: true,
+            tags: ["Sensual", "Standing", "Silhouette"]
+          },
+          {
+            id: "e9",
+            name: "Sensual Kneeling Arch with Hands Resting on Calves",
+            prompt: "Kneeling with spine arched backward into a camel-style extension, hands reaching back to touch calves, chest opened fully toward ceiling.",
+            nsfw: true,
+            tags: ["Fitness & Active", "Sensual", "Arch"]
+          },
+          {
+            id: "e10",
+            name: "Half-Lidded Direct Bedroom Gaze with Parted Lips",
+            prompt: "Close intimate posture with head tilted slightly forward, half-lidded heavy bedroom eyes locking onto lens, lips relaxed and parted in a quiet breath.",
+            nsfw: true,
+            tags: ["Selfie & Close-Up", "Sensual", "Intimate Gaze"]
+          },
+          {
+            id: "e11",
+            name: "Reclining on Back with One Knee Raised",
+            prompt: "Reclining flat on back with one leg extended and the other knee bent with foot planted, one hand resting on stomach, head turned to the side with peaceful gaze.",
+            nsfw: true,
+            tags: ["Sensual", "Lying", "Reclining"]
+          }
         ]
       }
     ]
@@ -897,6 +3146,7 @@ export const INITIAL_CATEGORIES: Category[] = [
   {
     id: "faceexpr",
     name: "Expression & Mood",
+    promptName: "expression",
     type: "flat",
     icon: "Smile",
     accent: "#f43f5e",
@@ -919,29 +3169,200 @@ export const INITIAL_CATEGORIES: Category[] = [
   {
     id: "env",
     name: "Environment & Setting",
+    promptName: "environment",
     type: "tabs",
     icon: "MapPin",
     accent: "#a855f7",
     description: "Cinematic locations, atmospheric rooms, outdoor landscapes, and backdrops",
+    themes: DEFAULT_ENV_THEMES,
     subcats: [
       {
         id: "indoor",
         name: "Indoor Settings",
         type: "flat",
         els: [
-          { id: "e0", name: "Cozy Minimalist Bedroom", prompt: "Setting is a sun-drenched minimalist bedroom, crisp white linens, soft morning shadows.", nsfw: false },
-          { id: "e1", name: "Seamless Photo Studio", prompt: "Clean white infinity cove studio background, smooth shadow roll-off.", nsfw: false },
-          { id: "e2", name: "Luxury Italian Marble Bath", prompt: "High-end Carrara marble bathroom, freestanding soaking tub, gentle ambient steam.", nsfw: false },
-          { id: "e3", name: "SoHo Industrial Loft", prompt: "SoHo loft apartment with exposed brick, 14-foot steel-frame windows, skyline view.", nsfw: false },
-          { id: "e4", name: "Mid-Century Living Room", prompt: "Mid-century modern living room with walnut furniture and soft ambient floor lamps.", nsfw: false },
-          { id: "e5", name: "Walk-In Vanity Closet", prompt: "Glamour walk-in dressing room with illuminated Hollywood vanity mirror reflections.", nsfw: false },
-          { id: "e6", name: "Upscale Penthouse Suite", prompt: "Luxury hotel penthouse with panoramic floor-to-ceiling city night views.", nsfw: false },
-          { id: "e7", name: "Artisan Cafe Nook", prompt: "Warm rustic artisan coffee shop corner, raw wood tables, vintage espresso machine in background.", nsfw: false },
-          { id: "e8", name: "Atmospheric Cocktail Bar", prompt: "Moody speakeasy lounge with dark mahogany counter and glowing backlit bottles.", nsfw: false },
-          { id: "e9", name: "Modern Fitness Gym", prompt: "Architectural modern gym with floor-to-ceiling mirrors and sleek black equipment.", nsfw: false },
-          { id: "e10", name: "Artist Loft Atelier", prompt: "Sunlit artist studio with large oil painting canvases and wooden easel.", nsfw: false },
-          { id: "e11", name: "Retro Laundromat", prompt: "Neon-lit retro laundromat with rows of circular chrome washing machine doors.", nsfw: false },
-          { id: "e12", name: "Mirrored Elevator", prompt: "Sleek brushed brass and mirror interior of a luxury boutique elevator.", nsfw: false }
+          {
+            id: "e0",
+            name: "Sun-Drenched Minimalist Bedroom",
+            prompt: "Setting is a sun-drenched minimalist high-rise bedroom with crisp white linen bedding, floor-to-ceiling sheer curtains, and warm morning shadows stretching across light oak floorboards.",
+            nsfw: false,
+            tags: ["Home & Private", "Bedroom", "Minimalist"]
+          },
+          {
+            id: "e1",
+            name: "Aesthetic Vanity & Glamour Dressing Area",
+            prompt: "Setting is an aesthetic modern vanity desk area with an illuminated arched Hollywood LED mirror, crystal perfume bottles, and sleek brushed brass accents.",
+            nsfw: false,
+            tags: ["Home & Private", "Vanity", "Glamour"]
+          },
+          {
+            id: "e2",
+            name: "Sunlit Carrara Marble Luxury Bathroom",
+            prompt: "Setting is a high-end Carrara marble bathroom with a freestanding sculptural soaking tub, matte black fixtures, and soft ambient steam illuminated by a tall frosted window.",
+            nsfw: false,
+            tags: ["Home & Private", "Bathroom", "Luxury"]
+          },
+          {
+            id: "e3",
+            name: "Architectural Walk-In Designer Closet",
+            prompt: "Setting is an editorial walk-in designer closet with custom smoked-glass backlit shelving displaying luxury handbags, jewelry trays, and full-length mirrors.",
+            nsfw: false,
+            tags: ["Home & Private", "Closet", "Luxury"]
+          },
+          {
+            id: "e4",
+            name: "Plush Boudoir Daybed by Bay Window",
+            prompt: "Setting is an intimate boudoir daybed nook framed by an expansive panoramic bay window, layered with fluffy alpaca throws and textured neutral cushions.",
+            nsfw: false,
+            tags: ["Home & Private", "Boudoir", "Cozy"]
+          },
+          {
+            id: "e5",
+            name: "Sunlit Japandi Living Room Suite",
+            prompt: "Setting is a tranquil Japandi-style penthouse living room with a low travertine coffee table, neutral textured linen sofa, and lush fiddle-leaf fig in soft diffused light.",
+            nsfw: false,
+            tags: ["Home & Private", "Living Room", "Japandi"]
+          },
+          {
+            id: "e6",
+            name: "Modern Glass Library Study Nook",
+            prompt: "Setting is a sleek architectural university library study nook with floor-to-ceiling glass windows, warm oak study desks, and stacks of hardcover books bathed in soft morning light.",
+            nsfw: false,
+            tags: ["University & Campus", "Library", "Study"]
+          },
+          {
+            id: "e7",
+            name: "Curved Nordic Wood Lecture Hall",
+            prompt: "Setting is a contemporary Scandinavian-designed university amphitheater lecture hall with tiered blonde-wood desks and warm ambient architectural cove lighting.",
+            nsfw: false,
+            tags: ["University & Campus", "Lecture Hall", "Academic"]
+          },
+          {
+            id: "e8",
+            name: "Aesthetic Student Union Lounge",
+            prompt: "Setting is a stylish university student union lounge with mid-century modular velvet seating, modern art prints, and high exposed concrete ceilings.",
+            nsfw: false,
+            tags: ["University & Campus", "Student Lounge", "Campus Life"]
+          },
+          {
+            id: "e9",
+            name: "Sunlit Campus Fine Arts Design Studio",
+            prompt: "Setting is an inspiring university art studio loft with tall north-facing factory windows, raw wooden easels, exposed brick walls, and canvas paintings.",
+            nsfw: false,
+            tags: ["University & Campus", "Art Studio", "Creative"]
+          },
+          {
+            id: "e10",
+            name: "Sunlit Boho-Chic Brunch Cafe",
+            prompt: "Setting is an aesthetic sunlit boho-chic brunch cafe with trailing hanging pothos vines, woven rattan furniture, rustic terracotta tiles, and artisan ceramic coffee cups.",
+            nsfw: false,
+            tags: ["City & Streetwear", "Cafe", "Boho"]
+          },
+          {
+            id: "e11",
+            name: "Minimalist Artisan Espresso Roastery",
+            prompt: "Setting is a sleek industrial specialty espresso bar with brushed stainless steel counters, exposed ductwork, polished concrete floors, and glowing pendant lights.",
+            nsfw: false,
+            tags: ["City & Streetwear", "Coffee Shop", "Industrial"]
+          },
+          {
+            id: "e12",
+            name: "Designer Luxury Boutique Fitting Salon",
+            prompt: "Setting is an opulent high-fashion boutique dressing suite with full-length gilt-framed mirrors, champagne velvet banquettes, and warm flattering spotlighting.",
+            nsfw: false,
+            tags: ["City & Streetwear", "Boutique", "Fashion"]
+          },
+          {
+            id: "e13",
+            name: "Contemporary White-Cube Art Gallery",
+            prompt: "Setting is a spacious minimalist contemporary art museum gallery with polished concrete floors, soaring blank white walls, and large-scale abstract modern art.",
+            nsfw: false,
+            tags: ["City & Streetwear", "Art Gallery", "Culture"]
+          },
+          {
+            id: "e14",
+            name: "Sleek Mirrored Elevator of a Boutique Tower",
+            prompt: "Setting is the intimate interior of a luxury boutique hotel elevator lined with brushed rose-gold mirrors and warm vertical LED light strips.",
+            nsfw: false,
+            tags: ["City & Streetwear", "Elevator", "Mirror Selfie"]
+          },
+          {
+            id: "e15",
+            name: "Underground Vinyl Listening Lounge",
+            prompt: "Setting is a vintage record store basement filled with wooden crates of vinyl records, retro band posters, and warm incandescent lamp glow.",
+            nsfw: false,
+            tags: ["City & Streetwear", "Vintage", "Music"]
+          },
+          {
+            id: "e16",
+            name: "Exclusive Velvet VIP Lounge & Speakeasy",
+            prompt: "Setting is an exclusive dimly lit VIP lounge with deep emerald velvet curved booths, dark walnut paneling, and glowing backlit cocktail displays.",
+            nsfw: false,
+            tags: ["Social & Nightlife", "VIP Lounge", "Speakeasy"]
+          },
+          {
+            id: "e17",
+            name: "Moody Low-Lit Cocktail Bar with Onyx Counter",
+            prompt: "Setting is a chic subterranean cocktail lounge with an illuminated amber onyx bar counter, smoky mirrors, and artisanal crystal glassware.",
+            nsfw: false,
+            tags: ["Social & Nightlife", "Cocktail Bar", "Moody"]
+          },
+          {
+            id: "e18",
+            name: "Michelin-Starred Fine Dining Candlelit Table",
+            prompt: "Setting is an intimate corner table at an upscale fine dining restaurant with starched white linen, polished silver cutlery, delicate wine glasses, and flickering votive candlelight.",
+            nsfw: false,
+            tags: ["Social & Nightlife", "Fine Dining", "Candlelit"]
+          },
+          {
+            id: "e19",
+            name: "Glittering Nightclub VIP Banquette",
+            prompt: "Setting is a high-energy luxury nightclub private banquette with plush black leather seating, pulsing violet and magenta neon rim reflections, and champagne bottles on ice.",
+            nsfw: false,
+            tags: ["Social & Nightlife", "Nightclub", "Glamour"]
+          },
+          {
+            id: "e20",
+            name: "Art Deco Jazz Club & Velvet Stage",
+            prompt: "Setting is a seductive vintage jazz club lounge with heavy crimson velvet stage drapes, polished brass candle lanterns, and smoky low-key mood lighting.",
+            nsfw: false,
+            tags: ["Social & Nightlife", "Jazz Club", "Atmospheric"]
+          },
+          {
+            id: "e21",
+            name: "Minimalist Japandi Boutique Hotel Lobby",
+            prompt: "Setting is the tranquil lobby of a luxury boutique design hotel featuring clean blonde cedar timber slats, water features, stone boulder sculptures, and soaring ceilings.",
+            nsfw: false,
+            tags: ["Travel & Leisure", "Hotel Lobby", "Design"]
+          },
+          {
+            id: "e22",
+            name: "Luxury Thermal Spa & Hydrotherapy Sanctuary",
+            prompt: "Setting is an ultra-modern indoor thermal spa sanctuary with steaming heated mineral pools, dark slate stone walls, and warm indirect ambient sconces.",
+            nsfw: false,
+            tags: ["Travel & Leisure", "Spa", "Wellness"]
+          },
+          {
+            id: "e23",
+            name: "Glass-Atrium Airport First-Class Lounge",
+            prompt: "Setting is a sunlit international airport first-class lounge suite with floor-to-ceiling glass looking onto taxiing airliners, designer leather recliners, and fresh white orchids.",
+            nsfw: false,
+            tags: ["Travel & Leisure", "First Class", "Aviation"]
+          },
+          {
+            id: "e24",
+            name: "Alpine Chalet Roaring Stone Hearth",
+            prompt: "Setting is a luxury alpine ski chalet living room with a roaring stone hearth fireplace, raw timber beams, and plush sheepskin rugs.",
+            nsfw: false,
+            tags: ["Travel & Leisure", "Alpine Chalet", "Winter"]
+          },
+          {
+            id: "e25",
+            name: "Victorian Glass Botanical Greenhouse Sunroom",
+            prompt: "Setting is a grand Victorian glass sunroom conservatory filled with towering banana palms, bird-of-paradise flowers, and humid dappled sunlight.",
+            nsfw: false,
+            tags: ["Travel & Leisure", "Conservatory", "Botanical"]
+          }
         ]
       },
       {
@@ -949,16 +3370,181 @@ export const INITIAL_CATEGORIES: Category[] = [
         name: "Outdoor Locations",
         type: "flat",
         els: [
-          { id: "e0", name: "Golden Sunlit Beach", prompt: "Golden sunlit Mediterranean beach, soft turquoise waves breaking on powdery sand.", nsfw: false },
-          { id: "e1", name: "Neon City Rooftop at Night", prompt: "Urban skyscraper rooftop at night, blurred bokeh of city lights and neon signs.", nsfw: false },
-          { id: "e2", name: "Sun-Dappled Pine Forest", prompt: "Sunlit evergreen forest clearing, beams of light filtering through pine needles.", nsfw: false },
-          { id: "e3", name: "Luxury Villa Poolside", prompt: "Private luxury villa poolside, shimmering cyan water reflections, tropical palm foliage.", nsfw: false },
-          { id: "e4", name: "Alpine Mountain Vista", prompt: "Breathtaking alpine mountain overlook, dramatic misty peaks under pastel sunset.", nsfw: false },
-          { id: "e5", name: "Parisian Haussmann Balcony", prompt: "Ornate wrought-iron Parisian balcony overlooking classic zinc roofs at dusk.", nsfw: false },
-          { id: "e6", name: "Sahara Desert Dunes", prompt: "Sculpted golden sand dunes stretching endlessly under a vast pristine sky.", nsfw: false },
-          { id: "e7", name: "Tuscan Sunset Vineyard", prompt: "Rolling Tuscan vineyard rows bathed in warm amber twilight.", nsfw: false },
-          { id: "e8", name: "Lush Botanical Greenhouse", prompt: "Victorian glass greenhouse filled with exotic tropical monstera and ferns.", nsfw: false },
-          { id: "e9", name: "Shibuya Rainy Crossing", prompt: "Rain-slicked Shibuya street crossing at dusk, glowing billboard reflections on asphalt.", nsfw: false }
+          {
+            id: "e0",
+            name: "Skyline High-Rise Penthouse Balcony",
+            prompt: "Setting is an expansive high-rise penthouse balcony with a clear glass balustrade overlooking a breathtaking metropolitan skyline under pastel twilight.",
+            nsfw: false,
+            tags: ["Home & Private", "Balcony", "Penthouse"]
+          },
+          {
+            id: "e1",
+            name: "Sun-Drenched Private Villa Stone Terrace",
+            prompt: "Setting is a private sun-drenched Mediterranean villa stone terrace framed by terracotta planters, blooming pink bougainvillea, and sun lounger seating.",
+            nsfw: false,
+            tags: ["Home & Private", "Terrace", "Villa"]
+          },
+          {
+            id: "e2",
+            name: "Modern Courtyard Patio with Zen Reflection Pool",
+            prompt: "Setting is an intimate architectural courtyard with polished concrete bench seating, a tranquil shallow black granite reflection pool, and a minimalist Japanese maple.",
+            nsfw: false,
+            tags: ["Home & Private", "Courtyard", "Zen"]
+          },
+          {
+            id: "e3",
+            name: "Secluded Rooftop Garden with Pergola & Fairy Lights",
+            prompt: "Setting is a private residential rooftop garden oasis with trailing climbing ivy, string bistro fairy lights, and a cozy outdoor daybed lounge.",
+            nsfw: false,
+            tags: ["Home & Private", "Rooftop Garden", "Private"]
+          },
+          {
+            id: "e4",
+            name: "Autumnal Tree-Lined Campus Quad",
+            prompt: "Setting is a historic university campus quad surrounded by majestic golden-orange oak trees, manicured emerald lawns, and grand collegiate brick architecture.",
+            nsfw: false,
+            tags: ["University & Campus", "Campus Quad", "Autumn"]
+          },
+          {
+            id: "e5",
+            name: "Grand Neo-Gothic Stone Campus Steps",
+            prompt: "Setting is the iconic grand stone staircase of a prestigious university library with tall carved stone pillars and student foot traffic in the soft background blur.",
+            nsfw: false,
+            tags: ["University & Campus", "Campus Steps", "Historic"]
+          },
+          {
+            id: "e6",
+            name: "Sun-Dappled College Courtyard with Ivy-Covered Walls",
+            prompt: "Setting is a peaceful ivy-covered university cloister courtyard with cobblestone paths, cast-iron benches, and dappled sunbeams filtering through leafy canopies.",
+            nsfw: false,
+            tags: ["University & Campus", "Courtyard", "Ivy League"]
+          },
+          {
+            id: "e7",
+            name: "Modernist Campus Botanical Amphitheater Lawn",
+            prompt: "Setting is a contemporary university outdoor amphitheater with stepped turf grass seating, sculptural modern concrete pavilions, and students relaxing in the sun.",
+            nsfw: false,
+            tags: ["University & Campus", "Amphitheater", "Modernist"]
+          },
+          {
+            id: "e8",
+            name: "Neon-Lit Downtown Cyberpunk Alleyway",
+            prompt: "Setting is a vibrant neon-lit downtown metropolis alleyway at dusk, with glowing Japanese signage, wet asphalt reflections, and steam rising from manholes.",
+            nsfw: false,
+            tags: ["City & Streetwear", "Neon Alley", "Cyberpunk"]
+          },
+          {
+            id: "e9",
+            name: "Upscale Fifth Avenue Shopping District Promenade",
+            prompt: "Setting is a glamorous luxury shopping avenue lined with grand designer flagship stores, marble building facades, and elegant sidewalk planters.",
+            nsfw: false,
+            tags: ["City & Streetwear", "Shopping District", "Luxury"]
+          },
+          {
+            id: "e10",
+            name: "Sunlit Sidewalk Cafe Terrace with Parisian Chairs",
+            prompt: "Setting is a charming sunlit outdoor sidewalk cafe terrace with round marble bistro tables, woven rattan Parisian chairs, and warm golden sunlight.",
+            nsfw: false,
+            tags: ["City & Streetwear", "Cafe Terrace", "European"]
+          },
+          {
+            id: "e11",
+            name: "Golden-Hour Pedestrian Crosswalk at Sunset",
+            prompt: "Setting is a bustling metropolitan downtown pedestrian crosswalk during golden hour, with warm low-angled sunlight casting long cinematic shadows across the asphalt.",
+            nsfw: false,
+            tags: ["City & Streetwear", "Crosswalk", "Golden Hour"]
+          },
+          {
+            id: "e12",
+            name: "Metropolitan Suspension Bridge Overlook",
+            prompt: "Setting is a scenic city bridge pedestrian promenade with iconic steel suspension cables framing a sprawling distant downtown skyscraper skyline.",
+            nsfw: false,
+            tags: ["City & Streetwear", "Bridge", "Skyline"]
+          },
+          {
+            id: "e13",
+            name: "Minimalist Concrete Rooftop Helipad & Deck",
+            prompt: "Setting is an open-air urban rooftop parking deck with weathered concrete markings, wide open skies, and sunset pastel clouds.",
+            nsfw: false,
+            tags: ["City & Streetwear", "Rooftop", "Industrial"]
+          },
+          {
+            id: "e14",
+            name: "Aesthetic Rooftop Sushi Bar at Sunset",
+            prompt: "Setting is an aesthetic open-air rooftop sushi bar and garden at sunset, with illuminated bonsai trees, sleek dark timber dining tables, and 360-degree skyline views.",
+            nsfw: false,
+            tags: ["Social & Nightlife", "Rooftop Lounge", "Sunset"]
+          },
+          {
+            id: "e15",
+            name: "Illuminated Skyline Rooftop Cocktail Lounge",
+            prompt: "Setting is an upscale rooftop cocktail lounge at night with glowing low-profile fire pits, glass perimeter railings, and glittering metropolitan city lights below.",
+            nsfw: false,
+            tags: ["Social & Nightlife", "Rooftop Bar", "Nightlife"]
+          },
+          {
+            id: "e16",
+            name: "Mediterranean Seaside Beach Club Sunset Deck",
+            prompt: "Setting is a trendy open-air seaside beach club deck with white canvas sails overhead, rustic bleached driftwood tables, and glowing amber lantern strings.",
+            nsfw: false,
+            tags: ["Social & Nightlife", "Beach Club", "Sunset"]
+          },
+          {
+            id: "e17",
+            name: "VIP Poolside Nightclub Cabana",
+            prompt: "Setting is an exclusive poolside nightclub cabana with curtained daybeds, cyan underwater pool illumination, and vibrant nightclub crowd bokeh in the distance.",
+            nsfw: false,
+            tags: ["Social & Nightlife", "Pool Club", "VIP"]
+          },
+          {
+            id: "e18",
+            name: "Chic Hotel Courtyard Garden Wine Bar",
+            prompt: "Setting is an enchanted open-air courtyard wine bar under a canopy of olive trees, twinkling bistro fairy lights, and limestone paving.",
+            nsfw: false,
+            tags: ["Social & Nightlife", "Wine Bar", "Courtyard"]
+          },
+          {
+            id: "e19",
+            name: "Private Sun-Bleached Infinity Pool Deck",
+            prompt: "Setting is a private cliffside luxury villa infinity pool deck with sun-bleached teak loungers, crystal-clear turquoise water merging with the distant ocean horizon.",
+            nsfw: false,
+            tags: ["Travel & Leisure", "Infinity Pool", "Resort"]
+          },
+          {
+            id: "e20",
+            name: "Overwater Tropical Beach Resort Cabana",
+            prompt: "Setting is a private thatched-roof overwater bungalow cabana in the Maldives with pristine white powdery sand, turquoise lagoon shallows, and palm fronds swaying.",
+            nsfw: false,
+            tags: ["Travel & Leisure", "Resort Cabana", "Tropical"]
+          },
+          {
+            id: "e21",
+            name: "Cliffside Amalfi Coast Lemon Grove Overlook",
+            prompt: "Setting is a breathtaking Mediterranean cliffside terrace in Positano, overlooking pastel seaside villas and deep sapphire waters through fragrant lemon grove trellises.",
+            nsfw: false,
+            tags: ["Travel & Leisure", "Amalfi Coast", "Mediterranean"]
+          },
+          {
+            id: "e22",
+            name: "Luxury Mega-Yacht Sun Deck with Teak Flooring",
+            prompt: "Setting is the pristine teak sun deck of a private luxury mega-yacht cruising open azure waters, with stainless steel railings and plush white sun pads.",
+            nsfw: false,
+            tags: ["Travel & Leisure", "Yacht Deck", "Luxury"]
+          },
+          {
+            id: "e23",
+            name: "Sunset Balinese Open-Air Bamboo Pavilion",
+            prompt: "Setting is an open-air handcrafted bamboo resort pavilion in Bali, perched above lush tiered rice terraces illuminated by golden tropical sunset light.",
+            nsfw: false,
+            tags: ["Travel & Leisure", "Bali", "Tropical"]
+          },
+          {
+            id: "e24",
+            name: "Desert Luxury Glamping Oasis Under Starry Sky",
+            prompt: "Setting is a high-end luxury desert oasis camp with billowing cream canvas tents, Persian rugs laid out on golden dunes, and glowing brass fire braziers.",
+            nsfw: false,
+            tags: ["Travel & Leisure", "Desert Oasis", "Glamping"]
+          }
         ]
       }
     ]
@@ -966,6 +3552,7 @@ export const INITIAL_CATEGORIES: Category[] = [
   {
     id: "light",
     name: "Lighting Setup",
+    promptName: "lighting",
     type: "flat",
     icon: "Sun",
     accent: "#eab308",
@@ -987,6 +3574,7 @@ export const INITIAL_CATEGORIES: Category[] = [
   {
     id: "tech",
     name: "Camera & Optics",
+    promptName: "camera",
     type: "flat",
     icon: "Aperture",
     accent: "#06b6d4",
@@ -1005,6 +3593,7 @@ export const INITIAL_CATEGORIES: Category[] = [
   {
     id: "kw",
     name: "Keywords & Fidelity",
+    promptName: "keywords",
     type: "flat",
     icon: "Sliders",
     accent: "#8b5cf6",
@@ -1025,8 +3614,8 @@ export const INITIAL_DB_STATE: DBState = {
   selections: {
     style: ["e0"],
     outfit: {
-      top: ["e2"],
-      bottom: ["e1"]
+      top: ["e0"],
+      bottom: ["e0"]
     },
     comp: {
       framing: ["e1"]
@@ -1035,7 +3624,7 @@ export const INITIAL_DB_STATE: DBState = {
       standing: ["e3"]
     },
     env: {
-      indoor: ["e7"]
+      indoor: ["e10"]
     },
     light: ["e1"]
   },
@@ -1048,5 +3637,49 @@ export const INITIAL_DB_STATE: DBState = {
   activePreset: "p8",
   stylize: 250,
   soundEnabled: true,
+  autoSelectEnsemble: true,
+  autoSelectContext: true,
   history: []
 };
+
+export const DEFAULT_CATEGORY_IDS = new Set<string>([
+  'style',
+  'subject',
+  'outfit',
+  'skin',
+  'comp',
+  'pose',
+  'faceexpr',
+  'env',
+  'light',
+  'tech',
+  'kw'
+]);
+
+export const DEFAULT_SUBCATEGORY_IDS = new Set<string>([
+  'general',
+  'mine',
+  'personalized',
+  'top',
+  'bottom',
+  'onepiece',
+  'other',
+  'angle',
+  'framing',
+  'style',
+  'standing',
+  'sitting',
+  'lying',
+  'movement',
+  'nsfw',
+  'indoor',
+  'outdoor'
+]);
+
+export function isDefaultCategory(catId: string): boolean {
+  return DEFAULT_CATEGORY_IDS.has(catId);
+}
+
+export function isDefaultSubcategory(subcatId: string): boolean {
+  return DEFAULT_SUBCATEGORY_IDS.has(subcatId);
+}

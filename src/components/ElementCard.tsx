@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Edit3, Flame, GripVertical } from 'lucide-react';
+import { Check, Edit3, Flame, GripVertical, Link2 } from 'lucide-react';
 import { PromptElement } from '../types/prompter';
 import { VisualThumbnail } from './VisualThumbnail';
 
@@ -14,6 +14,9 @@ interface ElementCardProps {
   dragProps?: React.HTMLAttributes<HTMLDivElement>;
   handleProps?: React.HTMLAttributes<HTMLDivElement>;
   isDragging?: boolean;
+  readOnly?: boolean;
+  showLinkedBadge?: boolean;
+  linkedTooltip?: string;
 }
 
 export const ElementCard: React.FC<ElementCardProps> = ({
@@ -26,13 +29,24 @@ export const ElementCard: React.FC<ElementCardProps> = ({
   weight,
   dragProps,
   handleProps,
-  isDragging = false
+  isDragging = false,
+  readOnly = false,
+  showLinkedBadge = true,
+  linkedTooltip
 }) => {
+  const hasLinks = Boolean(
+    showLinkedBadge &&
+    (element.linkedPoseId || element.linkedContextId || element.linkedEnvId)
+  );
   return (
     <div
-      {...dragProps}
-      onClick={onToggle}
-      className={`group relative flex flex-col rounded-xl overflow-hidden cursor-pointer transition-all duration-200 border text-left active:scale-[0.99] select-none ${
+      {...(!readOnly ? dragProps : {})}
+      onClick={!readOnly ? onToggle : undefined}
+      className={`group relative flex flex-col rounded-xl overflow-hidden transition-all duration-200 border text-left select-none ${
+        readOnly
+          ? 'cursor-default active:scale-100'
+          : 'cursor-pointer active:scale-[0.99]'
+      } ${
         isDragging
           ? nsfwOn
             ? 'scale-105 z-30 shadow-[0_0_25px_rgba(255,34,56,0.5)] ring-2 ring-red-500 opacity-95 cursor-grabbing bg-[#181215]'
@@ -42,7 +56,7 @@ export const ElementCard: React.FC<ElementCardProps> = ({
             ? 'bg-[#181215]/95 border-red-500/60 shadow-[0_0_15px_rgba(255,34,56,0.2)]'
             : 'bg-[#181412]/95 border-orange-500/60 shadow-[0_0_15px_rgba(255,102,0,0.2)]'
           : 'bg-[#121116]/80 hover:bg-[#16151b] border-white/[0.06] hover:border-white/[0.15]'
-      } ${dragProps?.className || ''}`}
+      } ${!readOnly ? dragProps?.className || '' : ''}`}
     >
       {/* Selection Checkmark Badge with theme color */}
       {isSelected && (
@@ -64,14 +78,16 @@ export const ElementCard: React.FC<ElementCardProps> = ({
 
       {/* Top Right Controls (Grip Handle & NSFW Tag) */}
       <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5 pointer-events-auto">
-        {/* Grip Handle */}
-        <div
-          {...handleProps}
-          title="Hold & drag to reorder element"
-          className="p-1 rounded bg-black/60 hover:bg-black/90 text-white/40 hover:text-white border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-md cursor-grab active:cursor-grabbing"
-        >
-          <GripVertical className="w-3 h-3 stroke-[2]" />
-        </div>
+        {/* Grip Handle (hidden in readOnly) */}
+        {!readOnly && (
+          <div
+            {...handleProps}
+            title="Hold & drag to reorder element"
+            className="p-1 rounded bg-black/60 hover:bg-black/90 text-white/40 hover:text-white border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-md cursor-grab active:cursor-grabbing"
+          >
+            <GripVertical className="w-3 h-3 stroke-[2]" />
+          </div>
+        )}
 
         {/* Minimalist NSFW Tag */}
         {element.nsfw && (
@@ -82,18 +98,20 @@ export const ElementCard: React.FC<ElementCardProps> = ({
         )}
       </div>
 
-      {/* Minimalist Edit Trigger (Hover) */}
-      <button
-        data-no-drag="true"
-        onClick={(e) => {
-          e.stopPropagation();
-          onEdit();
-        }}
-        title="Edit element"
-        className="absolute bottom-11 right-2 z-10 p-1.5 rounded-lg bg-black/60 hover:bg-black/90 text-white/50 hover:text-white border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-md"
-      >
-        <Edit3 className="w-3 h-3 stroke-[1.5]" />
-      </button>
+      {/* Minimalist Edit Trigger (hidden in readOnly) */}
+      {!readOnly && (
+        <button
+          data-no-drag="true"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+          }}
+          title="Edit element"
+          className="absolute bottom-11 right-2 z-10 p-1.5 rounded-lg bg-black/60 hover:bg-black/90 text-white/50 hover:text-white border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-md"
+        >
+          <Edit3 className="w-3 h-3 stroke-[1.5]" />
+        </button>
+      )}
 
       {/* Visual Artwork Thumbnail */}
       <VisualThumbnail
@@ -108,13 +126,48 @@ export const ElementCard: React.FC<ElementCardProps> = ({
 
       {/* Element Info */}
       <div className="p-2.5 flex flex-col justify-between flex-1 border-t border-white/[0.04] bg-[#121116]/90 pointer-events-none">
-        <span className="font-semibold text-xs text-white/90 line-clamp-2 leading-tight">
-          {element.name}
-        </span>
-        {element.prompt && (
-          <span className="text-[10px] text-white/35 truncate mt-1 font-mono">
-            {element.prompt}
+        <div>
+          <span className="font-semibold text-xs text-white/90 line-clamp-2 leading-tight">
+            {element.name}
           </span>
+          {element.prompt && (
+            <span className="text-[10px] text-white/35 truncate mt-1 block font-mono">
+              {element.prompt}
+            </span>
+          )}
+        </div>
+
+        {/* Ensemble Indicator, Linked Badge or Primary Tag */}
+        {(element.ensembleId || hasLinks || (element.tags && element.tags.length > 0)) && (
+          <div className="mt-1.5 flex items-center gap-1.5 overflow-hidden flex-wrap">
+            {element.ensembleId && (
+              <span className="inline-flex items-center gap-1 text-[9px] font-mono font-medium px-1.5 py-0.5 rounded bg-white/[0.05] text-white/50 border border-white/[0.08] shrink-0">
+                <Link2 className="w-2.5 h-2.5 text-emerald-400 stroke-[2]" />
+                <span>Ensemble</span>
+              </span>
+            )}
+            {hasLinks && (
+              <div className="group/linked relative inline-flex items-center pointer-events-auto">
+                <span
+                  title={linkedTooltip || "Linked item"}
+                  className="inline-flex items-center gap-1 text-[9px] font-mono font-medium px-1.5 py-0.5 rounded bg-white/[0.05] text-cyan-300/80 border border-cyan-500/25 shrink-0"
+                >
+                  <Link2 className="w-2.5 h-2.5 text-cyan-400 stroke-[2]" />
+                  <span>Linked</span>
+                </span>
+                {linkedTooltip && (
+                  <div className="pointer-events-none absolute bottom-full left-0 mb-1.5 z-40 hidden group-hover/linked:block whitespace-nowrap rounded-lg bg-[#18161f] border border-cyan-500/30 shadow-2xl px-2.5 py-1 text-[10px] text-white/95 font-sans animate-in fade-in zoom-in-95 duration-100">
+                    {linkedTooltip}
+                  </div>
+                )}
+              </div>
+            )}
+            {element.tags && element.tags.length > 0 && (
+              <span className="text-[9px] font-mono text-white/40 truncate max-w-[120px]">
+                {element.tags[0]}
+              </span>
+            )}
+          </div>
         )}
       </div>
     </div>

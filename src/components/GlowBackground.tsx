@@ -1,7 +1,9 @@
 import React, { useEffect, useRef } from 'react';
+import { AppTheme } from '../types/prompter';
 
 interface GlowBackgroundProps {
   nsfwOn: boolean;
+  theme?: AppTheme | 'dark' | 'light';
 }
 
 interface RGB {
@@ -22,10 +24,17 @@ const RED_PALETTE: { primary: RGB; secondary: RGB; tertiary: RGB } = {
   tertiary: { r: 190, g: 15, b: 35 }
 };
 
-export const GlowBackground: React.FC<GlowBackgroundProps> = ({ nsfwOn }) => {
+export const GlowBackground: React.FC<GlowBackgroundProps> = ({ nsfwOn, theme = 'glow' }) => {
+  // If Minimalist Dark or Minimalist Light is selected, no glow or canvas effects should run
+  if (theme !== 'glow') {
+    return null;
+  }
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const nsfwRef = useRef(nsfwOn);
   nsfwRef.current = nsfwOn;
+  const themeRef = useRef(theme);
+  themeRef.current = theme;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -74,9 +83,15 @@ export const GlowBackground: React.FC<GlowBackgroundProps> = ({ nsfwOn }) => {
       currentTertiary.g = lerp(currentTertiary.g, targetPalette.tertiary.g, speed);
       currentTertiary.b = lerp(currentTertiary.b, targetPalette.tertiary.b, speed);
 
-      // Clear with base pitch black
-      ctx.fillStyle = '#07070a';
+      const isLight = false;
+      // Clear with base
+      ctx.fillStyle = isLight ? '#f8fafc' : '#07070a';
       ctx.fillRect(0, 0, width, height);
+
+      const a1 = isLight ? 0.08 : 0.22;
+      const a2 = isLight ? 0.06 : 0.18;
+      const a3 = isLight ? 0.04 : 0.14;
+      const stopColor = isLight ? 'rgba(248, 250, 252, 0)' : 'rgba(7, 7, 10, 0)';
 
       // Node 1: Top-Left moving orb
       const x1 = width * (0.22 + Math.sin(t * 0.7) * 0.14);
@@ -86,13 +101,13 @@ export const GlowBackground: React.FC<GlowBackgroundProps> = ({ nsfwOn }) => {
       const grad1 = ctx.createRadialGradient(x1, y1, 0, x1, y1, r1);
       grad1.addColorStop(
         0,
-        `rgba(${Math.round(currentPrimary.r)}, ${Math.round(currentPrimary.g)}, ${Math.round(currentPrimary.b)}, 0.22)`
+        `rgba(${Math.round(currentPrimary.r)}, ${Math.round(currentPrimary.g)}, ${Math.round(currentPrimary.b)}, ${a1})`
       );
       grad1.addColorStop(
         0.5,
-        `rgba(${Math.round(currentPrimary.r)}, ${Math.round(currentPrimary.g)}, ${Math.round(currentPrimary.b)}, 0.07)`
+        `rgba(${Math.round(currentPrimary.r)}, ${Math.round(currentPrimary.g)}, ${Math.round(currentPrimary.b)}, ${a1 * 0.35})`
       );
-      grad1.addColorStop(1, 'rgba(7, 7, 10, 0)');
+      grad1.addColorStop(1, stopColor);
 
       ctx.fillStyle = grad1;
       ctx.fillRect(0, 0, width, height);
@@ -105,13 +120,13 @@ export const GlowBackground: React.FC<GlowBackgroundProps> = ({ nsfwOn }) => {
       const grad2 = ctx.createRadialGradient(x2, y2, 0, x2, y2, r2);
       grad2.addColorStop(
         0,
-        `rgba(${Math.round(currentSecondary.r)}, ${Math.round(currentSecondary.g)}, ${Math.round(currentSecondary.b)}, 0.18)`
+        `rgba(${Math.round(currentSecondary.r)}, ${Math.round(currentSecondary.g)}, ${Math.round(currentSecondary.b)}, ${a2})`
       );
       grad2.addColorStop(
         0.55,
-        `rgba(${Math.round(currentSecondary.r)}, ${Math.round(currentSecondary.g)}, ${Math.round(currentSecondary.b)}, 0.05)`
+        `rgba(${Math.round(currentSecondary.r)}, ${Math.round(currentSecondary.g)}, ${Math.round(currentSecondary.b)}, ${a2 * 0.3})`
       );
-      grad2.addColorStop(1, 'rgba(7, 7, 10, 0)');
+      grad2.addColorStop(1, stopColor);
 
       ctx.fillStyle = grad2;
       ctx.fillRect(0, 0, width, height);
@@ -124,9 +139,9 @@ export const GlowBackground: React.FC<GlowBackgroundProps> = ({ nsfwOn }) => {
       const grad3 = ctx.createRadialGradient(x3, y3, 0, x3, y3, r3);
       grad3.addColorStop(
         0,
-        `rgba(${Math.round(currentTertiary.r)}, ${Math.round(currentTertiary.g)}, ${Math.round(currentTertiary.b)}, 0.14)`
+        `rgba(${Math.round(currentTertiary.r)}, ${Math.round(currentTertiary.g)}, ${Math.round(currentTertiary.b)}, ${a3})`
       );
-      grad3.addColorStop(1, 'rgba(7, 7, 10, 0)');
+      grad3.addColorStop(1, stopColor);
 
       ctx.fillStyle = grad3;
       ctx.fillRect(0, 0, width, height);

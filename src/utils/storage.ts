@@ -48,6 +48,15 @@ export const api = {
     await request(`/api/users/${encodeURIComponent(id)}`, { method: 'DELETE' });
   },
 
+  async updateUser(id: string, name: string): Promise<ApiUser> {
+    const res = await request(`/api/users/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    });
+    return res.json();
+  },
+
   /** Returns null when this user has no saved database yet. Throws on any other failure. */
   async getDb(userId: string): Promise<any | null> {
     try {
@@ -65,6 +74,13 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(db)
     });
+  },
+
+  async restoreDb(userId: string): Promise<any> {
+    const res = await request(`/api/users/${encodeURIComponent(userId)}/restore`, {
+      method: 'POST'
+    });
+    return await res.json();
   },
 
   /** Stores the image as a real file in data/photos/<userId>/ and returns its URL (/files/<userId>/<file>). */
@@ -87,8 +103,61 @@ export const api = {
     });
     const json = await res.json();
     return json.url as string;
+  },
+
+  /** Full Export: Packages main JSON database and all data/photos into a dedicated export folder and downloadable .zip archive. */
+  async fullExport(userId = 'main'): Promise<{ filename: string; blob: Blob; imageCount: number; exportFolder?: string }> {
+    const res = await request(`/api/export/full?userId=${encodeURIComponent(userId)}`);
+    const blob = await res.blob();
+    const disposition = res.headers.get('Content-Disposition') || '';
+    let filename = `prompter-vault-full-export-${Date.now()}.zip`;
+    const m = /filename=["']?([^"';]+)["']?/.exec(disposition);
+    if (m && m[1]) filename = m[1];
+    const imageCount = parseInt(res.headers.get('X-Image-Count') || '0', 10);
+    const exportFolder = res.headers.get('X-Export-Folder') || undefined;
+    return { filename, blob, imageCount, exportFolder };
+  },
+
+  /** Full Import: Uploads a .zip archive, extracts all embedded images into data/photos, links them to JSON data, and updates database. */
+  async fullImport(userId: string, file: File): Promise<{
+    ok: boolean;
+    message: string;
+    imagesExtracted: number;
+    categoriesCount: number;
+    presetsCount: number;
+    db: any;
+  }> {
+    const formData = new FormData();
+    formData.append('archive', file);
+    formData.append('userId', userId);
+    const res = await request(`/api/import/full?userId=${encodeURIComponent(userId)}`, {
+      method: 'POST',
+      body: formData
+    });
+    return res.json();
+  },
+
+  /** Lists server-side saved export packages */
+  async listExports(): Promise<{ filename: string; sizeBytes: number; createdAt: number; downloadUrl: string }[]> {
+    try {
+      const res = await request('/api/export/list');
+      return res.json();
+    } catch {
+      return [];
+    }
   }
 };
+
+export function downloadBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
 
 export async function dataUrlToBlob(dataUrl: string): Promise<Blob> {
   return (await fetch(dataUrl)).blob();

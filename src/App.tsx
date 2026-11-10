@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { 
   Sparkles, 
   Dices, 
@@ -16,7 +16,14 @@ import {
   XCircle,
   Edit3,
   Database,
-  GripVertical
+  GripVertical,
+  CheckSquare,
+  Shirt,
+  Activity,
+  Camera,
+  MapPin,
+  Tags,
+  Link2
 } from 'lucide-react';
 import { 
   Category, 
@@ -28,12 +35,25 @@ import {
   PromptMode, 
   AspectRatio, 
   PromptHistoryItem,
-  SubCategory
+  PromptElement,
+  SubCategory,
+  Theme
 } from './types/prompter';
-import { INITIAL_DB_STATE, INITIAL_CATEGORIES } from './data/initialData';
+import { 
+  INITIAL_DB_STATE, 
+  INITIAL_CATEGORIES, 
+  isDefaultCategory, 
+  isDefaultSubcategory,
+  DEFAULT_CATEGORY_IDS,
+  DEFAULT_SUBCATEGORY_IDS,
+  DEFAULT_ENV_THEMES,
+  DEFAULT_POSE_THEMES,
+  DEFAULT_OUTFIT_THEMES
+} from './data/initialData';
 import { 
   compilePrompt, 
   getSelArr, 
+  resolveElement,
   EXCLUSIVE_TABBED, 
   SINGLE_PER_SUBCAT, 
   SINGLE_FLAT 
@@ -54,10 +74,17 @@ import { CommandPalette } from './components/CommandPalette';
 import { HistoryModal } from './components/HistoryModal';
 import { PresetModal } from './components/PresetModal';
 import { SubcategoryModal } from './components/SubcategoryModal';
+import { ThemeModal } from './components/ThemeModal';
+import { LinkableItemOption } from './components/SearchableLinkSelect';
 import { GlowBackground } from './components/GlowBackground';
 import { DevSettingsPage, UserProfile } from './components/DevSettingsPage';
+import { FullExportImportModal } from './components/FullExportImportModal';
+import { SettingsModal } from './components/SettingsModal';
+import { AppTheme } from './types/prompter';
+import { suggestPromptName, DEFAULT_CATEGORY_PROMPT_NAMES, getCategoryPromptName } from './utils/promptCompiler';
 import { api, ensureImageFor, externalizeImages, inlineImages, migrateLocalStorage } from './utils/storage';
 import { useHoldAndSlide } from './hooks/useHoldAndSlide';
+
 
 export default function App() {
   // Multi-user state. Everything persists to the local Rust server (data/ folder), not to the browser.
@@ -100,13 +127,102 @@ export default function App() {
     });
   };
 
-  const getEmptyCategories = (): Category[] => {
-    return ensureOnePieceInCats(
-      INITIAL_CATEGORIES.map((cat: any) => ({
+  const ensureDefaultSubcategoriesInCats = (cats: Category[]): Category[] => {
+    return cats.map((cat: any) => {
+      const initialCat = INITIAL_CATEGORIES.find((c) => c.id === cat.id);
+      if (!initialCat || !initialCat.subcats) return cat;
+
+      const existingSubcats = cat.subcats || [];
+      const missingDefaults = initialCat.subcats.filter(
+        (initSub) => !existingSubcats.some((s: any) => s.id === initSub.id)
+      );
+
+      if (missingDefaults.length === 0) return cat;
+
+      const newSubcats = [...existingSubcats];
+      for (const defSub of missingDefaults) {
+        newSubcats.push({
+          id: defSub.id,
+          name: defSub.name,
+          type: defSub.type || 'flat',
+          els: []
+        });
+      }
+      return { ...cat, subcats: newSubcats };
+    });
+  };
+
+  const ensureThemesInCats = (cats: Category[]): Category[] => {
+    return cats.map((cat: any) => {
+      let themes = cat.themes ? [...cat.themes] : undefined;
+      if ((!themes || themes.length === 0) && cat.id === 'env') {
+        themes = [...DEFAULT_ENV_THEMES];
+      } else if ((!themes || themes.length === 0) && cat.id === 'pose') {
+        themes = [...DEFAULT_POSE_THEMES];
+      } else if ((!themes || themes.length === 0) && cat.id === 'outfit') {
+        themes = [...DEFAULT_OUTFIT_THEMES];
+      }
+
+      // Migrate existing elements: if el has no themeIds, match tags/ensembleId to themes
+      if (themes && themes.length > 0) {
+        const populateElThemes = (els: any[]) => {
+          (els || []).forEach((el: any) => {
+            if (!el.themeIds || el.themeIds.length === 0) {
+              const matched = new Set<string>();
+              if (el.tags && el.tags.length > 0) {
+                themes!.forEach((t: any) => {
+                  const tLow = t.name.toLowerCase();
+                  if (el.tags.some((tag: string) => {
+                    const tagLow = tag.toLowerCase();
+                    return tagLow === tLow || tag === t.id || tLow.includes(tagLow) || tagLow.includes(tLow);
+                  })) {
+                    matched.add(t.id);
+                  }
+                });
+              }
+              // Also map outfit ensemble prefixes to outfit themes if applicable
+              if (cat.id === 'outfit' && el.ensembleId) {
+                if (el.ensembleId.startsWith('ens_cas')) matched.add('theme-outfit-casual-streetwear');
+                else if (el.ensembleId.startsWith('ens_uni')) matched.add('theme-outfit-university-preppy');
+                else if (el.ensembleId.startsWith('ens_eve')) matched.add('theme-outfit-events-nightlife');
+                else if (el.ensembleId.startsWith('ens_fit')) matched.add('theme-outfit-fitness-active');
+                else if (el.ensembleId.startsWith('ens_swm')) matched.add('theme-outfit-swimwear-resort');
+                else if (el.ensembleId.startsWith('ens_nsf')) matched.add('theme-outfit-lingerie-sensual');
+              }
+              if (matched.size > 0) {
+                el.themeIds = Array.from(matched);
+              }
+            }
+          });
+        };
+
+        if (cat.type === 'flat') populateElThemes(cat.els);
+        if (cat.subcats) {
+          cat.subcats.forEach((sc: any) => {
+            if (sc.els) populateElThemes(sc.els);
+            if (sc.rows) sc.rows.forEach((r: any) => populateElThemes(r.els));
+          });
+        }
+      }
+
+      return {
         ...cat,
-        els: cat.els ? [] : undefined,
-        subcats: cat.subcats ? cat.subcats.map((sub: any) => ({ ...sub, els: [] })) : undefined
-      }))
+        ...(themes ? { themes } : {})
+      };
+    });
+  };
+
+  const getEmptyCategories = (): Category[] => {
+    return ensureThemesInCats(
+      ensureDefaultSubcategoriesInCats(
+        ensureOnePieceInCats(
+          INITIAL_CATEGORIES.map((cat: any) => ({
+            ...cat,
+            els: cat.els ? [] : undefined,
+            subcats: cat.subcats ? cat.subcats.map((sub: any) => ({ ...sub, els: [] })) : undefined
+          }))
+        )
+      )
     );
   };
 
@@ -123,19 +239,27 @@ export default function App() {
     },
     presets: [],
     activePreset: "",
+    autoSelectContext: true,
     history: []
   });
 
   const normalizeDb = (parsed: any, userId: string): DBState => {
     const rawCats = parsed.cats || (userId === 'main' ? INITIAL_DB_STATE.cats : getEmptyCategories());
+    const withDefaults = ensureThemesInCats(ensureDefaultSubcategoriesInCats(ensureOnePieceInCats(rawCats)));
+    const migratedCats = withDefaults.map((cat: any) => ({
+      ...cat,
+      promptName: cat.promptName || DEFAULT_CATEGORY_PROMPT_NAMES[cat.id] || suggestPromptName(cat.name, cat.id)
+    }));
     return {
       ...INITIAL_DB_STATE,
       ...parsed,
-      cats: ensureOnePieceInCats(rawCats),
+      cats: migratedCats,
       presets: parsed.presets || (userId === 'main' ? INITIAL_DB_STATE.presets : []),
-      selections: parsed.selections || INITIAL_DB_STATE.selections
+      selections: parsed.selections || INITIAL_DB_STATE.selections,
+      autoSelectContext: parsed.autoSelectContext !== undefined ? parsed.autoSelectContext : true
     };
   };
+
 
   const getSequentialPresetName = (presets: Preset[], prefix: string): string => {
     const escaped = prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -218,12 +342,17 @@ export default function App() {
     }
   };
 
+  const handleRenameUser = async (userId: string, newName: string) => {
+    try {
+      const updated = await api.updateUser(userId, newName);
+      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, name: updated.name } : u)));
+    } catch (err: any) {
+      throw new Error(`Could not rename user: ${err?.message || err}`);
+    }
+  };
+
   const handleDeleteUser = async (userId: string) => {
     if (userId === 'main') return;
-    const u = users.find((x) => x.id === userId);
-    if (!confirm(`Delete user "${u?.name || userId}" and permanently remove their database and photo folder from disk?`)) {
-      return;
-    }
     try {
       if (activeUserId === userId) {
         await switchUser('main');
@@ -352,16 +481,16 @@ export default function App() {
               parsedOnePiece = parseItem(outfitData.one_piece || outfitData.onepiece || outfitData.onePiece, 'One-Piece Outfit');
               if (parsedOnePiece) onePieceElId = addElToSubcat('outfit', 'onepiece', parsedOnePiece.name, parsedOnePiece.prompt);
             }
-            if (outfitData.top) {
-              parsedTop = parseItem(outfitData.top, 'Outfit Top');
+            if (outfitData.top || outfitData.outerwear) {
+              parsedTop = parseItem(outfitData.top || outfitData.outerwear, 'Outfit Top');
               if (parsedTop) topElId = addElToSubcat('outfit', 'top', parsedTop.name, parsedTop.prompt);
             }
             if (outfitData.bottom) {
               parsedBottom = parseItem(outfitData.bottom, 'Outfit Bottom');
               if (parsedBottom) bottomElId = addElToSubcat('outfit', 'bottom', parsedBottom.name, parsedBottom.prompt);
             }
-            if (outfitData.accessories || outfitData.footwear || outfitData.other) {
-              const parsedAcc = parseItem(outfitData.accessories || outfitData.footwear || outfitData.other, 'Accessories & Footwear');
+            if (outfitData.accessories_and_footwear || outfitData.accessories || outfitData.footwear || outfitData.other) {
+              const parsedAcc = parseItem(outfitData.accessories_and_footwear || outfitData.accessories || outfitData.footwear || outfitData.other, 'Accessories & Footwear');
               if (parsedAcc) accElId = addElToSubcat('outfit', 'other', parsedAcc.name, parsedAcc.prompt);
             }
           } else {
@@ -376,16 +505,16 @@ export default function App() {
           parsedOnePiece = parseItem(data.one_piece || data.onepiece, 'One-Piece Outfit');
           if (parsedOnePiece) onePieceElId = addElToSubcat('outfit', 'onepiece', parsedOnePiece.name, parsedOnePiece.prompt);
         }
-        if (data.top && !topElId) {
-          parsedTop = parseItem(data.top, 'Outfit Top');
+        if ((data.top || data.outerwear) && !topElId) {
+          parsedTop = parseItem(data.top || data.outerwear, 'Outfit Top');
           if (parsedTop) topElId = addElToSubcat('outfit', 'top', parsedTop.name, parsedTop.prompt);
         }
         if (data.bottom && !bottomElId) {
           parsedBottom = parseItem(data.bottom, 'Outfit Bottom');
           if (parsedBottom) bottomElId = addElToSubcat('outfit', 'bottom', parsedBottom.name, parsedBottom.prompt);
         }
-        if ((data.accessories || data.footwear) && !accElId) {
-          const parsedAcc = parseItem(data.accessories || data.footwear, 'Accessories & Footwear');
+        if ((data.accessories_and_footwear || data.accessories || data.footwear || data.other) && !accElId) {
+          const parsedAcc = parseItem(data.accessories_and_footwear || data.accessories || data.footwear || data.other, 'Accessories & Footwear');
           if (parsedAcc) accElId = addElToSubcat('outfit', 'other', parsedAcc.name, parsedAcc.prompt);
         }
 
@@ -445,41 +574,125 @@ export default function App() {
         }
       }
 
-      // 3. Pose: Body position, stance, and action only
+      // 3. Pose: Body position, stance, and action only (strictly isolated from environment)
       let poseElId: string | null = null;
       let parsedPose: any = null;
+      let poseSubcatId = 'standing';
       if (shouldProcess('pose')) {
         parsedPose = parseItem(data.pose || data.pose_action, 'Pose');
         if (parsedPose) {
-          poseElId = addElToSubcat('pose', 'standing', parsedPose.name, parsedPose.prompt);
+          // Element Isolation: sanitize accidental environment bleeding
+          let cleanPosePrompt = parsedPose.prompt
+            .replace(/\b(?:sitting|seated|standing|leaning)\s+(?:at|in|on)\s+(?:a|an|the)\s+[^,.]*(?:table|car|restaurant|house|room|cafe|street|bar|beach|apartment|kitchen|couch|chair)[^,.]*/gi, (m: string) => {
+              if (/sitting|seated/i.test(m)) return 'seated with poised upright posture';
+              if (/standing/i.test(m)) return 'standing poised';
+              if (/leaning/i.test(m)) return 'leaning relaxed';
+              return '';
+            })
+            .trim();
+          if (!cleanPosePrompt) cleanPosePrompt = parsedPose.prompt;
+
+          const poseRaw = data.pose || data.pose_action;
+          let chosenPoseSubcat = 'standing';
+          if (typeof poseRaw === 'object' && poseRaw !== null) {
+            const explicitType = String(poseRaw.type || poseRaw.subcat || poseRaw.category || '').toLowerCase();
+            if (explicitType.includes('sit')) chosenPoseSubcat = 'sitting';
+            else if (explicitType.includes('ly') || explicitType.includes('lie') || explicitType.includes('reclin')) chosenPoseSubcat = 'lying';
+            else if (explicitType.includes('move') || explicitType.includes('walk') || explicitType.includes('stride')) chosenPoseSubcat = 'movement';
+            else if (explicitType.includes('stand')) chosenPoseSubcat = 'standing';
+          }
+          if (chosenPoseSubcat === 'standing') {
+            const text = `${parsedPose.name} ${parsedPose.prompt}`.toLowerCase();
+            if (/\b(sitting|seated|cross-legged|kneeling|straddling|perched|crouch|squat)\b/.test(text)) {
+              chosenPoseSubcat = 'sitting';
+            } else if (/\b(lying|laying|reclining|stretched out|on back|on stomach|supine|prone)\b/.test(text)) {
+              chosenPoseSubcat = 'lying';
+            } else if (/\b(walking|mid-stride|stride|spinning|running|jumping|stride)\b/.test(text)) {
+              chosenPoseSubcat = 'movement';
+            }
+          }
+
+          poseSubcatId = chosenPoseSubcat;
+          poseElId = addElToSubcat('pose', poseSubcatId, parsedPose.name, cleanPosePrompt);
         }
       }
 
-      // 4. Composition: Framing, camera angle, shot type, etc.
+      // 4. Composition: Granular distribution across "angle", "framing", and "style" (exactly one subcategory)
       let compElId: string | null = null;
       let parsedComp: any = null;
+      let compSubcatId = 'framing';
       if (shouldProcess('composition')) {
         parsedComp = parseItem(data.composition || data.comp || data.camera, 'Composition');
         if (parsedComp) {
-          compElId = addElToSubcat('comp', 'framing', parsedComp.name, parsedComp.prompt);
+          const compRaw = data.composition || data.comp || data.camera;
+          let chosenSubcat: 'angle' | 'framing' | 'style' | null = null;
+
+          if (typeof compRaw === 'object' && compRaw !== null) {
+            const explicitType = String(compRaw.type || compRaw.subcat || compRaw.category || '').toLowerCase();
+            if (explicitType === 'angle' || explicitType === 'camera_angle' || explicitType === 'camera angle') chosenSubcat = 'angle';
+            else if (explicitType === 'style' || explicitType === 'perspective' || explicitType === 'view') chosenSubcat = 'style';
+            else if (explicitType === 'framing' || explicitType === 'shot_framing' || explicitType === 'shot framing') chosenSubcat = 'framing';
+            else if (compRaw.angle) chosenSubcat = 'angle';
+            else if (compRaw.style || compRaw.perspective) chosenSubcat = 'style';
+            else if (compRaw.framing) chosenSubcat = 'framing';
+          }
+
+          if (!chosenSubcat) {
+            const text = `${parsedComp.name} ${parsedComp.prompt}`.toLowerCase();
+            const angleScore = (text.match(/\b(angle|eye-level|eye level|low angle|high angle|bird'?s-eye|overhead|top-down|dutch angle|tilted|tilt|worm'?s eye|ground level|looking up|looking down|canted)\b/g) || []).length;
+            const styleScore = (text.match(/\b(pov|point of view|first-person|mirror|selfie|reflection|over-the-shoulder|over the shoulder|profile|side profile|rear view|back view|from behind|silhouette|candid|doorway|window|glance)\b/g) || []).length;
+            const framingScore = (text.match(/\b(close-up|closeup|macro|headshot|portrait|cowboy shot|half-body|half body|waist-up|waist up|mid-thigh|full-body|full body|head-to-toe|wide shot|medium shot|extreme close-up|crop|framing)\b/g) || []).length;
+
+            if (angleScore > framingScore && angleScore >= styleScore) {
+              chosenSubcat = 'angle';
+            } else if (styleScore > framingScore && styleScore > angleScore) {
+              chosenSubcat = 'style';
+            } else {
+              chosenSubcat = 'framing';
+            }
+          }
+
+          compSubcatId = chosenSubcat;
+          compElId = addElToSubcat('comp', compSubcatId, parsedComp.name, parsedComp.prompt);
         }
       }
 
-      // 5. Environment: Setting or place information only (strictly excludes lighting)
+      // 5. Environment: Intelligent routing to either "Outdoor Location" (outdoor) or "Indoor Settings" (indoor)
       let envElId: string | null = null;
       let parsedEnv: any = null;
+      let envSubcatId = 'outdoor';
       if (shouldProcess('environment')) {
         parsedEnv = parseItem(data.environment || data.env, 'Environment');
         if (parsedEnv) {
-          envElId = addElToSubcat('env', 'outdoor', parsedEnv.name, parsedEnv.prompt);
+          const envRaw = data.environment || data.env;
+          let detectedType = '';
+          if (typeof envRaw === 'object' && envRaw !== null) {
+            const t = String(envRaw.type || envRaw.subcat || envRaw.category || '').toLowerCase();
+            if (t === 'indoor' || envRaw.indoor) detectedType = 'indoor';
+            else if (t === 'outdoor' || envRaw.outdoor) detectedType = 'outdoor';
+          }
+          if (!detectedType) {
+            const combinedText = `${parsedEnv.name} ${parsedEnv.prompt}`.toLowerCase();
+            const indoorMatches = (combinedText.match(/\b(indoor|interior|room|bedroom|living room|kitchen|bathroom|studio|loft|hallway|office|bar|cafe|restaurant|gym|elevator|closet|atelier|laundromat|suite|penthouse|cove|indoor pool|lounge|spa|hotel room|palace|gallery)\b/g) || []).length;
+            const outdoorMatches = (combinedText.match(/\b(outdoor|exterior|beach|street|forest|mountain|park|rooftop|garden|lake|ocean|sea|road|dune|desert|balcony|poolside|sky|crossing|alley|plaza|field|meadow|nature|waterfall|vineyard)\b/g) || []).length;
+            detectedType = indoorMatches > outdoorMatches ? 'indoor' : 'outdoor';
+          }
+          envSubcatId = detectedType === 'indoor' ? 'indoor' : 'outdoor';
+          envElId = addElToSubcat('env', envSubcatId, parsedEnv.name, parsedEnv.prompt);
         }
       }
 
-      // 6. Lighting: Time of day, light sources, shadow, mood, and atmosphere
+      // 6. Lighting: Time of day, light sources, shadow, mood, and atmosphere (strictly isolated from scenery/location)
+      let lightElId: string | null = null;
       if (shouldProcess('lighting')) {
         const light = parseItem(data.lighting || data.light, 'Lighting');
         if (light) {
-          addElToSubcat('light', 'light', light.name, light.prompt);
+          let cleanLightPrompt = light.prompt
+            .replace(/\b(?:inside|in)\s+(?:a|an|the)\s+[^,.]*(?:room|house|restaurant|cafe|studio|hallway|apartment|building)[^,.]*/gi, '')
+            .replace(/\s{2,}/g, ' ')
+            .trim();
+          if (!cleanLightPrompt) cleanLightPrompt = light.prompt;
+          lightElId = addElToSubcat('light', 'light', light.name, cleanLightPrompt);
         }
       }
 
@@ -511,9 +724,10 @@ export default function App() {
             ...(onePieceElId ? [{ cat: 'outfit', sub: 'onepiece', el: onePieceElId }] : []),
             ...(topElId ? [{ cat: 'outfit', sub: 'top', el: topElId }] : []),
             ...(bottomElId ? [{ cat: 'outfit', sub: 'bottom', el: bottomElId }] : []),
-            ...(compElId ? [{ cat: 'comp', sub: 'framing', el: compElId }] : []),
-            ...(poseElId ? [{ cat: 'pose', sub: 'standing', el: poseElId }] : []),
-            ...(envElId ? [{ cat: 'env', sub: 'outdoor', el: envElId }] : [])
+            ...(compElId ? [{ cat: 'comp', sub: compSubcatId, el: compElId }] : []),
+            ...(poseElId ? [{ cat: 'pose', sub: poseSubcatId, el: poseElId }] : []),
+            ...(envElId ? [{ cat: 'env', sub: envSubcatId, el: envElId }] : []),
+            ...(lightElId ? [{ cat: 'light', el: lightElId }] : [])
           ],
           description: combinedDescription,
           image: contextPresetImage,
@@ -686,7 +900,17 @@ export default function App() {
   const [historyOpen, setHistoryOpen] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [isDevPage, setIsDevPage] = useState<boolean>(false);
-  const [rootViewMode, setRootViewMode] = useState<'categories' | 'presets'>('categories');
+  const [rootViewMode, setRootViewMode] = useState<'categories' | 'presets' | 'selected'>('categories');
+  const [theme, setTheme] = useState<AppTheme>(() => {
+    const saved = localStorage.getItem('ultimate_prompter_theme');
+    if (saved === 'minimal-dark' || saved === 'minimal-light' || saved === 'glow') {
+      return saved;
+    }
+    if (saved === 'light') return 'minimal-light';
+    return 'glow';
+  });
+
+  const [settingsModalOpen, setSettingsModalOpen] = useState<boolean>(false);
 
   // Modals for editing
   const [cropModalData, setCropModalData] = useState<{
@@ -697,11 +921,20 @@ export default function App() {
     isCategory?: boolean;
     catId?: string;
     initialName?: string;
+    initialPromptName?: string;
     initialPrompt?: string;
     initialNsfw?: boolean;
     initialImage?: string;
     initialImgPos?: ImgPos;
     initialIcon?: string;
+    initialEnsembleId?: string;
+    initialPairedElementId?: string;
+    availableSubcategories?: { id: string; name: string }[];
+    initialSubcatId?: string;
+    initialThemeIds?: string[];
+    initialLinkedContextId?: string;
+    initialLinkedPoseId?: string;
+    initialLinkedEnvId?: string;
   }>({
     isOpen: false,
     title: '',
@@ -728,28 +961,191 @@ export default function App() {
     subcat: null
   });
 
+  const [themeModalData, setThemeModalData] = useState<{
+    isOpen: boolean;
+    mode: 'create' | 'edit';
+    theme: Theme | null;
+  }>({
+    isOpen: false,
+    mode: 'create',
+    theme: null
+  });
+
+  const isContextCategory = (c: Category | null | undefined) => {
+    if (!c) return false;
+    return c.id === 'comp' || c.id === 'context' || c.name.toLowerCase().includes('context') || c.name.toLowerCase().includes('composition');
+  };
+  const isPoseCategory = (c: Category | null | undefined) => {
+    if (!c) return false;
+    return c.id === 'pose' || c.name.toLowerCase().includes('pose');
+  };
+  const isEnvCategory = (c: Category | null | undefined) => {
+    if (!c) return false;
+    return c.id === 'env' || c.id === 'environment' || c.name.toLowerCase().includes('environment') || c.name.toLowerCase().includes('setting');
+  };
+  const isContextTargetCategory = (c: Category | null | undefined) => {
+    return isContextCategory(c) || isPoseCategory(c) || isEnvCategory(c);
+  };
+
+  const contextCat = useMemo(() => {
+    return db.cats.find((c) => c.id === 'context' || c.name.toLowerCase().includes('context')) ||
+           db.cats.find((c) => c.id === 'comp');
+  }, [db.cats]);
+
+  const poseCat = useMemo(() => {
+    return db.cats.find((c) => c.id === 'pose' || c.name.toLowerCase().includes('pose'));
+  }, [db.cats]);
+
+  const envCat = useMemo(() => {
+    return db.cats.find((c) => c.id === 'env' || c.id === 'environment' || c.name.toLowerCase().includes('environment'));
+  }, [db.cats]);
+
+  const getAllElementsInCat = useCallback((cat: any): PromptElement[] => {
+    if (!cat) return [];
+    const list: PromptElement[] = [];
+    if (Array.isArray(cat.els)) list.push(...cat.els);
+    if (Array.isArray(cat.subcats)) {
+      for (const sub of cat.subcats) {
+        if (Array.isArray(sub.els)) list.push(...sub.els);
+        if (Array.isArray(sub.rows)) {
+          for (const row of sub.rows) {
+            if (Array.isArray(row.els)) list.push(...row.els);
+          }
+        }
+      }
+    }
+    return list;
+  }, []);
+
+  const getCategoryItems = useCallback((cat: Category | undefined): LinkableItemOption[] => {
+    if (!cat) return [];
+    const items: LinkableItemOption[] = [];
+    if (cat.type === 'flat' && cat.els) {
+      cat.els.forEach((el) => {
+        items.push({
+          id: el.id,
+          name: el.name,
+          image: el.image,
+          imgPos: el.imgPos,
+          subcatName: cat.name
+        });
+      });
+    }
+    if (cat.subcats) {
+      cat.subcats.forEach((sc) => {
+        if (sc.els) {
+          sc.els.forEach((el) => {
+            items.push({
+              id: el.id,
+              name: el.name,
+              image: el.image,
+              imgPos: el.imgPos,
+              subcatName: sc.name
+            });
+          });
+        }
+        if (sc.rows) {
+          sc.rows.forEach((row) => {
+            row.els.forEach((el) => {
+              items.push({
+                id: el.id,
+                name: el.name,
+                image: el.image,
+                imgPos: el.imgPos,
+                subcatName: `${sc.name} · ${row.name}`
+              });
+            });
+          });
+        }
+      });
+    }
+    return items;
+  }, []);
+
+  const availableContextItems = useMemo(() => getCategoryItems(contextCat), [contextCat, getCategoryItems]);
+  const availablePoseItems = useMemo(() => getCategoryItems(poseCat), [poseCat, getCategoryItems]);
+  const availableEnvItems = useMemo(() => getCategoryItems(envCat), [envCat, getCategoryItems]);
+
+  const linkedItemsNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    availableContextItems.forEach((i) => map.set(i.id, i.name));
+    availablePoseItems.forEach((i) => map.set(i.id, i.name));
+    availableEnvItems.forEach((i) => map.set(i.id, i.name));
+    return map;
+  }, [availableContextItems, availablePoseItems, availableEnvItems]);
+
+  const getLinkedTooltip = useCallback((el: PromptElement): string | undefined => {
+    const parts: string[] = [];
+    if (el.linkedPoseId) {
+      const name = linkedItemsNameMap.get(el.linkedPoseId) || 'Linked Pose';
+      parts.push(`Pose - ${name}`);
+    }
+    if (el.linkedContextId) {
+      const name = linkedItemsNameMap.get(el.linkedContextId) || 'Linked Context';
+      parts.push(`Context - ${name}`);
+    }
+    if (el.linkedEnvId) {
+      const name = linkedItemsNameMap.get(el.linkedEnvId) || 'Linked Environment';
+      parts.push(`Environment - ${name}`);
+    }
+    return parts.length > 0 ? `Linked: ${parts.join(', ')}` : undefined;
+  }, [linkedItemsNameMap]);
+
   const [restoreConfirmOpen, setRestoreConfirmOpen] = useState<boolean>(false);
+  const [fullExportImportModal, setFullExportImportModal] = useState<{ isOpen: boolean; tab: 'export' | 'import' }>({
+    isOpen: false,
+    tab: 'export'
+  });
   const [presetNotice, setPresetNotice] = useState<string | null>(null);
 
-  // Restore Main User Database (strictly affects only the Main User's database data)
+
+  const availableEnsemblePairs = useMemo(() => {
+    if (cropModalData.path && cropModalData.path[0] === 'outfit') {
+      const currentSubId = cropModalData.path[1];
+      const targetSubId = currentSubId === 'top' ? 'bottom' : currentSubId === 'bottom' ? 'top' : null;
+      if (targetSubId) {
+        const outfitCat = db.cats.find((c) => c.id === 'outfit');
+        const targetSub = outfitCat?.subcats?.find((s) => s.id === targetSubId);
+        if (targetSub?.els) {
+          return targetSub.els.map((e) => ({
+            id: e.id,
+            name: e.name,
+            image: e.image,
+            subcatName: targetSub.name,
+            subcatId: targetSub.id
+          }));
+        }
+      }
+    }
+    return [];
+  }, [cropModalData.path, db.cats]);
+
+  const handleFullImportSuccess = (restoredDb: any) => {
+    recordHistory();
+    const normalized = normalizeDb(restoredDb, activeUserId);
+    setDb(normalized);
+    setSaveStatus('Restored full database!');
+    setTimeout(() => setSaveStatus(''), 3500);
+  };
+
+  // Restore Database (restores from actual data / backup dataset)
   const handleRestoreMainUserDB = async () => {
     try {
       setSaveStatus('Restoring…');
-      const defaultMainDb: DBState = JSON.parse(JSON.stringify(INITIAL_DB_STATE));
-      await api.putDb('main', defaultMainDb);
-
+      const restoredDb = await api.restoreDb(activeUserId);
+      const normalized = normalizeDb(restoredDb, activeUserId);
+      setDb(normalized);
+      setUndoStack([]);
+      setRedoStack([]);
       if (activeUserId === 'main') {
-        setDb(defaultMainDb);
-        setUndoStack([]);
-        setRedoStack([]);
         setView({ catId: null, subcatId: null });
       }
       setSaveStatus('Restored');
       setTimeout(() => setSaveStatus(''), 2000);
-      alert('Main User database has been restored to default workstation state.');
+      alert('Database has been restored to the actual dataset state.');
     } catch (err: any) {
       setSaveStatus('');
-      alert(`Failed to restore Main User database: ${err?.message || err}`);
+      alert(`Failed to restore database: ${err?.message || err}`);
     }
   };
 
@@ -842,6 +1238,76 @@ export default function App() {
     return n;
   };
 
+  // Memoized flat list of currently selected elements across all categories (for Selected Elements live preview)
+  const selectedElementsList = useMemo(() => {
+    const list: Array<{
+      element: any;
+      categoryName: string;
+      categoryIcon?: string;
+      categoryAccent?: string;
+      subcategoryName?: string;
+      rowName?: string;
+      weight?: number;
+    }> = [];
+
+    db.cats.forEach((cat) => {
+      if (cat.type === 'flat') {
+        const selIds: string[] = (db.selections[cat.id] as string[]) || [];
+        selIds.forEach((elId) => {
+          const el = (cat.els || []).find((e) => e.id === elId);
+          if (el) {
+            list.push({
+              element: el,
+              categoryName: cat.name,
+              categoryIcon: cat.icon,
+              categoryAccent: cat.accent,
+              weight: db.elementWeights?.[elId]
+            });
+          }
+        });
+      } else if (cat.type === 'tabs' && cat.subcats) {
+        cat.subcats.forEach((sub) => {
+          if (sub.type === 'flat') {
+            const selIds: string[] = (db.selections[cat.id]?.[sub.id] as string[]) || [];
+            selIds.forEach((elId) => {
+              const el = (sub.els || []).find((e) => e.id === elId);
+              if (el) {
+                list.push({
+                  element: el,
+                  categoryName: cat.name,
+                  categoryIcon: cat.icon,
+                  categoryAccent: cat.accent,
+                  subcategoryName: sub.name,
+                  weight: db.elementWeights?.[elId]
+                });
+              }
+            });
+          } else if (sub.type === 'rows' && sub.rows) {
+            sub.rows.forEach((row) => {
+              const selIds: string[] = (db.selections[cat.id]?.[sub.id]?.[row.id] as string[]) || [];
+              selIds.forEach((elId) => {
+                const el = (row.els || []).find((e) => e.id === elId);
+                if (el) {
+                  list.push({
+                    element: el,
+                    categoryName: cat.name,
+                    categoryIcon: cat.icon,
+                    categoryAccent: cat.accent,
+                    subcategoryName: sub.name,
+                    rowName: row.name,
+                    weight: db.elementWeights?.[elId]
+                  });
+                }
+              });
+            });
+          }
+        });
+      }
+    });
+
+    return list;
+  }, [db.cats, db.selections, db.elementWeights]);
+
   // Selection toggle logic
   const toggleSel = (path: string[], elId: string) => {
     recordHistory();
@@ -891,9 +1357,80 @@ export default function App() {
         const wasSelected = cur.includes(elId);
         playClickSound(prev.soundEnabled, !wasSelected);
         selectionsCopy[path[0]] = {};
-        if (!wasSelected) setPathSel(path, [elId]);
+        if (!wasSelected) {
+          setPathSel(path, [elId]);
+
+          // Auto-Select Context: Automatically select linked items in other connected categories
+          if (prev.autoSelectContext !== false) {
+            const currentCatId = path[0];
+            const isComp = currentCatId === 'comp' || currentCatId === 'context';
+            const isPose = currentCatId === 'pose';
+            const isEnv = currentCatId === 'env' || currentCatId === 'environment';
+
+            if (isComp || isPose || isEnv) {
+              const contextCategory = prev.cats.find((c) => c.id === 'context' || c.name.toLowerCase().includes('context')) ||
+                                     prev.cats.find((c) => c.id === 'comp');
+              const poseCategory = prev.cats.find((c) => c.id === 'pose' || c.name.toLowerCase().includes('pose'));
+              const envCategory = prev.cats.find((c) => c.id === 'env' || c.id === 'environment' || c.name.toLowerCase().includes('environment'));
+
+              const currentCat = prev.cats.find((c) => c.id === currentCatId);
+              const currentEl = currentCat ? resolveElement(currentCat, elId) : undefined;
+
+              if (currentEl) {
+                const selectInTargetCat = (targetCat: Category | undefined, targetElId: string | undefined) => {
+                  if (!targetCat || !targetElId) return;
+                  if (targetCat.type === 'flat') {
+                    if (targetCat.els?.some((e) => e.id === targetElId)) {
+                      selectionsCopy[targetCat.id] = [targetElId];
+                    }
+                  } else if (targetCat.subcats) {
+                    for (const sc of targetCat.subcats) {
+                      if (sc.els?.some((e) => e.id === targetElId)) {
+                        selectionsCopy[targetCat.id] = { [sc.id]: [targetElId] };
+                        break;
+                      }
+                      if (sc.rows) {
+                        for (const row of sc.rows) {
+                          if (row.els?.some((e) => e.id === targetElId)) {
+                            selectionsCopy[targetCat.id] = { [sc.id]: { [row.id]: [targetElId] } };
+                            break;
+                          }
+                        }
+                      }
+                    }
+                  }
+                };
+
+                const findReciprocalId = (cat: Category | undefined, field: 'linkedContextId' | 'linkedPoseId' | 'linkedEnvId'): string | undefined => {
+                  if (!cat) return undefined;
+                  const all = (cat.type === 'flat' ? cat.els : cat.subcats?.flatMap((s) => s.els || s.rows?.flatMap((r) => r.els) || [])) || [];
+                  const found = all.find((e: any) => e[field] === elId);
+                  return found?.id;
+                };
+
+                if (isEnv) {
+                  const targetPoseId = currentEl.linkedPoseId || findReciprocalId(poseCategory, 'linkedEnvId');
+                  selectInTargetCat(poseCategory, targetPoseId);
+                  const targetContextId = currentEl.linkedContextId || findReciprocalId(contextCategory, 'linkedEnvId');
+                  selectInTargetCat(contextCategory, targetContextId);
+                } else if (isPose) {
+                  const targetEnvId = currentEl.linkedEnvId || findReciprocalId(envCategory, 'linkedPoseId');
+                  selectInTargetCat(envCategory, targetEnvId);
+                  const targetContextId = currentEl.linkedContextId || findReciprocalId(contextCategory, 'linkedPoseId');
+                  selectInTargetCat(contextCategory, targetContextId);
+                } else if (isComp) {
+                  const targetEnvId = currentEl.linkedEnvId || findReciprocalId(envCategory, 'linkedContextId');
+                  selectInTargetCat(envCategory, targetEnvId);
+                  const targetPoseId = currentEl.linkedPoseId || findReciprocalId(poseCategory, 'linkedContextId');
+                  selectInTargetCat(poseCategory, targetPoseId);
+                }
+              }
+            }
+          }
+        }
         return { ...prev, selections: selectionsCopy, activePreset: null };
       }
+
 
       if (path.length === 2 && SINGLE_PER_SUBCAT.includes(path[0])) {
         const cur = getPathSel(path);
@@ -912,6 +1449,36 @@ export default function App() {
               setPathSel(['outfit', 'onepiece'], []);
               setPathSel(['outfit', 'one_piece'], []);
               setPathSel(['outfit', 'one-piece'], []);
+
+              // Smart Ensemble Auto-Selection strictly between Top and Bottom
+              if (prev.autoSelectEnsemble !== false) {
+                const outfitCat = prev.cats.find((c) => c.id === 'outfit');
+                const thisSub = outfitCat?.subcats?.find((s) => s.id === subId);
+                const selectedEl = thisSub?.els?.find((e) => e.id === elId);
+                const targetSubId = subId === 'top' ? 'bottom' : 'top';
+                const targetSub = outfitCat?.subcats?.find((s) => s.id === targetSubId);
+
+                if (selectedEl && targetSub?.els) {
+                  let matchingEl = selectedEl.pairedElementId
+                    ? targetSub.els.find((e) => e.id === selectedEl.pairedElementId)
+                    : undefined;
+
+                  if (!matchingEl && selectedEl.ensembleId) {
+                    matchingEl = targetSub.els.find((e) => e.ensembleId === selectedEl.ensembleId);
+                  }
+
+                  // Fallback match by shared primary theme tag
+                  if (!matchingEl && selectedEl.tags && selectedEl.tags.length > 0) {
+                    matchingEl = targetSub.els.find((e) =>
+                      e.tags && e.tags.some((t) => selectedEl.tags!.includes(t))
+                    );
+                  }
+
+                  if (matchingEl) {
+                    setPathSel(['outfit', targetSubId], [matchingEl.id]);
+                  }
+                }
+              }
             }
           }
         }
@@ -1217,6 +1784,102 @@ export default function App() {
     }
   };
 
+  // Toggle Auto-Select Ensemble
+  const handleToggleAutoSelectEnsemble = () => {
+    recordHistory();
+    const nextVal = db.autoSelectEnsemble === false ? true : false;
+    playClickSound(db.soundEnabled, nextVal);
+    setDb((prev) => ({
+      ...prev,
+      autoSelectEnsemble: nextVal
+    }));
+  };
+
+  // Toggle Auto-Select Context
+  const handleToggleAutoSelectContext = () => {
+    recordHistory();
+    const nextVal = db.autoSelectContext === false ? true : false;
+    playClickSound(db.soundEnabled, nextVal);
+    setDb((prev) => ({
+      ...prev,
+      autoSelectContext: nextVal
+    }));
+  };
+
+  // Theme Management Handlers (Environment and Pose themes)
+  const handleSaveTheme = (name: string) => {
+    if (!activeCat) return;
+    recordHistory();
+    setDb((prev) => {
+      const catsCopy = JSON.parse(JSON.stringify(prev.cats));
+      const cat = catsCopy.find((c: any) => c.id === activeCat.id);
+      if (cat) {
+        cat.themes = cat.themes || [];
+        if (themeModalData.mode === 'edit' && themeModalData.theme) {
+          const oldName = themeModalData.theme.name;
+          const th = cat.themes.find((t: any) => t.id === themeModalData.theme!.id);
+          if (th) th.name = name;
+          // Also update any tags on elements that had oldName
+          const updateTags = (els: any[]) => {
+            (els || []).forEach((el: any) => {
+              if (el.tags && el.tags.includes(oldName)) {
+                el.tags = el.tags.map((t: string) => (t === oldName ? name : t));
+              }
+            });
+          };
+          if (cat.type === 'flat') updateTags(cat.els);
+          if (cat.subcats) {
+            cat.subcats.forEach((sc: any) => {
+              if (sc.els) updateTags(sc.els);
+              if (sc.rows) sc.rows.forEach((r: any) => updateTags(r.els));
+            });
+          }
+        } else {
+          const newId = `th_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+          cat.themes.push({ id: newId, name });
+        }
+      }
+      return { ...prev, cats: catsCopy };
+    });
+  };
+
+  const handleDeleteTheme = () => {
+    if (!activeCat || !themeModalData.theme) return;
+    const themeId = themeModalData.theme.id;
+    const themeName = themeModalData.theme.name;
+    recordHistory();
+    setDb((prev) => {
+      const catsCopy = JSON.parse(JSON.stringify(prev.cats));
+      const cat = catsCopy.find((c: any) => c.id === activeCat.id);
+      if (cat) {
+        cat.themes = (cat.themes || []).filter((t: any) => t.id !== themeId);
+        // Unassign from elements, DO NOT delete items!
+        const unassign = (els: any[]) => {
+          (els || []).forEach((el: any) => {
+            if (el.themeIds) {
+              el.themeIds = el.themeIds.filter((tid: string) => tid !== themeId && tid !== themeName);
+            }
+            if (el.tags) {
+              el.tags = el.tags.filter((t: string) => t !== themeName && t !== themeId);
+            }
+          });
+        };
+        if (cat.type === 'flat') unassign(cat.els);
+        if (cat.subcats) {
+          cat.subcats.forEach((sc: any) => {
+            if (sc.els) unassign(sc.els);
+            if (sc.rows) sc.rows.forEach((r: any) => unassign(r.els));
+          });
+        }
+      }
+      return { ...prev, cats: catsCopy };
+    });
+    if (selectedThemeId === themeId) {
+      setSelectedThemeId('all');
+    }
+  };
+
+
   // Export DB — photos are inlined so the backup is one self-contained, portable file
   const handleExportDB = async () => {
     try {
@@ -1317,9 +1980,65 @@ export default function App() {
     return currentElements.filter((e) => db.nsfwOn || !e.nsfw);
   }, [currentElements, db.nsfwOn]);
 
+  const [selectedTagFilter, setSelectedTagFilter] = useState<string>('all');
+  const [selectedThemeId, setSelectedThemeId] = useState<string>('all');
+
+  // Reset tag and theme filter when switching category or subcategory
+  useEffect(() => {
+    setSelectedTagFilter('all');
+    setSelectedThemeId('all');
+  }, [view.catId, view.subcatId]);
+
+  // Hold-and-slide reordering for themes
+  const themeReorder = useHoldAndSlide({
+    groupId: `themes-${activeCat?.id || 'none'}`,
+    items: activeCat?.themes || [],
+    onReorder: (newThemes) => {
+      if (!activeCat) return;
+      setDb((prev) => {
+        const catsCopy = JSON.parse(JSON.stringify(prev.cats));
+        const cat = catsCopy.find((c: any) => c.id === activeCat.id);
+        if (cat) cat.themes = newThemes;
+        return { ...prev, cats: catsCopy };
+      });
+    },
+    onCommit: () => {
+      recordHistory();
+    }
+  });
+
+  const availableTags = useMemo(() => {
+    const set = new Set<string>();
+    visibleElements.forEach((el) => {
+      if (el.tags && el.tags.length > 0) {
+        set.add(el.tags[0]);
+      }
+    });
+    return Array.from(set);
+  }, [visibleElements]);
+
+  const displayedElements = useMemo(() => {
+    if (activeCat?.themes) {
+      if (selectedThemeId === 'all' || activeCat.themes.length === 0) return visibleElements;
+      const theme = activeCat.themes.find((t) => t.id === selectedThemeId);
+      if (!theme) return visibleElements;
+      return visibleElements.filter((el) => {
+        if (el.themeIds && el.themeIds.length > 0) {
+          return el.themeIds.includes(theme.id) || el.themeIds.includes(theme.name);
+        }
+        return Boolean(el.tags && (el.tags.includes(theme.name) || el.tags.includes(theme.id)));
+      });
+    }
+    if (selectedTagFilter === 'all') return visibleElements;
+    return visibleElements.filter((el) => el.tags && el.tags.includes(selectedTagFilter));
+  }, [visibleElements, selectedThemeId, selectedTagFilter, activeCat?.themes]);
+
   const elementReorder = useHoldAndSlide({
-    groupId: activeSubcat ? `elements-${activeCat?.id}-${activeSubcat.id}` : `elements-${activeCat?.id || 'flat'}`,
-    items: visibleElements,
+    groupId: activeSubcat 
+      ? `elements-${activeCat?.id}-${activeSubcat.id}-${selectedThemeId}-${selectedTagFilter}` 
+      : `elements-${activeCat?.id || 'flat'}-${selectedThemeId}-${selectedTagFilter}`,
+    items: displayedElements,
+
     onReorder: (newVisibleEls) => {
       if (!activeCat) return;
       setDb((prev) => {
@@ -1328,18 +2047,31 @@ export default function App() {
         if (cat) {
           const targetList = cat.type === 'flat' ? cat.els : cat.subcats?.find((s: any) => s.id === activeSubcat?.id)?.els;
           if (targetList) {
-            let visIdx = 0;
-            const updated = targetList.map((el: any) => {
-              if (db.nsfwOn || !el.nsfw) {
-                return newVisibleEls[visIdx++] || el;
+            if (selectedTagFilter === 'all') {
+              let visIdx = 0;
+              const updated = targetList.map((el: any) => {
+                if (db.nsfwOn || !el.nsfw) {
+                  return newVisibleEls[visIdx++] || el;
+                }
+                return el;
+              });
+              if (cat.type === 'flat') {
+                cat.els = updated;
+              } else {
+                const sc = cat.subcats?.find((s: any) => s.id === activeSubcat?.id);
+                if (sc) sc.els = updated;
               }
-              return el;
-            });
-            if (cat.type === 'flat') {
-              cat.els = updated;
             } else {
-              const sc = cat.subcats?.find((s: any) => s.id === activeSubcat?.id);
-              if (sc) sc.els = updated;
+              const remaining = targetList.filter(
+                (el: any) => !displayedElements.some((de) => de.id === el.id)
+              );
+              const updated = [...newVisibleEls, ...remaining];
+              if (cat.type === 'flat') {
+                cat.els = updated;
+              } else {
+                const sc = cat.subcats?.find((s: any) => s.id === activeSubcat?.id);
+                if (sc) sc.els = updated;
+              }
             }
           }
         }
@@ -1643,12 +2375,18 @@ export default function App() {
 
   return (
     <div
-      className={`min-h-screen text-[#f4efe8] flex flex-col font-sans relative transition-colors duration-500 ${
+      className={`min-h-screen flex flex-col font-sans relative transition-colors duration-300 ${
         db.nsfwOn ? 'theme-nsfw' : 'theme-orange'
+      } theme-${theme} ${
+        theme === 'minimal-light'
+          ? 'theme-light text-slate-900 bg-white'
+          : theme === 'minimal-dark'
+          ? 'theme-dark text-white bg-black'
+          : 'theme-dark text-[#f4efe8] bg-[#07070a]'
       }`}
     >
       {/* Orange Glowing Moving Background with smooth color transition to Red in NSFW mode */}
-      <GlowBackground nsfwOn={db.nsfwOn} />
+      <GlowBackground nsfwOn={db.nsfwOn} theme={theme} />
 
       {!ready && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm text-sm text-white/80">
@@ -1677,6 +2415,8 @@ export default function App() {
             onChangeEngine={(engine) => setDb((prev) => ({ ...prev, promptEngine: engine }))}
             onOpenHistory={() => setHistoryOpen(true)}
             onOpenDevSettings={() => setIsDevPage(true)}
+            onFullExport={() => setFullExportImportModal({ isOpen: true, tab: 'export' })}
+            onFullImport={() => setFullExportImportModal({ isOpen: true, tab: 'import' })}
             onExportDB={handleExportDB}
             onImportDB={handleImportDB}
             onRestoreMainDB={() => setRestoreConfirmOpen(true)}
@@ -1685,9 +2425,37 @@ export default function App() {
             onToggleFullscreen={handleToggleFullscreen}
             isRolling={isRolling}
             activeUserName={activeUserName}
+            onOpenSettings={() => setSettingsModalOpen(true)}
           />
         );
       })()}
+
+      {/* Floating Settings Modal (Users, Sound, Theme Switcher, Full Archive) */}
+      <SettingsModal
+        isOpen={settingsModalOpen}
+        onClose={() => setSettingsModalOpen(false)}
+        users={users}
+        activeUserId={activeUserId}
+        onSwitchUser={switchUser}
+        onRenameUser={handleRenameUser}
+        onCreateUser={handleCreateUser}
+        onDeleteUser={handleDeleteUser}
+        soundEnabled={db.soundEnabled}
+        onToggleSound={() => {
+          setDb((prev) => {
+            const nextSound = !prev.soundEnabled;
+            playClickSound(nextSound, nextSound);
+            return { ...prev, soundEnabled: nextSound };
+          });
+        }}
+        theme={theme}
+        onChangeTheme={(newTheme) => {
+          setTheme(newTheme);
+          localStorage.setItem('ultimate_prompter_theme', newTheme);
+        }}
+        onFullExport={() => setFullExportImportModal({ isOpen: true, tab: 'export' })}
+        onFullImport={() => setFullExportImportModal({ isOpen: true, tab: 'import' })}
+      />
 
       <div className={isDevPage ? 'flex-1 flex flex-col w-full' : 'hidden'}>
         <DevSettingsPage
@@ -1704,6 +2472,8 @@ export default function App() {
           initialActivePreset={devActivePreset}
           initialRefinePrompt={refinePromptInput}
           onRestoreMainDB={() => setRestoreConfirmOpen(true)}
+          onFullExport={() => setFullExportImportModal({ isOpen: true, tab: 'export' })}
+          onFullImport={() => setFullExportImportModal({ isOpen: true, tab: 'import' })}
         />
       </div>
 
@@ -1805,6 +2575,29 @@ export default function App() {
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>Preset View</span>
                 </button>
+                <button
+                  onClick={() => {
+                    playClickSound(db.soundEnabled, false);
+                    setRootViewMode('selected');
+                  }}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all duration-300 ${
+                    rootViewMode === 'selected'
+                      ? db.nsfwOn ? 'bg-red-500/20 text-red-300 shadow-sm' : 'bg-orange-500/20 text-orange-300 shadow-sm'
+                      : 'text-white/60 hover:text-white'
+                  }`}
+                >
+                  <CheckSquare className="w-3.5 h-3.5" />
+                  <span>Selected Elements</span>
+                  {selectedElementsList.length > 0 && (
+                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                      rootViewMode === 'selected'
+                        ? db.nsfwOn ? 'bg-red-500/30 text-white' : 'bg-orange-500/30 text-black'
+                        : 'bg-white/10 text-white/70'
+                    }`}>
+                      {selectedElementsList.length}
+                    </span>
+                  )}
+                </button>
               </div>
 
               {/* Animated Switcher Container */}
@@ -1839,8 +2632,10 @@ export default function App() {
                               isCategory: true,
                               catId: cat.id,
                               initialName: cat.name,
+                              initialPromptName: cat.promptName || suggestPromptName(cat.name, cat.id),
                               initialImage: cat.image,
-                              initialImgPos: cat.imgPos
+                              initialImgPos: cat.imgPos,
+                              initialIcon: cat.icon
                             });
                           }}
                           nsfwOn={db.nsfwOn}
@@ -1859,7 +2654,9 @@ export default function App() {
                             isCategory: true,
                             catId: undefined,
                             initialName: '',
-                            initialImage: ''
+                            initialPromptName: '',
+                            initialImage: '',
+                            initialIcon: 'Palette'
                           });
                         }}
                         className={`rounded-xl border border-dashed p-6 flex flex-col items-center justify-center gap-2 transition-all group min-h-[180px] duration-300 ${
@@ -1877,7 +2674,7 @@ export default function App() {
                       </button>
                     </div>
                   </div>
-                ) : (
+                ) : rootViewMode === 'presets' ? (
                   <div className="animate-fadeIn space-y-6">
                     {/* Preset Quick Chips / Cards */}
                     <PresetBar
@@ -1900,6 +2697,62 @@ export default function App() {
                       }}
                       nsfwOn={db.nsfwOn}
                     />
+                  </div>
+                ) : (
+                  /* Selected Elements View: Live preview showing all currently selected elements with editing/modification disabled */
+                  <div className="animate-fadeIn space-y-6">
+                    <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
+                      <div className="flex items-center gap-2.5">
+                        <CheckSquare className={`w-4 h-4 ${db.nsfwOn ? 'text-red-400' : 'text-orange-400'}`} />
+                        <h2 className="text-sm font-bold text-white">Selected Elements Live Preview</h2>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/10 text-white/70">
+                          {selectedElementsList.length} active
+                        </span>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 text-white/40 border border-white/10">
+                          Read-Only
+                        </span>
+                      </div>
+                    </div>
+
+                    {selectedElementsList.length === 0 ? (
+                      <div className="rounded-2xl border border-dashed border-white/10 p-12 text-center flex flex-col items-center justify-center gap-3 bg-[#121116]/60">
+                        <div className="w-12 h-12 rounded-2xl bg-white/[0.04] flex items-center justify-center text-white/30">
+                          <CheckSquare className="w-6 h-6 stroke-[1.5]" />
+                        </div>
+                        <h3 className="text-sm font-semibold text-white">No Elements Currently Selected</h3>
+                        <p className="text-xs text-white/40 max-w-md">
+                          Select traits, styles, outfits, or locations from Category View or Preset View to see their live preview here.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3.5">
+                        {selectedElementsList.map((item, idx) => (
+                          <div key={`${item.element.id}_${idx}`} className="flex flex-col">
+                            <div className="text-[10px] font-semibold text-white/40 mb-1.5 truncate flex items-center gap-1">
+                              <span className="text-white/70">{item.categoryName}</span>
+                              {(item.subcategoryName || item.rowName) && (
+                                <>
+                                  <span className="text-white/20">›</span>
+                                  <span className="truncate">{item.rowName || item.subcategoryName}</span>
+                                </>
+                              )}
+                            </div>
+                            <ElementCard
+                              element={item.element}
+                              isSelected={true}
+                              onToggle={() => {}}
+                              onEdit={() => {}}
+                              nsfwOn={db.nsfwOn}
+                              categoryIcon={item.categoryIcon}
+                              weight={item.weight}
+                              readOnly={true}
+                              showLinkedBadge={Boolean(item.element.linkedContextId || item.element.linkedPoseId || item.element.linkedEnvId)}
+                              linkedTooltip={getLinkedTooltip(item.element)}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -1938,16 +2791,127 @@ export default function App() {
                   )}
                 </div>
 
-                {activeCat && catSelCount(activeCat) > 0 && (
-                  <button
-                    onClick={() => handleClearCategory(activeCat.id)}
-                    title={`Clear All / Deselect elements in ${activeCat.name}`}
-                    className="flex items-center gap-1 text-[11px] text-white/40 hover:text-rose-400 transition-colors"
-                  >
-                    <RotateCcw className="w-3 h-3" />
-                    <span className="hidden sm:inline">Deselect All</span>
-                  </button>
-                )}
+                <div className="flex items-center gap-2">
+                  {/* Auto-Select Ensemble Toggle Switch (Category View) */}
+                  {activeCat?.id === 'outfit' && (
+                    <div
+                      className={`flex items-center gap-2 px-2.5 py-1 rounded-xl border transition-all duration-300 ${
+                        db.autoSelectEnsemble !== false
+                          ? 'bg-emerald-950/30 border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.18)]'
+                          : 'bg-black/40 border-white/[0.08]'
+                      }`}
+                      title="Auto-select complementary top & bottom pieces when picking wardrobe items"
+                    >
+                      <Shirt
+                        className={`w-3.5 h-3.5 transition-colors duration-300 ${
+                          db.autoSelectEnsemble !== false
+                            ? 'text-emerald-400'
+                            : 'text-white/40'
+                        }`}
+                      />
+                      <span
+                        className={`text-xs font-semibold tracking-wide transition-colors duration-300 ${
+                          db.autoSelectEnsemble !== false
+                            ? 'text-emerald-300'
+                            : 'text-white/50'
+                        }`}
+                      >
+                        Auto-Select Ensemble
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleToggleAutoSelectEnsemble}
+                        role="switch"
+                        aria-checked={db.autoSelectEnsemble !== false}
+                        className={`w-9 h-5 rounded-full transition-all duration-300 relative cursor-pointer ${
+                          db.autoSelectEnsemble !== false
+                            ? 'bg-emerald-600 shadow-[0_0_12px_rgba(16,185,129,0.6)]'
+                            : 'bg-white/10 hover:bg-white/20'
+                        }`}
+                      >
+                        <div
+                          className={`w-3.5 h-3.5 rounded-full bg-white absolute top-[3px] transition-transform duration-300 shadow-sm ${
+                            db.autoSelectEnsemble !== false ? 'translate-x-[18px]' : 'translate-x-[3px]'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Auto-Select Context Toggle Switch (Context, Pose, and Environment Categories) */}
+                  {isContextTargetCategory(activeCat) && (
+                    <div
+                      className={`flex items-center gap-2 px-2.5 py-1 rounded-xl border transition-all duration-300 ${
+                        db.autoSelectContext !== false
+                          ? 'bg-sky-950/30 border-sky-500/50 shadow-[0_0_12px_rgba(56,189,248,0.18)]'
+                          : 'bg-black/40 border-white/[0.08]'
+                      }`}
+                      title="Auto-select linked items across Context, Pose, and Environment when choosing an item"
+                    >
+                      <div className="flex items-center gap-1">
+                        <span title="Context Category">
+                          <Camera
+                            className={`w-3.5 h-3.5 transition-colors duration-300 ${
+                              db.autoSelectContext !== false ? 'text-amber-400' : 'text-white/30'
+                            }`}
+                          />
+                        </span>
+                        <span title="Pose Category">
+                          <Activity
+                            className={`w-3.5 h-3.5 transition-colors duration-300 ${
+                              db.autoSelectContext !== false ? 'text-sky-400' : 'text-white/30'
+                            }`}
+                          />
+                        </span>
+                        <span title="Environment Category">
+                          <MapPin
+                            className={`w-3.5 h-3.5 transition-colors duration-300 ${
+                              db.autoSelectContext !== false ? 'text-purple-400' : 'text-white/30'
+                            }`}
+                          />
+                        </span>
+                      </div>
+                      <span
+                        className={`text-xs font-semibold tracking-wide transition-colors duration-300 ${
+                          db.autoSelectContext !== false
+                            ? 'text-sky-300'
+                            : 'text-white/50'
+                        }`}
+                      >
+                        Auto-Select Context
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleToggleAutoSelectContext}
+                        role="switch"
+                        aria-checked={db.autoSelectContext !== false}
+                        className={`w-9 h-5 rounded-full transition-all duration-300 relative cursor-pointer ${
+                          db.autoSelectContext !== false
+                            ? 'bg-sky-600 shadow-[0_0_12px_rgba(56,189,248,0.6)]'
+                            : 'bg-white/10 hover:bg-white/20'
+                        }`}
+                      >
+                        <div
+                          className={`w-3.5 h-3.5 rounded-full bg-white absolute top-[3px] transition-transform duration-300 shadow-sm ${
+                            db.autoSelectContext !== false ? 'translate-x-[18px]' : 'translate-x-[3px]'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  )}
+
+
+                  {activeCat && catSelCount(activeCat) > 0 && (
+                    <button
+                      onClick={() => handleClearCategory(activeCat.id)}
+                      title={`Clear All / Deselect elements in ${activeCat.name}`}
+                      className="flex items-center gap-1 text-[11px] text-white/40 hover:text-rose-400 transition-colors"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      <span className="hidden sm:inline">Deselect All</span>
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Category Subtabs (if category has tabs) */}
@@ -2054,18 +3018,27 @@ export default function App() {
                   onClearRow={handleClearRow}
                   nsfwOn={db.nsfwOn}
                   onAddElement={(path) => {
+                    const availableSubcats = activeCat?.subcats
+                      ? activeCat.subcats.map((s) => ({ id: s.id, name: s.name }))
+                      : undefined;
                     setCropModalData({
                       isOpen: true,
                       title: 'Add Trait Option',
                       path,
                       initialName: '',
-                      initialPrompt: ''
+                      initialPrompt: '',
+                      availableSubcategories: availableSubcats,
+                      initialSubcatId: path[1],
+                      initialThemeIds: selectedThemeId !== 'all' ? [selectedThemeId] : []
                     });
                   }}
                   onEditElement={(path, elId) => {
                     const row = activeSubcat.rows?.find((r) => r.id === path[path.length - 1]);
                     const el = row?.els.find((e) => e.id === elId);
                     if (el) {
+                      const availableSubcats = activeCat?.subcats
+                        ? activeCat.subcats.map((s) => ({ id: s.id, name: s.name }))
+                        : undefined;
                       setCropModalData({
                         isOpen: true,
                         title: `Edit Trait: ${el.name}`,
@@ -2075,28 +3048,187 @@ export default function App() {
                         initialPrompt: el.prompt,
                         initialNsfw: el.nsfw,
                         initialImage: el.image,
-                        initialImgPos: el.imgPos
+                        initialImgPos: el.imgPos,
+                        initialEnsembleId: el.ensembleId,
+                        initialPairedElementId: el.pairedElementId,
+                        availableSubcategories: availableSubcats,
+                        initialSubcatId: path[1],
+                        initialThemeIds: el.themeIds || (el.tags ? activeCat?.themes?.filter(t => el.tags?.includes(t.name) || el.tags?.includes(t.id)).map(t => t.id) : []),
+                        initialLinkedContextId: el.linkedContextId,
+                        initialLinkedPoseId: el.linkedPoseId,
+                        initialLinkedEnvId: el.linkedEnvId
                       });
                     }
                   }}
                 />
               ) : (
-                /* Flat Grid of Element Cards */
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3.5">
-                  {(() => {
-                    const elements = activeCat?.type === 'flat'
-                      ? activeCat.els || []
-                      : activeSubcat?.els || [];
+                <div className="flex flex-col">
+                  {/* Category Themes Filter & Management Bar */}
+                  {activeCat?.themes ? (
+                    <div className="flex items-center gap-1.5 overflow-x-auto pb-2.5 mb-3.5 scrollbar-none">
+                      {/* Built-in, non-deletable "All" chip */}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedThemeId('all')}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition-all cursor-pointer ${
+                          selectedThemeId === 'all'
+                            ? db.nsfwOn
+                              ? 'bg-red-500/20 text-red-300 border border-red-500/40 shadow-sm'
+                              : 'bg-orange-500/20 text-orange-300 border border-orange-500/40 shadow-sm'
+                            : 'bg-white/[0.04] text-white/50 hover:text-white border border-white/[0.06]'
+                        }`}
+                      >
+                        All ({visibleElements.length})
+                      </button>
 
-                    const path = activeCat?.type === 'flat'
-                      ? [activeCat.id]
-                      : [activeCat!.id, activeSubcat!.id];
+                      {/* Manageable Theme Chips with drag-and-drop reordering */}
+                      {activeCat.themes.map((theme, thIdx) => {
+                        const isThemeSelected = selectedThemeId === theme.id;
+                        const isDraggingThis = themeReorder.dragIndex === thIdx;
+                        const count = visibleElements.filter((el) => {
+                          if (el.themeIds && el.themeIds.length > 0) {
+                            return el.themeIds.includes(theme.id) || el.themeIds.includes(theme.name);
+                          }
+                          return Boolean(el.tags && (el.tags.includes(theme.name) || el.tags.includes(theme.id)));
+                        }).length;
 
-                    const selArr = getSelArr(db.selections, path);
+                        return (
+                          <div
+                            key={theme.id}
+                            {...themeReorder.getItemProps(thIdx)}
+                            onClick={() => {
+                              if (themeReorder.justDragged.current) return;
+                              playClickSound(db.soundEnabled, true);
+                              setSelectedThemeId(theme.id);
+                            }}
+                            className={`group/themechip relative inline-flex items-center shrink-0 rounded-xl select-none px-2.5 py-1 text-xs font-semibold gap-1.5 transition-all duration-200 cursor-pointer border ${
+                              isDraggingThis
+                                ? db.nsfwOn
+                                  ? 'scale-105 z-30 shadow-[0_0_20px_rgba(255,34,56,0.5)] ring-2 ring-red-500 bg-red-600 text-white cursor-grabbing opacity-95'
+                                  : 'scale-105 z-30 shadow-[0_0_20px_rgba(255,102,0,0.5)] ring-2 ring-orange-500 bg-orange-500 text-black cursor-grabbing opacity-95'
+                                : isThemeSelected
+                                ? db.nsfwOn
+                                  ? 'bg-red-500/20 text-red-300 border-red-500/40 shadow-sm'
+                                  : 'bg-orange-500/20 text-orange-300 border-orange-500/40 shadow-sm'
+                                : 'bg-white/[0.04] text-white/60 hover:text-white border-white/[0.06] hover:bg-white/[0.08]'
+                            }`}
+                          >
+                            {/* Drag Handle */}
+                            <span
+                              {...themeReorder.getHandleProps(thIdx)}
+                              title="Hold & drag to reorder theme"
+                              className={`p-0.5 -ml-1 rounded transition-opacity cursor-grab active:cursor-grabbing ${
+                                isThemeSelected
+                                  ? db.nsfwOn ? 'text-red-300/80 hover:text-red-100' : 'text-orange-300/80 hover:text-orange-100'
+                                  : 'text-white/30 hover:text-white/70'
+                              }`}
+                            >
+                              <GripVertical className="w-3 h-3 stroke-[2]" />
+                            </span>
 
-                    return (
-                      <>
-                        {visibleElements.map((el, visIdx) => {
+                            {/* Theme Name & Count */}
+                            <span className="pointer-events-none tracking-wide select-none">
+                              {theme.name} ({count})
+                            </span>
+
+                            {/* Edit Button */}
+                            <button
+                              type="button"
+                              data-no-drag="true"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setThemeModalData({
+                                  isOpen: true,
+                                  mode: 'edit',
+                                  theme
+                                });
+                              }}
+                              title={`Edit ${theme.name} theme`}
+                              className={`p-0.5 rounded transition-all cursor-pointer ${
+                                isThemeSelected
+                                  ? db.nsfwOn
+                                    ? 'hover:bg-red-500/20 text-red-300/90 hover:text-white'
+                                    : 'hover:bg-orange-500/20 text-orange-300/90 hover:text-white'
+                                  : 'opacity-0 group-hover/themechip:opacity-100 hover:bg-white/10 text-white/40 hover:text-white'
+                              }`}
+                            >
+                              <Edit3 className="w-3 h-3 stroke-[2]" />
+                            </button>
+                          </div>
+                        );
+                      })}
+
+                      {/* Add Theme Button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setThemeModalData({
+                            isOpen: true,
+                            mode: 'create',
+                            theme: null
+                          });
+                        }}
+                        title="Add new theme"
+                        className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-dashed text-xs font-semibold shrink-0 transition-colors ${
+                          db.nsfwOn
+                            ? 'border-red-500/30 hover:border-red-500/60 text-red-300/70 hover:text-red-200 bg-red-500/5 hover:bg-red-500/10'
+                            : 'border-orange-500/30 hover:border-orange-500/60 text-orange-300/70 hover:text-orange-200 bg-orange-500/5 hover:bg-orange-500/10'
+                        }`}
+                      >
+                        <Plus className="w-3.5 h-3.5 stroke-[2]" />
+                        <span className="hidden sm:inline">Add Theme</span>
+                      </button>
+                    </div>
+                  ) : availableTags.length > 1 ? (
+                    /* Fallback Category Tag Filter Bar */
+                    <div className="flex items-center gap-1.5 overflow-x-auto pb-2.5 mb-3.5 scrollbar-none">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedTagFilter('all')}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition-all cursor-pointer ${
+                          selectedTagFilter === 'all'
+                            ? db.nsfwOn
+                              ? 'bg-red-500/20 text-red-300 border border-red-500/40 shadow-sm'
+                              : 'bg-orange-500/20 text-orange-300 border border-orange-500/40 shadow-sm'
+                            : 'bg-white/[0.04] text-white/50 hover:text-white border border-white/[0.06]'
+                        }`}
+                      >
+                        All ({visibleElements.length})
+                      </button>
+                      {availableTags.map((tag) => {
+                        const count = visibleElements.filter((el) => el.tags && el.tags.includes(tag)).length;
+                        return (
+                          <button
+                            key={tag}
+                            type="button"
+                            onClick={() => setSelectedTagFilter(tag)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition-all cursor-pointer ${
+                              selectedTagFilter === tag
+                                ? db.nsfwOn
+                                  ? 'bg-red-500/20 text-red-300 border border-red-500/40 shadow-sm'
+                                  : 'bg-orange-500/20 text-orange-300 border border-orange-500/40 shadow-sm'
+                                : 'bg-white/[0.04] text-white/50 hover:text-white border border-white/[0.06]'
+                            }`}
+                          >
+                            {tag} ({count})
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+
+                  {/* Flat Grid of Element Cards */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3.5">
+                    {(() => {
+                      const path = activeCat?.type === 'flat'
+                        ? [activeCat.id]
+                        : [activeCat!.id, activeSubcat!.id];
+
+                      const selArr = getSelArr(db.selections, path);
+
+                      return (
+                        <>
+                          {displayedElements.map((el, visIdx) => {
                             const isSelected = selArr.includes(el.id);
                             return (
                               <ElementCard
@@ -2108,6 +3240,9 @@ export default function App() {
                                   toggleSel(path, el.id);
                                 }}
                                 onEdit={() => {
+                                  const availableSubcats = activeCat?.subcats
+                                    ? activeCat.subcats.map((s) => ({ id: s.id, name: s.name }))
+                                    : undefined;
                                   setCropModalData({
                                     isOpen: true,
                                     title: `Edit Element: ${el.name}`,
@@ -2117,7 +3252,15 @@ export default function App() {
                                     initialPrompt: el.prompt,
                                     initialNsfw: el.nsfw,
                                     initialImage: el.image,
-                                    initialImgPos: el.imgPos
+                                    initialImgPos: el.imgPos,
+                                    initialEnsembleId: el.ensembleId,
+                                    initialPairedElementId: el.pairedElementId,
+                                    availableSubcategories: availableSubcats,
+                                    initialSubcatId: path[1],
+                                    initialThemeIds: el.themeIds || (el.tags ? activeCat?.themes?.filter(t => el.tags?.includes(t.name) || el.tags?.includes(t.id)).map(t => t.id) : []),
+                                    initialLinkedContextId: el.linkedContextId,
+                                    initialLinkedPoseId: el.linkedPoseId,
+                                    initialLinkedEnvId: el.linkedEnvId
                                   });
                                 }}
                                 nsfwOn={db.nsfwOn}
@@ -2125,6 +3268,8 @@ export default function App() {
                                 dragProps={elementReorder.getItemProps(visIdx)}
                                 handleProps={elementReorder.getHandleProps(visIdx)}
                                 isDragging={elementReorder.dragIndex === visIdx}
+                                showLinkedBadge={isContextTargetCategory(activeCat)}
+                                linkedTooltip={getLinkedTooltip(el)}
                               />
                             );
                           })}
@@ -2132,12 +3277,18 @@ export default function App() {
                         {/* Add Element Card Button */}
                         <button
                           onClick={() => {
+                            const availableSubcats = activeCat?.subcats
+                              ? activeCat.subcats.map((s) => ({ id: s.id, name: s.name }))
+                              : undefined;
                             setCropModalData({
                               isOpen: true,
                               title: `Add to ${activeSubcat ? activeSubcat.name : activeCat?.name}`,
                               path,
                               initialName: '',
-                              initialPrompt: ''
+                              initialPrompt: '',
+                              availableSubcategories: availableSubcats,
+                              initialSubcatId: path[1],
+                              initialThemeIds: selectedThemeId !== 'all' ? [selectedThemeId] : []
                             });
                           }}
                           className={`rounded-xl border border-dashed p-5 flex flex-col items-center justify-center gap-2 transition-all group aspect-square duration-300 ${
@@ -2157,7 +3308,9 @@ export default function App() {
                     );
                   })()}
                 </div>
-              )}
+              </div>
+            )}
+
             </div>
           )}
         </main>
@@ -2189,6 +3342,7 @@ export default function App() {
           onCreateContextPreset={handleCreateContextPreset}
           onCreateOutfitPreset={handleCreateOutfitPreset}
           presetNotice={presetNotice}
+          theme={theme}
         />
       </div>
 
@@ -2291,11 +3445,28 @@ export default function App() {
         onClose={() => setCropModalData((prev) => ({ ...prev, isOpen: false }))}
         title={cropModalData.title}
         showPromptField={!cropModalData.isCategory}
+        isCategory={cropModalData.isCategory}
+        catId={cropModalData.catId}
         initialName={cropModalData.initialName}
+        initialPromptName={cropModalData.initialPromptName}
         initialPrompt={cropModalData.initialPrompt}
         initialNsfw={cropModalData.initialNsfw}
         initialImage={cropModalData.initialImage}
         initialImgPos={cropModalData.initialImgPos}
+        initialIcon={cropModalData.initialIcon}
+        initialEnsembleId={cropModalData.initialEnsembleId}
+        initialPairedElementId={cropModalData.initialPairedElementId}
+        availableEnsemblePairs={availableEnsemblePairs}
+        availableSubcategories={cropModalData.availableSubcategories}
+        initialSubcatId={cropModalData.initialSubcatId}
+        categoryThemes={activeCat?.themes}
+        initialThemeIds={cropModalData.initialThemeIds}
+        availableContextItems={availableContextItems}
+        availablePoseItems={availablePoseItems}
+        availableEnvItems={availableEnvItems}
+        initialLinkedContextId={cropModalData.initialLinkedContextId}
+        initialLinkedPoseId={cropModalData.initialLinkedPoseId}
+        initialLinkedEnvId={cropModalData.initialLinkedEnvId}
         users={users}
         activeUserId={activeUserId}
         path={cropModalData.path}
@@ -2311,14 +3482,17 @@ export default function App() {
                 const cat = catsCopy.find((c: any) => c.id === cropModalData.catId);
                 if (cat) {
                   cat.name = saved.name;
+                  cat.promptName = saved.promptName || suggestPromptName(saved.name, cat.id);
                   cat.image = saved.image;
                   cat.imgPos = saved.imgPos;
                   cat.icon = saved.icon;
                 }
               } else {
+                const newCatId = 'c' + Date.now();
                 catsCopy.push({
-                  id: 'c' + Date.now(),
+                  id: newCatId,
                   name: saved.name,
+                  promptName: saved.promptName || suggestPromptName(saved.name, newCatId),
                   type: 'flat',
                   image: saved.image,
                   imgPos: saved.imgPos,
@@ -2326,53 +3500,298 @@ export default function App() {
                   els: []
                 });
               }
+              return { ...prev, cats: catsCopy };
             } else {
               // Element save
               const path = cropModalData.path;
               const cat = catsCopy.find((c: any) => c.id === path[0]);
-              let targetEls: any[] = [];
+              const targetSubcatId = saved.subcategoryId;
+              const isMovingSubcat = targetSubcatId && path.length >= 2 && targetSubcatId !== path[1];
+              let effectiveElId = cropModalData.elId;
 
-              if (cat) {
-                if (path.length === 1) {
-                  targetEls = cat.els = cat.els || [];
-                } else if (path.length === 2) {
-                  const sc = cat.subcats?.find((s: any) => s.id === path[1]);
-                  if (sc) targetEls = sc.els = sc.els || [];
-                } else if (path.length === 3) {
-                  const sc = cat.subcats?.find((s: any) => s.id === path[1]);
-                  const row = sc?.rows?.find((r: any) => r.id === path[2]);
-                  if (row) targetEls = row.els = row.els || [];
-                }
-              }
+              if (isMovingSubcat && cat && cat.subcats) {
+                const sourceSub = cat.subcats.find((s: any) => s.id === path[1]);
+                const destSub = cat.subcats.find((s: any) => s.id === targetSubcatId);
+                if (sourceSub && destSub) {
+                  destSub.els = destSub.els || [];
+                  sourceSub.els = sourceSub.els || [];
 
-              if (cropModalData.elId) {
-                const el = targetEls.find((e: any) => e.id === cropModalData.elId);
-                if (el) {
-                  el.name = saved.name;
-                  el.prompt = saved.prompt || '';
-                  el.nsfw = !!saved.nsfw;
-                  el.image = saved.image;
-                  el.imgPos = saved.imgPos;
-                  el.icon = saved.icon;
+                  const assignedThemeNames = (cat.themes || [])
+                    .filter((t: any) => (saved.themeIds || []).includes(t.id))
+                    .map((t: any) => t.name);
+
+                  if (cropModalData.elId) {
+                    const existingIdx = sourceSub.els.findIndex((e: any) => e.id === cropModalData.elId);
+                    const existingEl = existingIdx !== -1 ? sourceSub.els.splice(existingIdx, 1)[0] : null;
+
+                    const targetSubName = destSub.name;
+                    let updatedTags = existingEl?.tags || [];
+                    if (targetSubName) {
+                      updatedTags = [targetSubName, ...updatedTags.filter((t: string) => t !== targetSubName)];
+                    }
+                    if (cat.themes && saved.themeIds) {
+                      const nonThemeTags = updatedTags.filter(
+                        (tg: string) => !cat.themes.some((t: any) => t.name.toLowerCase() === tg.toLowerCase())
+                      );
+                      updatedTags = [...nonThemeTags, ...assignedThemeNames];
+                    }
+
+                    const updatedEl = {
+                      ...(existingEl || {}),
+                      id: cropModalData.elId,
+                      name: saved.name,
+                      prompt: saved.prompt || '',
+                      nsfw: !!saved.nsfw,
+                      image: saved.image,
+                      imgPos: saved.imgPos,
+                      icon: saved.icon,
+                      ensembleId: saved.ensembleId,
+                      pairedElementId: saved.pairedElementId,
+                      subcategoryId: targetSubcatId,
+                      themeIds: saved.themeIds !== undefined ? saved.themeIds : existingEl?.themeIds,
+                      linkedContextId: saved.linkedContextId,
+                      linkedPoseId: saved.linkedPoseId,
+                      linkedEnvId: saved.linkedEnvId,
+                      tags: updatedTags
+                    };
+                    destSub.els.push(updatedEl);
+
+                    // Update selections if this element was selected in old subcategory
+                    let nextSelections = prev.selections;
+                    const catSelections = prev.selections?.[path[0]];
+                    if (catSelections && Array.isArray(catSelections[path[1]])) {
+                      if (catSelections[path[1]].includes(cropModalData.elId)) {
+                        nextSelections = JSON.parse(JSON.stringify(prev.selections));
+                        nextSelections[path[0]][path[1]] = nextSelections[path[0]][path[1]].filter((id: string) => id !== cropModalData.elId);
+                        nextSelections[path[0]][targetSubcatId] = nextSelections[path[0]][targetSubcatId] || [];
+                        if (!nextSelections[path[0]][targetSubcatId].includes(cropModalData.elId)) {
+                          nextSelections[path[0]][targetSubcatId].push(cropModalData.elId);
+                        }
+                      }
+                    }
+                  } else {
+                    effectiveElId = 'e' + Date.now();
+                    const initialTags = destSub.name ? [destSub.name] : [];
+                    if (cat.themes && saved.themeIds) {
+                      initialTags.push(...assignedThemeNames);
+                    }
+                    destSub.els.push({
+                      id: effectiveElId,
+                      name: saved.name,
+                      prompt: saved.prompt || '',
+                      nsfw: !!saved.nsfw,
+                      image: saved.image,
+                      imgPos: saved.imgPos,
+                      icon: saved.icon,
+                      ensembleId: saved.ensembleId,
+                      pairedElementId: saved.pairedElementId,
+                      subcategoryId: targetSubcatId,
+                      themeIds: saved.themeIds || [],
+                      linkedContextId: saved.linkedContextId,
+                      linkedPoseId: saved.linkedPoseId,
+                      linkedEnvId: saved.linkedEnvId,
+                      tags: initialTags
+                    });
+                  }
                 }
               } else {
-                targetEls.push({
-                  id: 'e' + Date.now(),
-                  name: saved.name,
-                  prompt: saved.prompt || '',
-                  nsfw: !!saved.nsfw,
-                  image: saved.image,
-                  imgPos: saved.imgPos,
-                  icon: saved.icon
-                });
-              }
-            }
+                let targetEls: any[] = [];
+                if (cat) {
+                  if (path.length === 1) {
+                    targetEls = cat.els = cat.els || [];
+                  } else if (path.length === 2) {
+                    const sc = cat.subcats?.find((s: any) => s.id === path[1]);
+                    if (sc) targetEls = sc.els = sc.els || [];
+                  } else if (path.length === 3) {
+                    const sc = cat.subcats?.find((s: any) => s.id === path[1]);
+                    const row = sc?.rows?.find((r: any) => r.id === path[2]);
+                    if (row) targetEls = row.els = row.els || [];
+                  }
+                }
 
-            return { ...prev, cats: catsCopy };
+                if (cropModalData.elId) {
+                  const el = targetEls.find((e: any) => e.id === cropModalData.elId);
+                  if (el) {
+                    el.name = saved.name;
+                    el.prompt = saved.prompt || '';
+                    el.nsfw = !!saved.nsfw;
+                    el.image = saved.image;
+                    el.imgPos = saved.imgPos;
+                    el.icon = saved.icon;
+                    el.ensembleId = saved.ensembleId;
+                    el.pairedElementId = saved.pairedElementId;
+                    el.themeIds = saved.themeIds !== undefined ? saved.themeIds : el.themeIds;
+                    el.linkedContextId = saved.linkedContextId;
+                    el.linkedPoseId = saved.linkedPoseId;
+                    el.linkedEnvId = saved.linkedEnvId;
+                    if (saved.subcategoryId) {
+                      el.subcategoryId = saved.subcategoryId;
+                      const curSub = cat?.subcats?.find((s: any) => s.id === saved.subcategoryId);
+                      if (curSub?.name) {
+                        el.tags = [curSub.name, ...((el.tags || []).filter((t: string) => t !== curSub.name))];
+                      }
+                    }
+                    if (cat?.themes && saved.themeIds) {
+                      const assignedThemeNames = cat.themes.filter((t: any) => saved.themeIds?.includes(t.id)).map((t: any) => t.name);
+                      const nonThemeTags = (el.tags || []).filter((tg: string) => !cat.themes.some((t: any) => t.name.toLowerCase() === tg.toLowerCase()));
+                      el.tags = [...nonThemeTags, ...assignedThemeNames];
+                    }
+                  }
+
+                  // If editing in outfit category (between top and bottom), maintain bidirectional pairing
+                  if (cropModalData.path && cropModalData.path[0] === 'outfit') {
+                    const currentSubId = cropModalData.path[1];
+                    const targetSubId = currentSubId === 'top' ? 'bottom' : currentSubId === 'bottom' ? 'top' : null;
+                    if (targetSubId) {
+                      const outfitCat = catsCopy.find((c: any) => c.id === 'outfit');
+                      const targetSub = outfitCat?.subcats?.find((s: any) => s.id === targetSubId);
+                      if (targetSub?.els) {
+                        targetSub.els.forEach((other: any) => {
+                          if (other.pairedElementId === cropModalData.elId && other.id !== saved.pairedElementId) {
+                            other.pairedElementId = undefined;
+                            other.ensembleId = undefined;
+                          }
+                        });
+                        if (saved.pairedElementId) {
+                          const counterpart = targetSub.els.find((e: any) => e.id === saved.pairedElementId);
+                          if (counterpart) {
+                            counterpart.pairedElementId = cropModalData.elId;
+                            counterpart.ensembleId = saved.ensembleId;
+                          }
+                        }
+                      }
+                    }
+                  }
+                } else {
+                  effectiveElId = 'e' + Date.now();
+                  const curSub = cat?.subcats?.find((s: any) => s.id === (saved.subcategoryId || path[1]));
+                  const initialTags = curSub?.name ? [curSub.name] : [];
+                  if (cat?.themes && saved.themeIds) {
+                    const assignedThemeNames = cat.themes.filter((t: any) => saved.themeIds?.includes(t.id)).map((t: any) => t.name);
+                    initialTags.push(...assignedThemeNames);
+                  }
+                  targetEls.push({
+                    id: effectiveElId,
+                    name: saved.name,
+                    prompt: saved.prompt || '',
+                    nsfw: !!saved.nsfw,
+                    image: saved.image,
+                    imgPos: saved.imgPos,
+                    icon: saved.icon,
+                    ensembleId: saved.ensembleId,
+                    pairedElementId: saved.pairedElementId,
+                    subcategoryId: saved.subcategoryId || (path.length >= 2 ? path[1] : undefined),
+                    themeIds: saved.themeIds || [],
+                    linkedContextId: saved.linkedContextId,
+                    linkedPoseId: saved.linkedPoseId,
+                    linkedEnvId: saved.linkedEnvId,
+                    tags: initialTags
+                  });
+                }
+              }
+
+              // Auto-Select Context: maintain reciprocal links between Context, Pose, and Environment
+              const activeCatId = path[0];
+              const isContext = activeCatId === 'comp' || activeCatId === 'context';
+              const isPose = activeCatId === 'pose';
+              const isEnv = activeCatId === 'env';
+
+              if (effectiveElId && (isContext || isPose || isEnv)) {
+                const targetEnvCat = catsCopy.find((c: any) => c.id === 'env');
+                const targetPoseCat = catsCopy.find((c: any) => c.id === 'pose');
+                const targetContextCat = catsCopy.find((c: any) => c.id === 'comp' || c.id === 'context');
+
+                const allEnvEls = getAllElementsInCat(targetEnvCat);
+                const allPoseEls = getAllElementsInCat(targetPoseCat);
+                const allContextEls = getAllElementsInCat(targetContextCat);
+
+                if (isEnv) {
+                  allPoseEls.forEach((p: any) => {
+                    if (p.linkedEnvId === effectiveElId && p.id !== saved.linkedPoseId) {
+                      p.linkedEnvId = undefined;
+                    }
+                  });
+                  if (saved.linkedPoseId) {
+                    const counterpart = allPoseEls.find((p: any) => p.id === saved.linkedPoseId);
+                    if (counterpart) counterpart.linkedEnvId = effectiveElId;
+                  }
+
+                  allContextEls.forEach((c: any) => {
+                    if (c.linkedEnvId === effectiveElId && c.id !== saved.linkedContextId) {
+                      c.linkedEnvId = undefined;
+                    }
+                  });
+                  if (saved.linkedContextId) {
+                    const counterpart = allContextEls.find((c: any) => c.id === saved.linkedContextId);
+                    if (counterpart) counterpart.linkedEnvId = effectiveElId;
+                  }
+                } else if (isPose) {
+                  allEnvEls.forEach((e: any) => {
+                    if (e.linkedPoseId === effectiveElId && e.id !== saved.linkedEnvId) {
+                      e.linkedPoseId = undefined;
+                    }
+                  });
+                  if (saved.linkedEnvId) {
+                    const counterpart = allEnvEls.find((e: any) => e.id === saved.linkedEnvId);
+                    if (counterpart) counterpart.linkedPoseId = effectiveElId;
+                  }
+
+                  allContextEls.forEach((c: any) => {
+                    if (c.linkedPoseId === effectiveElId && c.id !== saved.linkedContextId) {
+                      c.linkedPoseId = undefined;
+                    }
+                  });
+                  if (saved.linkedContextId) {
+                    const counterpart = allContextEls.find((c: any) => c.id === saved.linkedContextId);
+                    if (counterpart) counterpart.linkedPoseId = effectiveElId;
+                  }
+                } else if (isContext) {
+                  allEnvEls.forEach((e: any) => {
+                    if (e.linkedContextId === effectiveElId && e.id !== saved.linkedEnvId) {
+                      e.linkedContextId = undefined;
+                    }
+                  });
+                  if (saved.linkedEnvId) {
+                    const counterpart = allEnvEls.find((e: any) => e.id === saved.linkedEnvId);
+                    if (counterpart) counterpart.linkedContextId = effectiveElId;
+                  }
+
+                  allPoseEls.forEach((p: any) => {
+                    if (p.linkedContextId === effectiveElId && p.id !== saved.linkedPoseId) {
+                      p.linkedContextId = undefined;
+                    }
+                  });
+                  if (saved.linkedPoseId) {
+                    const counterpart = allPoseEls.find((p: any) => p.id === saved.linkedPoseId);
+                    if (counterpart) counterpart.linkedContextId = effectiveElId;
+                  }
+                }
+              }
+
+              return { ...prev, cats: catsCopy };
+            }
           });
         }}
         onDelete={
-          cropModalData.elId
+          cropModalData.isCategory && cropModalData.catId && !isDefaultCategory(cropModalData.catId)
+            ? () => {
+                const targetCatId = cropModalData.catId!;
+                recordHistory();
+                setDb((prev) => {
+                  const catsCopy = prev.cats.filter((c: any) => c.id !== targetCatId);
+                  const selectionsCopy = JSON.parse(JSON.stringify(prev.selections || {}));
+                  delete selectionsCopy[targetCatId];
+                  return {
+                    ...prev,
+                    cats: catsCopy,
+                    selections: selectionsCopy
+                  };
+                });
+                if (view.catId === cropModalData.catId) {
+                  setView({ catId: null, subcatId: null });
+                }
+              }
+            : cropModalData.elId
             ? () => {
                 setDb((prev) => {
                   const catsCopy = JSON.parse(JSON.stringify(prev.cats));
@@ -2392,6 +3811,19 @@ export default function App() {
                   }
                   const idx = targetEls.findIndex((e: any) => e.id === cropModalData.elId);
                   if (idx > -1) targetEls.splice(idx, 1);
+
+                  // Clean up reciprocal links in counterpart categories
+                  const delId = cropModalData.elId;
+                  catsCopy.forEach((c: any) => {
+                    const allEls = getAllElementsInCat(c);
+                    allEls.forEach((item: any) => {
+                      if (item.linkedContextId === delId) item.linkedContextId = undefined;
+                      if (item.linkedPoseId === delId) item.linkedPoseId = undefined;
+                      if (item.linkedEnvId === delId) item.linkedEnvId = undefined;
+                      if (item.pairedElementId === delId) item.pairedElementId = undefined;
+                    });
+                  });
+
                   return { ...prev, cats: catsCopy };
                 });
               }
@@ -2405,6 +3837,8 @@ export default function App() {
         onClose={() => setSubcatModalData({ isOpen: false, mode: 'create', subcat: null })}
         mode={subcatModalData.mode}
         subcat={subcatModalData.subcat}
+        categoryName={activeCat?.name}
+        isTheme={false}
         nsfwOn={db.nsfwOn}
         onSave={(name) => {
           if (!activeCat) return;
@@ -2434,33 +3868,49 @@ export default function App() {
             return { ...prev, cats: catsCopy };
           });
         }}
-        onDelete={() => {
-          if (!activeCat || !subcatModalData.subcat) return;
-          const targetSubcatId = subcatModalData.subcat.id;
-          recordHistory();
-          setDb((prev) => {
-            const catsCopy = JSON.parse(JSON.stringify(prev.cats));
-            const cat = catsCopy.find((c: any) => c.id === activeCat.id);
-            if (!cat) return prev;
-            cat.subcats = (cat.subcats || []).filter((s: any) => s.id !== targetSubcatId);
+        onDelete={
+          subcatModalData.subcat && !isDefaultSubcategory(subcatModalData.subcat.id)
+            ? () => {
+                if (!activeCat || !subcatModalData.subcat) return;
+                const targetSubcatId = subcatModalData.subcat.id;
+                recordHistory();
+                setDb((prev) => {
+                  const catsCopy = JSON.parse(JSON.stringify(prev.cats));
+                  const cat = catsCopy.find((c: any) => c.id === activeCat.id);
+                  if (!cat) return prev;
+                  cat.subcats = (cat.subcats || []).filter((s: any) => s.id !== targetSubcatId);
 
-            // Clear selections in this subcategory
-            const selectionsCopy = JSON.parse(JSON.stringify(prev.selections || {}));
-            if (selectionsCopy[activeCat.id]?.[targetSubcatId]) {
-              delete selectionsCopy[activeCat.id][targetSubcatId];
-            }
+                  // Clear selections in this subcategory
+                  const selectionsCopy = JSON.parse(JSON.stringify(prev.selections || {}));
+                  if (selectionsCopy[activeCat.id]?.[targetSubcatId]) {
+                    delete selectionsCopy[activeCat.id][targetSubcatId];
+                  }
 
-            const remainingSubcats = cat.subcats;
-            const nextSubcatId = remainingSubcats?.[0]?.id || null;
-            setView((v) => ({ ...v, subcatId: nextSubcatId }));
+                  const remainingSubcats = cat.subcats;
+                  const nextSubcatId = remainingSubcats?.[0]?.id || null;
+                  setView((v) => ({ ...v, subcatId: nextSubcatId }));
 
-            return {
-              ...prev,
-              cats: catsCopy,
-              selections: selectionsCopy
-            };
-          });
-        }}
+                  return {
+                    ...prev,
+                    cats: catsCopy,
+                    selections: selectionsCopy
+                  };
+                });
+              }
+            : undefined
+        }
+      />
+
+      {/* Theme Management Modal */}
+      <ThemeModal
+        isOpen={themeModalData.isOpen}
+        onClose={() => setThemeModalData((prev) => ({ ...prev, isOpen: false, theme: null }))}
+        mode={themeModalData.mode}
+        theme={themeModalData.theme}
+        categoryName={activeCat?.name}
+        nsfwOn={db.nsfwOn}
+        onSave={handleSaveTheme}
+        onDelete={themeModalData.theme ? handleDeleteTheme : undefined}
       />
 
       {/* Restore Main User Database Confirmation Modal */}
@@ -2504,6 +3954,18 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Full Database & Photos Export/Import Modal */}
+      <FullExportImportModal
+        isOpen={fullExportImportModal.isOpen}
+        onClose={() => setFullExportImportModal((prev) => ({ ...prev, isOpen: false }))}
+        activeUserId={activeUserId}
+        activeUserName={users.find((u) => u.id === activeUserId)?.name || 'Main User'}
+        nsfwOn={db.nsfwOn}
+        soundEnabled={db.soundEnabled}
+        onImportSuccess={handleFullImportSuccess}
+        initialTab={fullExportImportModal.tab}
+      />
     </div>
   );
 }

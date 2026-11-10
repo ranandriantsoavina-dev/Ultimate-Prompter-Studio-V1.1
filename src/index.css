@@ -8,16 +8,60 @@
   --theme-accent-hover: #ff7d24;
   --theme-accent-glow: rgba(255, 102, 0, 0.4);
   --theme-text-accent: #ff7824;
+  --text-primary: #f4efe8;
+  --text-secondary: rgba(255, 255, 255, 0.65);
+  --text-muted: rgba(255, 255, 255, 0.4);
 }
 
+/* 1. GLOW THEME TOKENS */
+.theme-glow {
+  --bg-primary: #07070a;
+  --panel-surface: #121116;
+  --panel-border: rgba(255, 255, 255, 0.08);
+}
+
+/* 2. MINIMALIST DARK THEME TOKENS */
+.theme-minimal-dark {
+  --bg-primary: #000000;
+  --panel-surface: #0a0a0a;
+  --panel-border: #27272a;
+  --text-primary: #ffffff;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+}
+
+/* 3. MINIMALIST LIGHT THEME TOKENS */
+.theme-minimal-light,
+.theme-light {
+  --bg-primary: #ffffff;
+  --panel-surface: #ffffff;
+  --panel-border: #e4e4e7;
+  --text-primary: #09090b;
+  --text-secondary: #52525b;
+  --text-muted: #a1a1aa;
+}
+
+/* NSFW Indicator Accent Colors across themes */
 .theme-orange {
+  --theme-accent: #ea580c;
+  --theme-accent-hover: #c2410c;
+  --theme-text-accent: #ea580c;
+}
+
+.theme-nsfw {
+  --theme-accent: #dc2626;
+  --theme-accent-hover: #b91c1c;
+  --theme-text-accent: #dc2626;
+}
+
+.theme-glow.theme-orange {
   --theme-accent: #ff6600;
   --theme-accent-hover: #ff7d24;
   --theme-accent-glow: rgba(255, 102, 0, 0.4);
   --theme-text-accent: #ff7824;
 }
 
-.theme-nsfw {
+.theme-glow.theme-nsfw {
   --theme-accent: #ff2238;
   --theme-accent-hover: #ff3d52;
   --theme-accent-glow: rgba(255, 34, 56, 0.45);
@@ -43,6 +87,338 @@
   background: rgba(255, 255, 255, 0.22);
 }
 
+/* Smooth application theme transitions (~300ms ease) */
+html, body, #root,
+.theme-glow, .theme-minimal-dark, .theme-minimal-light, .theme-light, .theme-dark,
+header, main, aside, nav,
+div, button, input, textarea, select {
+  transition: background-color 300ms ease,
+              border-color 300ms ease,
+              color 300ms ease,
+              box-shadow 300ms ease;
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Light Theme / Minimalist Light Styling Overrides */
+.theme-light,
+.theme-minimal-light {
+  --bg-primary: #f8fafc;
+  --panel-surface: #ffffff;
+  --panel-border: #e2e8f0;
+  --theme-accent: #ea580c;
+  --theme-accent-hover: #c2410c;
+  --theme-accent-glow: rgba(234, 88, 12, 0.25);
+  --theme-text-accent: #c2410c;
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* 1. Base App & Canvas Background in Light Mode */
+.theme-light [class*="bg-[#07070a]"],
+.theme-light.text-\[\#f4efe8\],
+.theme-light [class*="text-[#f4efe8]"] {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* 2. All Dark Container and Card Surfaces */
+.theme-light header,
+.theme-light aside,
+.theme-light [class*="bg-[#0d0c10]"],
+.theme-light [class*="bg-[#0e0d11]"],
+.theme-light [class*="bg-[#100e14]"],
+.theme-light [class*="bg-[#111014]"],
+.theme-light [class*="bg-[#111015]"],
+.theme-light [class*="bg-[#121116]"],
+.theme-light [class*="bg-[#131116]"],
+.theme-light [class*="bg-[#131117]"],
+.theme-light [class*="bg-[#141217]"],
+.theme-light [class*="bg-[#15131a]"],
+.theme-light [class*="bg-[#151419]"],
+.theme-light [class*="bg-[#16141c]"],
+.theme-light [class*="bg-[#16151b]"],
+.theme-light [class*="bg-[#17151a]"],
+.theme-light [class*="bg-[#17151e]"],
+.theme-light [class*="bg-[#18161c]"],
+.theme-light [class*="bg-[#1a1920]"],
+.theme-light [class*="bg-[#1a1721]"],
+.theme-light [class*="bg-[#18161e]"] {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Header & Aside translucent backgrounds with crisp borders */
+.theme-light header {
+  background-color: rgba(255, 255, 255, 0.94) !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.theme-light aside {
+  background-color: rgba(255, 255, 255, 0.96) !important;
+  border-left: 1px solid #e2e8f0 !important;
+  border-top-color: #e2e8f0 !important;
+}
+
+/* Selected Active Cards (warm orange-tinted or rose-tinted surface with high contrast) */
+.theme-light [class*="bg-[#181412]"] {
+  background-color: #fff7ed !important; /* orange-50 */
+  border-color: #f97316 !important;
+  box-shadow: 0 0 15px rgba(249, 115, 22, 0.22) !important;
+}
+
+.theme-light [class*="bg-[#181215]"] {
+  background-color: #fff1f2 !important; /* rose-50 */
+  border-color: #f43f5e !important;
+  box-shadow: 0 0 15px rgba(244, 63, 94, 0.22) !important;
+}
+
+/* Card Footers (clean slate-50 contrast against white card body) */
+.theme-light [class*="bg-[#121116]/90"],
+.theme-light [class*="bg-[#121116]/80"] {
+  background-color: #f8fafc !important;
+  border-top-color: #e2e8f0 !important;
+}
+
+/* Fallback Art Thumbnail Placeholder */
+.theme-light [class*="bg-[#111014]"] {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #475569 !important;
+}
+
+/* 3. Text Legibility & High-Contrast Tones */
+.theme-light,
+.theme-light .text-white,
+.theme-light .text-white\/95,
+.theme-light .text-white\/90 {
+  color: #0f172a !important; /* Slate-900 */
+}
+
+.theme-light .text-white\/85,
+.theme-light .text-white\/80 {
+  color: #1e293b !important; /* Slate-800 */
+}
+
+.theme-light .text-white\/70 {
+  color: #334155 !important; /* Slate-700 */
+}
+
+.theme-light .text-white\/60,
+.theme-light .text-white\/50 {
+  color: #475569 !important; /* Slate-600 */
+}
+
+.theme-light .text-white\/40,
+.theme-light .text-white\/35,
+.theme-light .text-white\/30 {
+  color: #64748b !important; /* Slate-500 */
+}
+
+.theme-light .text-white\/25,
+.theme-light .text-white\/20,
+.theme-light .text-white\/10 {
+  color: #94a3b8 !important; /* Slate-400 */
+}
+
+/* 4. Compiled Prompt Section / Prompt Inspector Box */
+.theme-light [class*="bg-black/70"] {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.03) !important;
+}
+
+.theme-light [class*="text-[#ede6dd]"],
+.theme-light [class*="text-[#eee7de]"] {
+  color: #0f172a !important;
+}
+
+/* In structured prompt mode: category names in rich legible orange and red */
+.theme-light .text-\[\#ff7824\] {
+  color: #c2410c !important; /* deep rich amber-700 */
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+.theme-light .text-\[\#ff384d\] {
+  color: #be123c !important; /* deep rich rose-700 */
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+/* Active contributing category badges in Inspector */
+.theme-light [class*="bg-orange-950/40"] {
+  background-color: #fff7ed !important;
+  color: #c2410c !important;
+  border-color: #fdba74 !important;
+  box-shadow: none !important;
+}
+
+.theme-light [class*="bg-red-950/40"] {
+  background-color: #fff1f2 !important;
+  color: #be123c !important;
+  border-color: #fda4af !important;
+  box-shadow: none !important;
+}
+
+/* Prompt Inspector Preset Creation Buttons */
+.theme-light aside [class*="bg-orange-500/10"] {
+  background-color: #fff7ed !important;
+  border-color: #fed7aa !important;
+  color: #0f172a !important;
+}
+.theme-light aside [class*="bg-orange-500/10"]:hover {
+  background-color: #ffedd5 !important;
+}
+.theme-light aside [class*="bg-red-500/10"] {
+  background-color: #fff1f2 !important;
+  border-color: #fecdd3 !important;
+  color: #0f172a !important;
+}
+.theme-light aside [class*="bg-red-500/10"]:hover {
+  background-color: #ffe4e6 !important;
+}
+
+/* 5. Overlay Buttons (Lock, Edit, Dice, GripVertical, NSFW badge on cards) */
+.theme-light [class*="bg-black/50"],
+.theme-light [class*="bg-black/60"],
+.theme-light [class*="bg-black/80"],
+.theme-light [class*="bg-black/90"] {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  color: #334155 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+}
+
+.theme-light [class*="bg-black/50"]:hover,
+.theme-light [class*="bg-black/60"]:hover,
+.theme-light [class*="bg-black/80"]:hover,
+.theme-light [class*="bg-black/90"]:hover {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Modal Backdrops (dimmed backdrop in light mode) */
+.theme-light [class*="bg-black/75"],
+.theme-light [class*="bg-black/60"].fixed {
+  background-color: rgba(15, 23, 42, 0.5) !important;
+}
+
+/* Form Inputs, Textareas, Selects */
+.theme-light input[type="text"],
+.theme-light input[type="number"],
+.theme-light textarea,
+.theme-light select,
+.theme-light [class*="bg-black/40"] {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.theme-light input::placeholder,
+.theme-light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* 6. Borders */
+.theme-light [class*="border-white"] {
+  border-color: #e2e8f0 !important;
+}
+
+/* 7. Buttons & View Switchers */
+.theme-light [class*="bg-white/[0.02]"],
+.theme-light [class*="bg-white/[0.03]"],
+.theme-light [class*="bg-white/[0.04]"],
+.theme-light [class*="bg-white/[0.05]"],
+.theme-light [class*="bg-white/[0.06]"],
+.theme-light [class*="bg-white/[0.08]"],
+.theme-light [class*="bg-white/5"],
+.theme-light [class*="bg-white/10"] {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #334155 !important;
+}
+
+.theme-light [class*="bg-white/[0.04]"]:hover,
+.theme-light [class*="bg-white/[0.06]"]:hover,
+.theme-light [class*="bg-white/[0.08]"]:hover,
+.theme-light [class*="bg-white/10"]:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+/* Inactive View Switcher Tab */
+.theme-light .text-white\/60.hover\:text-white:hover {
+  color: #0f172a !important;
+}
+
+/* Add Card Dashed Outline */
+.theme-light .border-dashed {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #475569 !important;
+}
+
+.theme-light .border-dashed:hover {
+  background-color: #f8fafc !important;
+  border-color: #f97316 !important;
+  color: #ea580c !important;
+}
+
+/* Auto-Select Ensemble badge in Outfit header */
+.theme-light [class*="bg-emerald-950/30"],
+.theme-light [class*="bg-emerald-950/35"],
+.theme-light [class*="bg-emerald-950/15"] {
+  background-color: #ecfdf5 !important;
+  border-color: #6ee7b7 !important;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.15) !important;
+}
+.theme-light [class*="text-emerald-300"] {
+  color: #047857 !important;
+}
+.theme-light [class*="bg-emerald-950/70"] {
+  background-color: #d1fae5 !important;
+  border-color: #a7f3d0 !important;
+}
+
+/* Dedicated Krea 2 model badge in header */
+.theme-light [class*="bg-orange-950/25"] {
+  background-color: #fff7ed !important;
+  border-color: #fdba74 !important;
+  color: #0f172a !important;
+  box-shadow: none !important;
+}
+.theme-light [class*="bg-red-950/25"] {
+  background-color: #fff1f2 !important;
+  border-color: #fca5a5 !important;
+  color: #0f172a !important;
+  box-shadow: none !important;
+}
+
+/* Dropdown Menu in Titlebar */
+.theme-light [class*="bg-[#17151a]"] {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Scrollbars */
+.theme-light ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.18) !important;
+}
+.theme-light ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.32) !important;
+}
+
 /* Subtle selection styling */
 ::selection {
   background: var(--theme-accent);
@@ -57,4 +433,163 @@
 /* Tabular figures for telemetry and counts */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+}
+
+/* ========================================================
+   PART 2: MINIMALIST DARK THEME
+   - Base: pitch black background, pure white text
+   - Flat design: no glow effects, no gradients, thin borders
+   - NSFW indicator accent: orange when disabled, red when enabled
+   ======================================================== */
+.theme-minimal-dark {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+.theme-minimal-dark,
+.theme-minimal-dark header,
+.theme-minimal-dark aside,
+.theme-minimal-dark main,
+.theme-minimal-dark [class*="bg-[#07070a]"],
+.theme-minimal-dark [class*="bg-[#0e0d11]"],
+.theme-minimal-dark [class*="bg-[#100e14]"],
+.theme-minimal-dark [class*="bg-[#121116]"],
+.theme-minimal-dark [class*="bg-[#141217]"],
+.theme-minimal-dark [class*="bg-[#15131a]"],
+.theme-minimal-dark [class*="bg-[#17151a]"] {
+  box-shadow: none !important;
+  text-shadow: none !important;
+  filter: none !important;
+}
+
+/* Minimalist Dark header and sidebar */
+.theme-minimal-dark header {
+  background-color: #000000 !important;
+  border-bottom: 1px solid #27272a !important;
+}
+
+.theme-minimal-dark aside {
+  background-color: #09090b !important;
+  border-left: 1px solid #27272a !important;
+}
+
+/* Base surface overrides for flat dark */
+.theme-minimal-dark [class*="bg-[#07070a]"] {
+  background-color: #000000 !important;
+}
+
+.theme-minimal-dark [class*="bg-[#0e0d11]"],
+.theme-minimal-dark [class*="bg-[#100e14]"],
+.theme-minimal-dark [class*="bg-[#121116]"],
+.theme-minimal-dark [class*="bg-[#141217]"],
+.theme-minimal-dark [class*="bg-[#15131a]"],
+.theme-minimal-dark [class*="bg-[#17151a]"] {
+  background-color: #09090b !important;
+  border-color: #27272a !important;
+}
+
+/* Text Legibility in Minimalist Dark */
+.theme-minimal-dark .text-white,
+.theme-minimal-dark .text-white\/95,
+.theme-minimal-dark .text-white\/90 {
+  color: #ffffff !important;
+}
+
+.theme-minimal-dark .text-white\/80,
+.theme-minimal-dark .text-white\/70 {
+  color: #d4d4d8 !important; /* zinc-300 */
+}
+
+.theme-minimal-dark .text-white\/60,
+.theme-minimal-dark .text-white\/50 {
+  color: #a1a1aa !important; /* zinc-400 */
+}
+
+.theme-minimal-dark .text-white\/40,
+.theme-minimal-dark .text-white\/30 {
+  color: #71717a !important; /* zinc-500 */
+}
+
+/* Selected active cards in Minimalist Dark: thin crisp flat border */
+.theme-minimal-dark [class*="bg-[#181412]"] {
+  background-color: #12100e !important;
+  border-color: #f97316 !important;
+  box-shadow: none !important;
+}
+
+.theme-minimal-dark [class*="bg-[#181215]"] {
+  background-color: #140d10 !important;
+  border-color: #ef4444 !important;
+  box-shadow: none !important;
+}
+
+/* Form Inputs, Textarea, Selects in Minimalist Dark */
+.theme-minimal-dark input[type="text"],
+.theme-minimal-dark input[type="number"],
+.theme-minimal-dark textarea,
+.theme-minimal-dark select,
+.theme-minimal-dark [class*="bg-black/40"],
+.theme-minimal-dark [class*="bg-black/60"] {
+  background-color: #09090b !important;
+  border-color: #27272a !important;
+  color: #ffffff !important;
+}
+
+/* Prompt Inspector in Minimalist Dark */
+.theme-minimal-dark [class*="bg-black/70"] {
+  background-color: #09090b !important;
+  border-color: #27272a !important;
+  color: #f4f4f5 !important;
+  box-shadow: none !important;
+}
+
+/* Card footers and overlay buttons in Minimalist Dark */
+.theme-minimal-dark [class*="bg-[#121116]/90"],
+.theme-minimal-dark [class*="bg-[#121116]/80"] {
+  background-color: #09090b !important;
+  border-top-color: #27272a !important;
+}
+
+/* Thin flat borders */
+.theme-minimal-dark [class*="border-white"] {
+  border-color: #27272a !important;
+}
+
+/* Buttons in Minimalist Dark */
+.theme-minimal-dark [class*="bg-white/[0.04]"],
+.theme-minimal-dark [class*="bg-white/[0.06]"],
+.theme-minimal-dark [class*="bg-white/[0.08]"] {
+  background-color: #18181b !important;
+  border-color: #27272a !important;
+  color: #d4d4d8 !important;
+}
+
+.theme-minimal-dark [class*="bg-white/[0.04]"]:hover,
+.theme-minimal-dark [class*="bg-white/[0.06]"]:hover,
+.theme-minimal-dark [class*="bg-white/[0.08]"]:hover {
+  background-color: #27272a !important;
+  color: #ffffff !important;
+}
+
+/* ========================================================
+   NSFW ACCENT RULES FOR MINIMALIST THEMES:
+   - Orange when NSFW disabled
+   - Red when NSFW enabled
+   ======================================================== */
+.theme-minimal-dark .theme-orange,
+.theme-minimal-light .theme-orange,
+.theme-minimal-dark.theme-orange,
+.theme-minimal-light.theme-orange {
+  --theme-accent: #f97316;
+  --theme-accent-hover: #ea580c;
+  --theme-text-accent: #f97316;
+}
+
+.theme-minimal-dark .theme-nsfw,
+.theme-minimal-light .theme-nsfw,
+.theme-minimal-dark.theme-nsfw,
+.theme-minimal-light.theme-nsfw {
+  --theme-accent: #ef4444;
+  --theme-accent-hover: #dc2626;
+  --theme-text-accent: #ef4444;
 }
