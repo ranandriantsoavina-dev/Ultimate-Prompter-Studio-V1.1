@@ -59,7 +59,7 @@ export const PromptInspector: React.FC<PromptInspectorProps> = ({
 
   return (
     <aside
-      className={`w-full lg:w-[420px] border-t lg:border-t-0 lg:border-l flex flex-col h-full min-h-0 select-none transition-colors duration-500 shrink-0 ${
+      className={`w-full lg:w-[420px] backdrop-blur-md border-t lg:border-t-0 lg:border-l flex flex-col h-auto lg:h-[calc(100vh-84px)] lg:sticky lg:top-[84px] select-none transition-colors duration-500 shrink-0 ${
         isLight
           ? 'bg-white/95 border-slate-200 text-slate-900 shadow-sm'
           : 'bg-[#100e14]/95 border-white/[0.08] text-white'

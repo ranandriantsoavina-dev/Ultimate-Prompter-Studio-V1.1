@@ -85,7 +85,7 @@ export const DesktopTitlebar: React.FC<DesktopTitlebarProps> = ({
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="shrink-0 z-40 bg-[#0e0d11]/95 border-b border-white/[0.08] select-none">
+    <header className="sticky top-0 z-40 bg-[#0e0d11]/95 backdrop-blur-md border-b border-white/[0.08] select-none">
       {/* Top Native Titlebar Strip */}
       <div className="flex items-center justify-between px-4 py-2 text-xs border-b border-white/[0.04]">
         {/* Left: Window Traffic Lights & App ID */}

@@ -28,7 +28,7 @@ export const PresetCard: React.FC<PresetCardProps> = ({
     <div
       {...dragProps}
       onClick={onToggle}
-      className={`group relative flex flex-col rounded-xl overflow-hidden cursor-pointer transition-all duration-300 border text-left select-none w-full ${
+      className={`group relative flex flex-col rounded-xl overflow-hidden cursor-pointer transition-all duration-300 border text-left select-none ${
         isDragging
           ? nsfwOn
             ? 'scale-105 z-30 shadow-[0_0_25px_rgba(255,34,56,0.5)] ring-2 ring-red-500 opacity-95 bg-[#181215] cursor-grabbing'

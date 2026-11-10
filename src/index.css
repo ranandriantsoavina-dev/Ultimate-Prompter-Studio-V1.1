@@ -11,12 +11,6 @@
   --text-primary: #f4efe8;
   --text-secondary: rgba(255, 255, 255, 0.65);
   --text-muted: rgba(255, 255, 255, 0.4);
-  --scrollbar-width: 6px;
-  --scrollbar-thumb-color: rgba(255, 255, 255, 0.28);
-  --scrollbar-thumb-hover-color: rgba(255, 255, 255, 0.48);
-  --scrollbar-thumb-idle: transparent;
-  --grid-gap: 14px;
-  --card-min-width: 180px;
 }
 
 /* 1. GLOW THEME TOKENS */
@@ -74,14 +68,10 @@
   --theme-text-accent: #ff384d;
 }
 
-/* Shared Global Workstation Scrollbars & Auto-Fade System */
-* {
-  scrollbar-gutter: stable;
-}
-
+/* Custom workstation scrollbars */
 ::-webkit-scrollbar {
-  width: var(--scrollbar-width, 6px);
-  height: var(--scrollbar-width, 6px);
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -89,34 +79,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: var(--scrollbar-thumb-idle, transparent);
+  background: rgba(255, 255, 255, 0.12);
   border-radius: 9999px;
-  transition: background-color 400ms ease, opacity 400ms ease;
 }
 
-/* Scrollbar shows thumb when scrolling (.is-scrolling), hovered, or active */
-.is-scrolling::-webkit-scrollbar-thumb,
-*:hover::-webkit-scrollbar-thumb,
-::-webkit-scrollbar-thumb:hover,
-::-webkit-scrollbar-thumb:active {
-  background-color: var(--scrollbar-thumb-color);
-}
-
-::-webkit-scrollbar-thumb:hover,
-::-webkit-scrollbar-thumb:active {
-  background-color: var(--scrollbar-thumb-hover-color);
-}
-
-/* Firefox Engine Support */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: transparent transparent;
-  transition: scrollbar-color 400ms ease;
-}
-
-*.is-scrolling,
-*:hover {
-  scrollbar-color: var(--scrollbar-thumb-color) transparent;
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
 }
 
 /* Smooth application theme transitions (~300ms ease) */
@@ -150,8 +118,6 @@ div, button, input, textarea, select {
   --theme-accent-hover: #c2410c;
   --theme-accent-glow: rgba(234, 88, 12, 0.25);
   --theme-text-accent: #c2410c;
-  --scrollbar-thumb-color: rgba(0, 0, 0, 0.28);
-  --scrollbar-thumb-hover-color: rgba(0, 0, 0, 0.48);
   background-color: #f8fafc !important;
   color: #0f172a !important;
 }
@@ -445,7 +411,13 @@ div, button, input, textarea, select {
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
 }
 
-
+/* Scrollbars */
+.theme-light ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.18) !important;
+}
+.theme-light ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.32) !important;
+}
 
 /* Subtle selection styling */
 ::selection {

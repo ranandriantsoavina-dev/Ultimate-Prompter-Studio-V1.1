@@ -8,7 +8,7 @@ import AdmZip from 'adm-zip';
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
   const DATA_DIR = process.env.PROMPTER_DATA || path.join(process.cwd(), 'data');
 
   // Ensure data dirs
